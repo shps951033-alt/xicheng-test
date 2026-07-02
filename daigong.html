@@ -55,10 +55,10 @@
 </head>
 <body>
 
-<div class="draft">⚠ 內部草稿版・尚未上線　｜　製版費＝確定值，工繳＝暫估（待大紙量大階梯校正）</div>
+<div class="draft">⚡ 線上即時報價・一鍵送單 LINE　｜　高雄・當日回覆　｜　實際以確認檔案為準</div>
 
 <h1>喜成印刷　<span class="g">同行燙金・打凸 代工報價</span></h1>
-<div class="sub">選規格 → 即時試算。滿版／大面積走 LINE 人工報價。</div>
+<div class="sub">選規格 → 即時報價 → 一鍵送單到 LINE。</div>
 
 <!-- 規格 -->
 <div class="card">
@@ -120,6 +120,7 @@
       <button class="send" onclick="sendLine('bid')">送出到 LINE</button>
     </div>
 
+    <div id="bossTools" style="display:none">
     <button class="b-train" onclick="toggle('formTrain')">📊 複製訓練資料給 Jesper</button>
     <div class="form" id="formTrain">
       <div class="hint" style="margin-bottom:8px">把你所有點選的規格＋系統暫估打包成文字，複製後直接貼到對話框給 Jesper（不會傳 LINE）。實際成交的現金／押票價可選填，校準更準。</div>
@@ -130,6 +131,7 @@
       <label>備註（選填）</label><input type="text" id="t_note" placeholder="機台／特殊狀況…">
       <button class="send" onclick="sendTrain()">複製訓練資料（貼給 Jesper）</button>
     </div>
+    </div>
   </div>
 </div>
 
@@ -139,6 +141,8 @@
 /* ===== 設定 ===== */
 // 待老闆確認：LINE 官方帳號連結（先放電話 deep link，可改成 @ID）
 const LINE_URL = "https://line.me/R/ti/p/0986990812";
+// 測試階段：訓練區塊（複製訓練資料）常駐顯示；正式給客戶時改 false（之後只有網址加 #boss 才會出現）
+const TESTING_MODE = true;
 const NT = "$";  // 金額符號（集中一處）
 
 // 印刷尺寸（cm，寬×長），最大菊全。
@@ -167,9 +171,16 @@ const FULL_RATIO = 0.5;
 const FOIL_PRICE = {'金':400,'銀':400,'亮金':400,'亮銀':400,'霧金':1000,'霧銀':1000,'珍珠白':1200,'白':2000};
 const FOIL_DEFAULT = 1000;
 const FOIL_YIELD = 0.85;
-const AREA_REF = 2000;
+const AREA_REF = 1200;
 function foilPrice(color){ return FOIL_PRICE[color]||FOIL_DEFAULT; }
-function baseFee(qty){ if(qty<=0)return 0; var b=4.0-1.5*(Math.log10(qty)-Math.log10(500)); return Math.min(6.0,Math.max(1.0,b)); }
+function baseFee(qty){ if(qty<=0)return 0; var b=2.85-1.384*(Math.log10(qty)-Math.log10(500)); return Math.min(6.0,Math.max(1.0,b)); }
+// ── 季節競爭係數（淡旺季浮動定價）───────────────────────
+// 1.00=常態；淡月<1（壓價衝量搶單）、旺月>1（抬價保毛利）。只乘加工費、不動金箔/製版。
+// 老闆季節：大月 10~隔年2；3月轉淡、4月劇烈下坡、5~8月谷底(最淡)、9月回升。以下數字可自行調整。
+const SEASON = {1:1.10,2:1.06,3:1.00,4:0.90,5:0.85,6:0.83,7:0.82,8:0.84,9:0.95,10:1.06,11:1.12,12:1.12};
+// 手動蓋台：想不管月份強制某係數就填數字（如缺工急單填 0.85）；平常設 null 走上表。
+const SEASON_OVERRIDE = null;
+function seasonFactor(){ if(SEASON_OVERRIDE!=null) return SEASON_OVERRIDE; var m=(new Date()).getMonth()+1; return SEASON[m]||1; }
 function foilAreaPerSheet(cols){ var s=0; cols.forEach(function(col){ if(col.n>0) col.areas.forEach(function(a){ s+=(a.w+2)*a.l; }); }); return s; }
 function foilCostTotal(cols,qty){ var sum=0; cols.forEach(function(col){ if(col.n>0){ var ar=0; col.areas.forEach(function(a){ ar+=(a.w+2)*a.l; }); sum += (ar*qty/FOIL_YIELD/768000)*foilPrice(col.color); } }); return sum; }
 const HOT_COLORS = ['金','銀','霧金','霧銀','古銅','蕭光古銅','紅','藍','綠','黑','白','珍珠白','透明箔','其他'];
@@ -418,8 +429,10 @@ function calc(){
         hotFee = Math.round(qty*hotC*CARD_HOT(qty));          // 名片：車數×單價（材料內含）
       }else{
         foilMat = foilCostTotal(cols,qty);                    // 金箔材料（損耗 85%）
-        feePerSheet = baseFee(qty)*Math.max(1, foilPS/AREA_REF);
-        hotFee = Math.round(feePerSheet*qty);                 // 燙加工費
+        var perSheet=0;                                       // 每色一趟過機：各自 baseFee×面積倍率，再加總
+        cols.forEach(function(col){ if(col.n>0){ var ca=0; col.areas.forEach(function(a){ ca+=(a.w+2)*a.l; }); perSheet += baseFee(qty)*Math.max(1, ca/AREA_REF); } });
+        feePerSheet = perSheet * seasonFactor();               // ×季節競爭係數（淡月衝量／旺月保毛利）
+        hotFee = Math.round(feePerSheet*qty);                 // 燙加工費（多色＝多次加工，分趟計）
       }
     }
     if(embN>0){
@@ -430,7 +443,7 @@ function calc(){
   const foilMatR=Math.round(foilMat);
   const cash = Math.round(plate + foilMatR + hotFee + embLabor);
   const expectCash = (mc!=='card') ? Math.round(plate + expectHot + embLabor) : null;
-  const ratio = cash<3000?1.25 : cash<8000?1.15 : 1.1;
+  const ratio = cash<3000?1.15 : 1.05;
   const press = Math.round(cash*ratio/100)*100;
 
   // 輸出（一律算出參考價，不再走人工）
@@ -452,7 +465,7 @@ function calc(){
   window.__quote={paper:p,qty,hotN,hotC,embN,plate,
     foilMat:foilMatR,hotFee:hotFee,feePerSheet:feePerSheet,embLabor:embLabor,
     labor:hotFee+embLabor, cash:cash, press:press, expectCash:expectCash,
-    mc:mc,ratio:ratio,
+    mc:mc,ratio:ratio,sf:seasonFactor(),
     hotOwn:hotOwn, embOwn:document.getElementById('embOwn').checked,
     hotCols:cols,hotAreas:hotA,embAreas:embA};
 }
@@ -476,13 +489,14 @@ function specText(){
 function sendLine(type){
   let msg;
   if(type==='quote'){
-    msg=specText()+'─────\n聯絡人：'+v('q_name')+'\n電話：'+v('q_phone')+'\n收件地址：'+v('q_addr');
+    msg='【我要下單】\n'+specText()+'─────\n聯絡人：'+v('q_name')+'\n電話：'+v('q_phone')+'\n收件地址：'+v('q_addr');
   }else{
-    msg=specText()+'─────\n💬 議價金額：'+NT+v('b_price')+'\n聯絡人：'+v('b_name')+'\n電話：'+v('b_phone');
+    msg='【我要議價】\n'+specText()+'─────\n💬 希望金額：'+NT+v('b_price')+'\n聯絡人：'+v('b_name')+'\n電話：'+v('b_phone');
   }
   if(navigator.clipboard)navigator.clipboard.writeText(msg);
-  window.open(LINE_URL,'_blank');
-  alert('報價內容已複製，正開啟 LINE，貼上即可送出 ✦');
+  // 預填訊息開 LINE：客戶選「喜成印刷」按送出即可（訂單內容已帶好）
+  window.open('https://line.me/R/msg/text/?'+encodeURIComponent(msg),'_blank');
+  alert('正開啟 LINE，選「喜成印刷」送出即可 ✦（訂單內容已幫你打好、也已複製備份）');
 }
 function v(id){return document.getElementById(id).value||'—'}
 function trainText(){
@@ -513,7 +527,7 @@ function trainText(){
   const tn=document.getElementById('t_note').value; if(tn)s+='備註：'+tn+'\n';
   s+='─ Jesper 解析（系統內部・勿手改）─\n';
   s+='機台：'+(q.mc==='card'?'名片':q.mc==='rotary'?'輪轉':'半自動')+'\n';
-  s+='燙加工費：'+NT+(q.hotFee||0).toLocaleString()+(q.feePerSheet?'（'+q.feePerSheet.toFixed(2)+'／張）':'')+'　凸加工費：'+NT+(q.embLabor||0).toLocaleString()+'　金箔材料：'+NT+(q.foilMat||0).toLocaleString()+'　周轉倍率：×'+q.ratio+'\n';
+  s+='燙加工費：'+NT+(q.hotFee||0).toLocaleString()+(q.feePerSheet?'（'+q.feePerSheet.toFixed(2)+'／張）':'')+'　凸加工費：'+NT+(q.embLabor||0).toLocaleString()+'　金箔材料：'+NT+(q.foilMat||0).toLocaleString()+'　周轉倍率：×'+q.ratio+'　季節係數：×'+(q.sf!=null?q.sf.toFixed(2):'1.00')+'\n';
   s+='[訓練資料·非實際報價·報價浮動·供 Jesper 校準工繳邏輯]\n';
   return s;
 }
@@ -524,6 +538,8 @@ function sendTrain(){
 }
 
 init();
+// 測試階段(TESTING_MODE) 或 網址加 #boss → 顯示訓練工具；正式上線把 TESTING_MODE 改 false
+if(TESTING_MODE||/boss|jesper/i.test(location.hash+location.search)){var _bt=document.getElementById('bossTools');if(_bt)_bt.style.display='';}
 </script>
 </body>
 </html>
