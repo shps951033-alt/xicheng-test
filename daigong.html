@@ -164,6 +164,25 @@ const AREA_RATE = 0.01;
 const CARD_HOT  = (q)=> q>=5000?0.6 : q>=2000?0.7 : 0.75;
 const CARD_EMB  = (q,multi)=> { let u = q>=5000?0.5:0.6; return multi?Math.max(u,0.8):u; };
 const FULL_RATIO = 0.5;
+const HOT_COLORS = ['金','銀','霧金','霧銀','古銅','蕭光古銅','紅','藍','綠','黑','白','珍珠白','透明箔','其他'];
+function hotColorOptions(saved){
+  return HOT_COLORS.map(function(cn){ return '<option value="'+cn+'"'+(saved===cn?' selected':'')+'>'+cn+'</option>'; }).join('');
+}
+function hotColorRow(ci,saved,savedOther,labelText){
+  saved=saved||'金';
+  var isOther=(saved==='其他');
+  var ov=savedOther?String(savedOther).replace(/"/g,'&quot;'):'';
+  var h='<label>'+labelText+'</label>';
+  h+='<select id="hotColor_'+ci+'" onchange="onHotColor('+ci+')">'+hotColorOptions(saved)+'</select>';
+  h+='<input type="text" id="hotColorOther_'+ci+'" placeholder="自行填入箔色" oninput="calc()" value="'+ov+'" style="margin-top:6px;display:'+(isOther?'block':'none')+'">';
+  return h;
+}
+function onHotColor(ci){
+  var sel=document.getElementById('hotColor_'+ci);
+  var oth=document.getElementById('hotColorOther_'+ci);
+  if(sel&&oth) oth.style.display=(sel.value==='其他')?'block':'none';
+  calc();
+}
 
 /* ===== 初始化 ===== */
 function init(){
@@ -227,7 +246,10 @@ function snapHot(){
     const bx=inp.closest('[id^="hotAreas_"]'); if(!bx)return;
     a[bx.id+'|'+inp.dataset.i+'|'+inp.dataset.d]=inp.value;
   });
-  return {n,a};
+  const co={},coOther={};
+  document.querySelectorAll('#hotBlocks select[id^="hotColor_"]').forEach(s=>{co[s.id]=s.value;});
+  document.querySelectorAll('#hotBlocks input[id^="hotColorOther_"]').forEach(i=>{coOther[i.id]=i.value;});
+  return {n,a,co,coOther};
 }
 function buildHotBlocks(){
   const colors=+document.getElementById('hotColors').value||0;
@@ -244,6 +266,11 @@ function buildHotBlocks(){
     const title=bothSame?('每色（共 '+colors+' 色，只填一次）'):('第 '+(c+1)+' 色');
     const blk=document.createElement('div');blk.className='hotblk';
     let h='<div class="blk-h">'+title+'</div>';
+    if(bothSame){
+      for(let ci=0;ci<colors;ci++){ h+=hotColorRow(ci, snap.co&&snap.co['hotColor_'+ci], snap.coOther&&snap.coOther['hotColorOther_'+ci], colors>1?('第 '+(ci+1)+' 色顏色'):'燙金顏色'); }
+    } else {
+      h+=hotColorRow(c, snap.co&&snap.co['hotColor_'+c], snap.coOther&&snap.coOther['hotColorOther_'+c], '燙金顏色');
+    }
     if(isFirst||!sameN){ h+='<label>燙金處數</label><select id="hotN_'+c+'" onchange="onHotN('+c+')"></select>'; }
     else{ h+='<div class="hint" style="margin-top:6px">處數同第 1 色</div>'; }
     if(isFirst||!sameA){ h+='<div id="hotAreas_'+c+'" class="areas"></div>'; }
@@ -295,11 +322,17 @@ function getHotColors(){
     const rd=(i,d)=>{let el=[...ins].find(x=>+x.dataset.i===i&&x.dataset.d===d);return el?(+el.value||0):0};
     let a=[];for(let i=0;i<n;i++)a.push({w:rd(i,'w'),l:rd(i,'l')});return a;
   };
+  const colOf=(c)=>{
+    const sel=document.getElementById('hotColor_'+c);
+    if(!sel)return '';
+    if(sel.value==='其他'){ const o=document.getElementById('hotColorOther_'+c); return (o&&o.value.trim())?o.value.trim():'其他'; }
+    return sel.value;
+  };
   let arr=[];
   for(let c=0;c<colors;c++){
     const sel=document.getElementById('hotN_'+(sameN?0:c));
     const n=sel?(+sel.value||0):0;
-    arr.push({n,areas:readAreas(c,n)});
+    arr.push({n,areas:readAreas(c,n),color:colOf(c)});
   }
   return arr;
 }
@@ -432,6 +465,7 @@ function specText(){
   let s='【同行代工詢價】\n';
   s+='紙張：'+(p.n||((p.w+'×'+p.l)+'cm'))+'\n數量：'+q.qty+' 張\n';
   s+='燙金：'+q.hotC+' 色／共 '+q.hotN+' 處　打凸：'+q.embN+' 處\n';
+  if(q.hotCols&&q.hotCols.length){ const cc=q.hotCols.map(x=>x.color).filter(Boolean).join('、'); if(cc)s+='燙金色：'+cc+'\n'; }
   s+='製版費：'+NT+q.plate.toLocaleString()+'\n';
   if(q.cash!=null)s+='系統試算 現金：'+NT+q.cash.toLocaleString()+'／押票：'+NT+q.press.toLocaleString()+'（暫估）\n';
   else s+='（滿版／大面積，待人工報價）\n';
@@ -457,7 +491,7 @@ function trainText(){
   s+='─ 燙金 ─\n色數：'+q.hotC+'　總處數：'+q.hotN+'　自備版：'+(q.hotOwn?'是':'否')+'\n';
   if(q.hotCols&&q.hotCols.length){
     q.hotCols.forEach((col,ci)=>{
-      s+='　第'+(ci+1)+'色：'+col.n+' 處';
+      s+='　第'+(ci+1)+'色'+(col.color?'（'+col.color+'）':'')+'：'+col.n+' 處';
       if(col.areas.length)s+='｜'+col.areas.map(a=>a.w+'×'+a.l).join('、')+' cm';
       s+='\n';
     });
