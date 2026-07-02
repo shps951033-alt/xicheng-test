@@ -101,7 +101,7 @@
   <h2>④ 試算結果</h2>
   <div class="warn-box" id="fitWarn"></div>
   <div id="lines"></div>
-  <div class="note" id="bigNote">🔔 偵測到滿版／大面積，工繳需依實際工時人工估算 → 請按下方「確認報價」或「我要議價」由喜成回報完整價。</div>
+  <div class="note" id="bigNote" style="display:block">ℹ️ 此為參考價，實際報價以確認檔案後報價為主。</div>
 
   <div class="btns">
     <button class="b-line" onclick="toggle('formQuote')">✅ 確認報價・通知載紙</button>
@@ -164,6 +164,14 @@ const AREA_RATE = 0.01;
 const CARD_HOT  = (q)=> q>=5000?0.6 : q>=2000?0.7 : 0.75;
 const CARD_EMB  = (q,multi)=> { let u = q>=5000?0.5:0.6; return multi?Math.max(u,0.8):u; };
 const FULL_RATIO = 0.5;
+const FOIL_PRICE = {'金':400,'銀':400,'亮金':400,'亮銀':400,'霧金':1000,'霧銀':1000,'珍珠白':1200,'白':2000};
+const FOIL_DEFAULT = 1000;
+const FOIL_YIELD = 0.85;
+const AREA_REF = 2000;
+function foilPrice(color){ return FOIL_PRICE[color]||FOIL_DEFAULT; }
+function baseFee(qty){ if(qty<=0)return 0; var b=4.0-1.5*(Math.log10(qty)-Math.log10(500)); return Math.min(6.0,Math.max(1.0,b)); }
+function foilAreaPerSheet(cols){ var s=0; cols.forEach(function(col){ if(col.n>0) col.areas.forEach(function(a){ s+=(a.w+2)*a.l; }); }); return s; }
+function foilCostTotal(cols,qty){ var sum=0; cols.forEach(function(col){ if(col.n>0){ var ar=0; col.areas.forEach(function(a){ ar+=(a.w+2)*a.l; }); sum += (ar*qty/FOIL_YIELD/768000)*foilPrice(col.color); } }); return sum; }
 const HOT_COLORS = ['金','銀','霧金','霧銀','古銅','蕭光古銅','紅','藍','綠','黑','白','珍珠白','透明箔','其他'];
 function hotColorOptions(saved){
   return HOT_COLORS.map(function(cn){ return '<option value="'+cn+'"'+(saved===cn?' selected':'')+'>'+cn+'</option>'; }).join('');
@@ -393,61 +401,59 @@ function calc(){
   const embPlate=plateFee(embA,document.getElementById('embOwn').checked,400,8);
   const plate=hotPlate+embPlate;
 
-  // 滿版偵測
-  const big = isBig(hotA,p)||isBig(embA,p);
-  document.getElementById('bigNote').style.display = big?'block':'none';
+  // （滿版不再走人工估價，一律由下方公式算出參考價）
 
   // 落版驗算（超出紙張→警告）
   const fw=fitCheck(p,hotA,embA);
   const fwEl=document.getElementById('fitWarn');
   if(fw){fwEl.style.display='block';fwEl.textContent='⚠ 落版警告：'+fw;}else{fwEl.style.display='none';}
 
-  // 工繳（暫估）
-  let hotLabor=0, embLabor=0, laborKnown=true;
+  // 加工費＋金箔成本（市場參考價）｜心中預期價（0.01 上限參考）
+  let foilMat=0, hotFee=0, embLabor=0, feePerSheet=0, expectHot=0;
   if(qty>0){
     if(hotN>0){
-      if(mc==='card'){ hotLabor = qty*hotC*CARD_HOT(qty); }   // 名片：車數=張×色數
-      else if(big){ laborKnown=false; }
-      else{
-        let foil=0; hotA.forEach(a=> foil += (a.w+2)*(a.l+2));  // 各處用箔面積相加
-        hotLabor = Math.max(foil*qty*AREA_RATE, HOT_FLOOR[mc]||1000);
+      const foilPS = foilAreaPerSheet(cols);                 // 用箔／張 cm²
+      expectHot = Math.round(foilPS*qty*AREA_RATE);           // 心中預期工繳（0.01）
+      if(mc==='card'){
+        hotFee = Math.round(qty*hotC*CARD_HOT(qty));          // 名片：車數×單價（材料內含）
+      }else{
+        foilMat = foilCostTotal(cols,qty);                    // 金箔材料（損耗 85%）
+        feePerSheet = baseFee(qty)*Math.max(1, foilPS/AREA_REF);
+        hotFee = Math.round(feePerSheet*qty);                 // 燙加工費
       }
     }
     if(embN>0){
-      if(mc==='card'){ embLabor = qty*embN*CARD_EMB(qty, embN>=2); }
-      else if(big){ laborKnown=false; }
-      else{ embLabor = EMB_FLOOR[p.k]||EMB_FLOOR.default; } // 量大階梯：待補
+      if(mc==='card'){ embLabor = Math.round(qty*embN*CARD_EMB(qty, embN>=2)); }
+      else{ embLabor = EMB_FLOOR[p.k]||EMB_FLOOR.default; }
     }
   }
-  const labor=Math.round(hotLabor+embLabor);
-
-  // 現金 / 押票（周轉槓桿）
-  const cash = plate + labor;
+  const foilMatR=Math.round(foilMat);
+  const cash = Math.round(plate + foilMatR + hotFee + embLabor);
+  const expectCash = (mc!=='card') ? Math.round(plate + expectHot + embLabor) : null;
   const ratio = cash<3000?1.25 : cash<8000?1.15 : 1.1;
   const press = Math.round(cash*ratio/100)*100;
 
-  // 輸出
+  // 輸出（一律算出參考價，不再走人工）
   const L=document.getElementById('lines');
-  const f=n=>n.toLocaleString();
+  const f=n=>Math.round(n).toLocaleString();
   let html='';
-  html+=row('燙金製版費'+(document.getElementById('hotOwn').checked?'（自備）':''), NT+f(hotPlate));
+  html+=row('燙金製版費'+(hotOwn?'（自備）':''), NT+f(hotPlate));
   html+=row('打凸製版費'+(document.getElementById('embOwn').checked?'（自備）':''), NT+f(embPlate));
-  if(!big && laborKnown){
-    html+=row('工繳 <span class="est">暫估</span>', NT+f(labor));
-    html+=row2('現金價 <span class="est">暫估</span>', NT+f(cash));
-    html+=row2('押票價 <span class="est">暫估</span>', NT+f(press));
-  }else{
-    html+=row('工繳', '<span class="est">滿版／大面積・人工報</span>');
-    html+=row2('製版費小計', NT+f(plate));
+  if(mc!=='card' && foilMatR>0) html+=row('金箔成本（材料）', NT+f(foilMatR));
+  if(hotFee>0){
+    const tag = (mc!=='card'&&feePerSheet)? ' <span class="est">'+feePerSheet.toFixed(2)+'／張</span>':'';
+    html+=row('燙金加工費'+tag, NT+f(hotFee));
   }
+  if(embLabor>0) html+=row('打凸加工費', NT+f(embLabor));
+  html+=row2('現金價 <span class="est">參考</span>', NT+f(cash));
+  html+=row2('押票價 <span class="est">參考</span>', NT+f(press));
+  if(expectCash!=null && expectHot>0) html+=row('心中預期價 <span class="est">上限參考</span>', NT+f(expectCash));
   L.innerHTML=html;
-  window.__quote={paper:p,qty,hotN,hotC,embN,plate,labor,
-    cash:(!big&&laborKnown)?cash:null,
-    press:(!big&&laborKnown)?press:null,
-    mc:mc,big:big,ratio:(!big&&laborKnown)?ratio:null,
-    hotLabor:Math.round(hotLabor),embLabor:Math.round(embLabor),
-    hotOwn:hotOwn,
-    embOwn:document.getElementById('embOwn').checked,
+  window.__quote={paper:p,qty,hotN,hotC,embN,plate,
+    foilMat:foilMatR,hotFee:hotFee,feePerSheet:feePerSheet,embLabor:embLabor,
+    labor:hotFee+embLabor, cash:cash, press:press, expectCash:expectCash,
+    mc:mc,ratio:ratio,
+    hotOwn:hotOwn, embOwn:document.getElementById('embOwn').checked,
     hotCols:cols,hotAreas:hotA,embAreas:embA};
 }
 function row(k,v){return '<div class="line"><span>'+k+'</span><span class="v">'+v+'</span></div>'}
@@ -462,8 +468,9 @@ function specText(){
   s+='燙金：'+q.hotC+' 色／共 '+q.hotN+' 處　打凸：'+q.embN+' 處\n';
   if(q.hotCols&&q.hotCols.length){ const cc=q.hotCols.map(x=>x.color).filter(Boolean).join('、'); if(cc)s+='燙金色：'+cc+'\n'; }
   s+='製版費：'+NT+q.plate.toLocaleString()+'\n';
-  if(q.cash!=null)s+='系統試算 現金：'+NT+q.cash.toLocaleString()+'／押票：'+NT+q.press.toLocaleString()+'（暫估）\n';
-  else s+='（滿版／大面積，待人工報價）\n';
+  s+='系統參考價 現金：'+NT+q.cash.toLocaleString()+'／押票：'+NT+q.press.toLocaleString()+'\n';
+  if(q.expectCash!=null)s+='（心中預期上限：'+NT+q.expectCash.toLocaleString()+'）\n';
+  s+='※ 此為參考價，實際以確認檔案後報價為主\n';
   return s;
 }
 function sendLine(type){
@@ -493,17 +500,20 @@ function trainText(){
   }
   s+='─ 打凸 ─\n處數：'+q.embN+'　自備版：'+(q.embOwn?'是':'否')+'\n';
   if(q.embN)s+='每處面積：\n'+fa(q.embAreas)+'\n';
-  s+='─ 系統試算 ─\n製版費：'+NT+q.plate.toLocaleString()+'\n';
-  if(q.cash!=null) s+='工繳暫估：'+NT+q.labor.toLocaleString()+'\n現金暫估：'+NT+q.cash.toLocaleString()+'\n押票暫估：'+NT+q.press.toLocaleString()+'\n';
-  else s+='（滿版／大面積·人工）\n';
+  s+='─ 系統試算（參考價）─\n製版費：'+NT+q.plate.toLocaleString()+'\n';
+  s+='金箔成本：'+NT+(q.foilMat||0).toLocaleString()+'\n';
+  s+='燙金加工費：'+NT+(q.hotFee||0).toLocaleString()+(q.feePerSheet?'（'+q.feePerSheet.toFixed(2)+'／張）':'')+'\n';
+  if(q.embLabor)s+='打凸加工費：'+NT+q.embLabor.toLocaleString()+'\n';
+  s+='現金參考：'+NT+q.cash.toLocaleString()+'／押票參考：'+NT+q.press.toLocaleString()+'\n';
+  if(q.expectCash!=null)s+='心中預期上限：'+NT+q.expectCash.toLocaleString()+'\n';
   const tc=document.getElementById('t_cash').value;
   const tp=document.getElementById('t_press').value;
   if(tc)s+='★實際現金價：'+NT+(+tc).toLocaleString()+'\n';
   if(tp)s+='★實際押票價：'+NT+(+tp).toLocaleString()+'\n';
   const tn=document.getElementById('t_note').value; if(tn)s+='備註：'+tn+'\n';
   s+='─ Jesper 解析（系統內部・勿手改）─\n';
-  s+='機台：'+(q.mc==='card'?'名片':q.mc==='rotary'?'輪轉':'半自動')+'　滿版：'+(q.big?'是→人工':'否')+'\n';
-  if(q.cash!=null) s+='燙工繳：'+NT+(q.hotLabor||0).toLocaleString()+'　凸工繳：'+NT+(q.embLabor||0).toLocaleString()+'　周轉倍率：×'+q.ratio+'\n';
+  s+='機台：'+(q.mc==='card'?'名片':q.mc==='rotary'?'輪轉':'半自動')+'\n';
+  s+='燙加工費：'+NT+(q.hotFee||0).toLocaleString()+(q.feePerSheet?'（'+q.feePerSheet.toFixed(2)+'／張）':'')+'　凸加工費：'+NT+(q.embLabor||0).toLocaleString()+'　金箔材料：'+NT+(q.foilMat||0).toLocaleString()+'　周轉倍率：×'+q.ratio+'\n';
   s+='[訓練資料·非實際報價·報價浮動·供 Jesper 校準工繳邏輯]\n';
   return s;
 }
