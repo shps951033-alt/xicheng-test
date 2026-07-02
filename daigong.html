@@ -259,18 +259,13 @@ function buildHotBlocks(){
   const snap=snapHot();
   box.innerHTML='';
   if(colors===0)return;
-  const bothSame=sameN&&sameA;
-  const blocks=bothSame?1:colors;
+  const blocks=colors;   // 每色恆為一個獨立框（面積條件逐色不同）
   for(let c=0;c<blocks;c++){
     const isFirst=c===0;
-    const title=bothSame?('每色（共 '+colors+' 色，只填一次）'):('第 '+(c+1)+' 色');
+    const title=(colors>1)?('第 '+(c+1)+' 色'):'每色（共 1 色）';
     const blk=document.createElement('div');blk.className='hotblk';
     let h='<div class="blk-h">'+title+'</div>';
-    if(bothSame){
-      for(let ci=0;ci<colors;ci++){ h+=hotColorRow(ci, snap.co&&snap.co['hotColor_'+ci], snap.coOther&&snap.coOther['hotColorOther_'+ci], colors>1?('第 '+(ci+1)+' 色顏色'):'燙金顏色'); }
-    } else {
-      h+=hotColorRow(c, snap.co&&snap.co['hotColor_'+c], snap.coOther&&snap.coOther['hotColorOther_'+c], '燙金顏色');
-    }
+    h+=hotColorRow(c, snap.co&&snap.co['hotColor_'+c], snap.coOther&&snap.coOther['hotColorOther_'+c], '燙金顏色');
     if(isFirst||!sameN){ h+='<label>燙金處數</label><select id="hotN_'+c+'" onchange="onHotN('+c+')"></select>'; }
     else{ h+='<div class="hint" style="margin-top:6px">處數同第 1 色</div>'; }
     if(isFirst||!sameA){ h+='<div id="hotAreas_'+c+'" class="areas"></div>'; }
