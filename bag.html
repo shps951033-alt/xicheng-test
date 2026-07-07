@@ -261,6 +261,7 @@ function calc(){
   else if(spotSel==='2色'){spotN=2;}else if(spotSel==='2色近滿版'){spotN=2;spotFull=true;}
   var plateN=(four?4:0)+spotN;
   var inkPerLing=(four?4*500:0)+spotN*(2000+(spotFull?500:0));
+  var inkCost=function(l){var c=inkPerLing*l;return l>1?c*0.95:c;};   /* 印工超過1令打95折（2026-07-07 老闆） */
   if(spotN>0)warns.push('特別色以一般專色 2000/令 計；若為金/銀請備註（2500/令）。');
 
   var foil=val('foil'), emb=val('emboss');
@@ -288,15 +289,15 @@ function calc(){
     var pd={type:pmeta.type,pack:pmeta.pack,priceOf:pmeta.th[val('thick')]||{}};
     var sBest=null,dBest=null;
     if(mode==='single'||mode==='compare'){
-      sBest=pickBest(planCandidates(pW,pH,Q,pd),function(c){return c.pcs.cost+(plateN>0?plateN*500+inkPerLing*c.ling:0);});
+      sBest=pickBest(planCandidates(pW,pH,Q,pd),function(c){return c.pcs.cost+(plateN>0?plateN*350+inkCost(c.ling):0);});
     }
     if(mode==='dual'||mode==='compare'){
-      dBest=pickBest(planCandidates(aW,aH,2*Q,pd),function(c){var pf=(c.m>=2?plateN:plateN*2)*500;return c.pcs.cost+(plateN>0?pf+inkPerLing*c.ling:0);});
+      dBest=pickBest(planCandidates(aW,aH,2*Q,pd),function(c){var pf=(c.m>=2?plateN:plateN*2)*350;return c.pcs.cost+(plateN>0?pf+inkCost(c.ling):0);});
     }
     if(mode==='compare'){
       /* 含軋型/糊袋差比總價（單接超菊全＝委外軋；雙接＝A面自做軋） */
-      var sTot=sBest?sBest.pcs.cost+(plateN>0?plateN*500+inkPerLing*sBest.ling:0)+(4000+Math.max(2500,2.5*Q))+4*Q:Infinity;
-      var dTot=dBest?dBest.pcs.cost+(plateN>0?(dBest.m>=2?plateN:plateN*2)*500+inkPerLing*dBest.ling:0)+dieFeeCalc(aArea,2*Q).fee+6*Q:Infinity;
+      var sTot=sBest?sBest.pcs.cost+(plateN>0?plateN*350+inkCost(sBest.ling):0)+(4000+Math.max(2500,2.5*Q))+4*Q:Infinity;
+      var dTot=dBest?dBest.pcs.cost+(plateN>0?(dBest.m>=2?plateN:plateN*2)*350+inkCost(dBest.ling):0)+dieFeeCalc(aArea,2*Q).fee+6*Q:Infinity;
       if(sTot===Infinity&&dTot===Infinity){warns.push('單接超出印刷機、雙接亦無可行方案 → 送出後由喜成人工核算。');}
       else if(sTot<=dTot){mode='single';best=sBest;warns.push('無燙金/打凸：單接(直裁+委外軋)較省，已採單接。');}
       else {mode='dual';best=dBest;warns.push('無燙金/打凸：雙接較省，已採雙接。');}
@@ -321,9 +322,9 @@ function calc(){
       if(dual&&best.m>=2)warns.push('雙接 A/B 同版面印刷（'+best.m+'片/張）→ 版費一套。');
       if(dual&&best.m<2)warns.push('雙接 A/B 分開印，以各開版計（版費×2）；若 A/B 同圖請備註，可共版省半。');
       var lingTxt=(Math.round(best.ling*100)/100)+'令';
-      rows.push(['印刷 版費',effPlate+'版×500',money(effPlate*500)]);
-      rows.push(['印刷 印工',(four?'4色':'')+(spotN?(four?'+':'')+spotN+'特':'')+'×'+lingTxt+(spotFull?'(滿版+500)':''),money(inkPerLing*best.ling)]);
-      subtotal+=effPlate*500+inkPerLing*best.ling;
+      rows.push(['印刷 版費',effPlate+'版×350',money(effPlate*350)]);
+      rows.push(['印刷 印工',(four?'4色':'')+(spotN?(four?'+':'')+spotN+'特':'')+'×'+lingTxt+(spotFull?'(滿版+500)':'')+(best.ling>1?'×95折':''),money(inkCost(best.ling))]);
+      subtotal+=effPlate*350+inkCost(best.ling);
     }
   }
 
