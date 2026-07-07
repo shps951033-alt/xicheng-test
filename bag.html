@@ -158,8 +158,8 @@ var PAPERS={
  '輕描淡雪':{type:'sheet',th:{'11條':{'25x35':6,'31x43':9},'14條':{'25x35':7.5,'31x43':11},'19條':{'25x35':10,'31x43':15},'24條':{'25x35':15,'31x43':22},'29條':{'25x35':17.5,'31x43':26},'35條':{'25x35':22,'31x43':33}}},
  '永續環保黑卡':{type:'sheet',th:{'110g':{'31x43':16},'180g':{'31x43':26,'35x47':32},'250g':{'31x43':36,'35x47':45},'350g':{'31x43':50,'35x47':62},'400g':{'31x43':57,'35x47':71},'500g':{'31x43':70,'35x47':87}}},
  '海洋白牛':{type:'pack',th:{'13條':{'31x43':8},'15條':{'31x43':10},'19條':{'31x43':12},'23條':{'31x43':15},'26條':{'31x43':20}}},
- 'JP超特銅(薄銅版·亮)':{type:'pack',th:{'80g':{'25x35':6.5,'31x43':10},'95g':{'25x35':7,'31x43':11},'118g':{'25x35':9,'31x43':13.5},'148g':{'25x35':11,'31x43':17}}},
- 'JP超雪銅(薄銅版·雪)':{type:'pack',th:{'80g':{'25x35':6.5,'31x43':10},'95g':{'25x35':7,'31x43':11},'118g':{'25x35':9,'31x43':13.5},'148g':{'25x35':11,'31x43':17}}},
+ 'JP超特銅(薄銅版·亮)':{type:'pack',pack:250,th:{'80g':{'25x35':6.5,'31x43':10},'95g':{'25x35':7,'31x43':11},'118g':{'25x35':9,'31x43':13.5},'148g':{'25x35':11,'31x43':17}}},
+ 'JP超雪銅(薄銅版·雪)':{type:'pack',pack:250,th:{'80g':{'25x35':6.5,'31x43':10},'95g':{'25x35':7,'31x43':11},'118g':{'25x35':9,'31x43':13.5},'148g':{'25x35':11,'31x43':17}}},
  '其他（自填）':{type:'manual',th:{}}
 };
 var LAM={'亮膜':{r:0.000550,min:700},'霧膜':{r:0.000721,min:700}};
@@ -202,8 +202,9 @@ function paperCost(pd,sizeKey,rawSheets){
     return {cost:bundles*(price/5)*d, buy:buy, unit:bundles+'束', disc:d};
   }
   if(pd.type==='pack'){
-    var buyP=Math.ceil(rawSheets/100)*100, dp=bulkDisc(buyP);
-    return {cost:buyP*price*dp, buy:buyP, unit:(buyP/100)+'包', disc:dp};
+    var pk=pd.pack||100;
+    var buyP=Math.ceil(rawSheets/pk)*pk, dp=bulkDisc(buyP);
+    return {cost:buyP*price*dp, buy:buyP, unit:(buyP/pk)+'包×'+pk, disc:dp};
   }
   var s=Math.ceil(rawSheets), ds=bulkDisc(s);
   return {cost:s*price*ds, buy:s, unit:'散買', disc:ds};
@@ -284,7 +285,7 @@ function calc(){
   /* ── 方案搜尋（依接法） ── */
   var best=null, dual=false, planOK=false;
   if(!feBlock && !manual){
-    var pd={type:pmeta.type,priceOf:pmeta.th[val('thick')]||{}};
+    var pd={type:pmeta.type,pack:pmeta.pack,priceOf:pmeta.th[val('thick')]||{}};
     var sBest=null,dBest=null;
     if(mode==='single'||mode==='compare'){
       sBest=pickBest(planCandidates(pW,pH,Q,pd),function(c){return c.pcs.cost+(plateN>0?plateN*500+inkPerLing*c.ling:0);});
