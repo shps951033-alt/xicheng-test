@@ -168,11 +168,20 @@ const AREA_RATE = 0.01;
 const CARD_HOT  = (q)=> q>=5000?0.6 : q>=2000?0.7 : 0.75;
 const CARD_EMB  = (q,multi)=> { let u = q>=5000?0.5:0.6; return multi?Math.max(u,0.8):u; };
 const FULL_RATIO = 0.5;
-const FOIL_PRICE = {'金':400,'銀':400,'亮金':400,'亮銀':400,'霧金':1000,'霧銀':1000,'珍珠白':1200,'白':2000};
-const FOIL_DEFAULT = 1000;
+// 箔材單價（每令）。2026-07-11 全面調漲 50%（原：金/銀400、霧1000、珍珠白1200、白2000、def1000）。回退÷1.5。
+const FOIL_PRICE = {'金':600,'銀':600,'亮金':600,'亮銀':600,'霧金':1500,'霧銀':1500,'珍珠白':1800,'白':3000};
+const FOIL_DEFAULT = 1500;
 const FOIL_YIELD = 0.85;
 const AREA_REF = 1200;
+// 基本費／低消（ORDER_MIN）：任何單的保底價。少量攤不掉「代來回物流＋上機工時」→ 低於此一律以此報。
+// 2026-07-11 老闆定＝$800（校準#13：菊4開100張，工繳僅算$519/647，實際現金＝押票＝800、備註「基本費」）。
+// 目前全域單一值；日後若依紙張大小／難度分級再改成表。地板綁「現金與押票」兩者、且觸底時押票不另加倍率（故兩者同為800）。
+const ORDER_MIN = 800;
 function foilPrice(color){ return FOIL_PRICE[color]||FOIL_DEFAULT; }
+// 工繳曲線（baseFee）：2026-07-02 由 9 筆真實成交三次校準（截距2.85、斜率-1.384、面積除數1200），200~10000張 6 點 ±3%。
+// 2026-07-11 曾試全域 +41%（PRICE_LEVEL 1.41）擬合校準#12，但真實鄰點（#6 200張870、#2 500張1500、#3/#4 10000張）
+//   顯示上下兩端會被高報~40% → 老闆定案撤回、曲線保持校準值；「小量要多」改由基本費地板 ORDER_MIN 接住（見上）。
+//   #12 的 $9,000 屬「小面積·人工圓數往上」，非曲線訊號，由人工判斷、工具僅顯示參考錨。
 function baseFee(qty){ if(qty<=0)return 0; var b=2.85-1.384*(Math.log10(qty)-Math.log10(500)); return Math.min(6.0,Math.max(1.0,b)); }
 // ── 季節競爭係數（淡旺季浮動定價）───────────────────────
 // 1.00=常態；淡月<1（壓價衝量搶單）、旺月>1（抬價保毛利）。只乘加工費、不動金箔/製版。
@@ -441,10 +450,14 @@ function calc(){
     }
   }
   const foilMatR=Math.round(foilMat);
-  const cash = Math.round(plate + foilMatR + hotFee + embLabor);
+  const rawCash = Math.round(plate + foilMatR + hotFee + embLabor);
+  const ratio = rawCash<3000?1.15 : 1.05;
+  const rawPress = Math.round(rawCash*ratio/100)*100;
+  // 基本費地板：現金與押票各自不低於 ORDER_MIN；觸底時兩者皆＝ORDER_MIN（押票不另加倍率）
+  const cash = Math.max(rawCash, ORDER_MIN);
+  const press = Math.max(rawPress, ORDER_MIN);
+  const atFloor = (rawCash < ORDER_MIN);
   const expectCash = (mc!=='card') ? Math.round(plate + expectHot + embLabor) : null;
-  const ratio = cash<3000?1.15 : 1.05;
-  const press = Math.round(cash*ratio/100)*100;
 
   // 輸出（一律算出參考價，不再走人工）
   const L=document.getElementById('lines');
@@ -458,8 +471,10 @@ function calc(){
     html+=row('燙金加工費'+tag, NT+f(hotFee));
   }
   if(embLabor>0) html+=row('打凸加工費', NT+f(embLabor));
-  html+=row2('現金價 <span class="est">參考</span>', NT+f(cash));
-  html+=row2('押票價 <span class="est">參考</span>', NT+f(press));
+  const floorTag = atFloor ? ' <span class="est">基本費</span>' : ' <span class="est">參考</span>';
+  html+=row2('現金價'+floorTag, NT+f(cash));
+  html+=row2('押票價'+floorTag, NT+f(press));
+  if(atFloor) html+=row('<span class="est">※ 未達基本費 '+NT+ORDER_MIN.toLocaleString()+'，以基本費計（工繳試算 '+NT+f(rawCash)+'）</span>','');
   if(expectCash!=null && expectHot>0) html+=row('心中預期價 <span class="est">上限參考</span>', NT+f(expectCash));
   L.innerHTML=html;
   window.__quote={paper:p,qty,hotN,hotC,embN,plate,
