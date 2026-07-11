@@ -80,7 +80,7 @@
   <div class="card">
     <h2>③ 後加工</h2>
     <label>燙金（假設 1 色）</label>
-    <select id="foil" class="mb"><option value="無">無</option><option value="單面">單面</option><option value="雙面同圖">雙面同圖（共版）</option><option value="雙面不同圖">雙面不同圖（各開版）</option><option value="側面左右兩片">側面左右兩片</option></select>
+    <select id="foil" class="mb"><option value="無">無</option><option value="單面">單面</option><option value="雙面同圖">雙面同圖（仍各開版）</option><option value="雙面不同圖">雙面不同圖（各開版）</option><option value="側面左右兩片">側面左右兩片（各開版）</option></select>
     <p class="hint">正面圖案（長 × 寬 cm）</p>
     <div class="row mb"><div><input type="number" id="foilFL" placeholder="長"></div><div class="x">×</div><div><input type="number" id="foilFW" placeholder="寬"></div></div>
     <p class="hint">反面圖案（長 × 寬 cm｜不同圖才填）</p>
@@ -88,7 +88,7 @@
 
     <div class="sect">
     <label>打凸</label>
-    <select id="emboss" class="mb"><option value="無">無</option><option value="正面">正面</option><option value="反面">反面</option><option value="雙面同圖">雙面同圖（共版）</option><option value="雙面不同圖">雙面不同圖（各開版）</option><option value="側面">側面</option></select>
+    <select id="emboss" class="mb"><option value="無">無</option><option value="正面">正面</option><option value="反面">反面</option><option value="雙面同圖">雙面同圖（仍各開版）</option><option value="雙面不同圖">雙面不同圖（各開版）</option><option value="側面">側面（各開版）</option></select>
     <p class="hint">正面圖案（長 × 寬 cm）</p>
     <div class="row mb"><div><input type="number" id="embFL" placeholder="長"></div><div class="x">×</div><div><input type="number" id="embFW" placeholder="寬"></div></div>
     <p class="hint">反面圖案（長 × 寬 cm｜不同圖才填）</p>
@@ -330,34 +330,39 @@ function calc(){
     }
   }
 
-  /* ── 燙金 ── */
+  /* ── 燙金（老闆 2026-07-11：沒有共版、工資每色一次作業）── */
   var fF=ar('foilFL','foilFW'), fB=ar('foilBL','foilBW');
   if(foil!=='無'&&!feBlock){
-    var fApplied=0,fPlateArea=0,fPlates=1;
-    if(foil==='單面'){fApplied=fF;fPlateArea=fF;}
-    else if(foil==='雙面同圖'){fApplied=fF*2;fPlateArea=fF;}
-    else if(foil==='雙面不同圖'){fApplied=fF+fB;fPlateArea=fF+fB;fPlates=2;}
-    else if(foil==='側面左右兩片'){fApplied=fF*2;fPlateArea=fF;}
-    var fPlate=Math.max(200*fPlates,fPlateArea*4);
-    var fLabor=Math.max(1500,fApplied*0.01*Q);
-    rows.push(['燙金 製版費','max(200×版'+fPlates+', 面積×4)',money(fPlate)]);
-    rows.push(['燙金 加工費','施作 '+Math.round(fApplied)+'cm²×0.01×'+Q+'（min 1500）',money(fLabor)]);
+    var fAreas=[];                                      /* 每圖案/位置各自開版，同圖也各開版（燙金無共版）*/
+    if(foil==='單面'){fAreas=[fF];}
+    else if(foil==='雙面同圖'){fAreas=[fF,fF];}          /* 雙面同圖→仍兩塊版 */
+    else if(foil==='雙面不同圖'){fAreas=[fF,fB];}
+    else if(foil==='側面左右兩片'){fAreas=[fF,fF];}      /* 左右兩片→兩塊版 */
+    var fPlates=fAreas.length;
+    var fPlateArea=fAreas.reduce(function(s,a){return s+a;},0);
+    var fApplied=fPlateArea;
+    var fPlate=Math.max(200+(fPlates-1)*100, fPlateArea*4);                            /* 版費：色階地板(第1色200每加1色+100) vs 各版面積×4加總，取大 */
+    var fLabor=fAreas.reduce(function(s,a){return s+Math.max(1500,a*0.01*Q);},0);      /* 工資：每色各走一次 max(1500,單版面積×0.01×張) */
+    rows.push(['燙金 製版費','max(色階'+fPlates+'色, 各版面積×4加總)｜各圖各開版',money(fPlate)]);
+    rows.push(['燙金 加工費',fPlates+'色×max(1500, 單版面積×0.01×'+Q+')',money(fLabor)]);
     subtotal+=fPlate+fLabor;
     if(!fF)warns.push('燙金已選但正面圖案面積未填，版費/加工費偏低。');
   }
 
-  /* ── 打凸 ── */
+  /* ── 打凸（老闆 2026-07-11：沒有共版、工資每道一次作業）── */
   var eF=ar('embFL','embFW'), eB=ar('embBL','embBW');
   if(emb!=='無'&&!feBlock){
-    var eApplied=0,ePlate=0;
-    if(emb==='正面'){eApplied=eF;ePlate=Math.max(400,eF*8);}
-    else if(emb==='反面'){eApplied=eB;ePlate=Math.max(400,eB*8);}
-    else if(emb==='雙面同圖'){eApplied=eF*2;ePlate=Math.max(400,eF*8);}
-    else if(emb==='雙面不同圖'){eApplied=eF+eB;ePlate=Math.max(400,eF*8)+Math.max(400,eB*8);}
-    else if(emb==='側面'){eApplied=eF*2;ePlate=Math.max(400,eF*8);}
-    var eLabor=Math.max(1500,eApplied*0.01*Q);
-    rows.push(['打凸 凹版費','面積×8（min 400/面）',money(ePlate)]);
-    rows.push(['打凸 加工費','施作 '+Math.round(eApplied)+'cm²×0.01×'+Q+'（min 1500）',money(eLabor)]);
+    var eAreas=[];                                      /* 每圖案/位置各自開凹版，同圖也各開版（打凸無共版）*/
+    if(emb==='正面'){eAreas=[eF];}
+    else if(emb==='反面'){eAreas=[eB];}
+    else if(emb==='雙面同圖'){eAreas=[eF,eF];}          /* 雙面同圖→仍兩塊凹版 */
+    else if(emb==='雙面不同圖'){eAreas=[eF,eB];}
+    else if(emb==='側面'){eAreas=[eF,eF];}              /* 左右兩片→兩塊凹版 */
+    var eApplied=eAreas.reduce(function(s,a){return s+a;},0);
+    var ePlate=eAreas.reduce(function(s,a){return s+Math.max(400,a*8);},0);            /* 凹版費：每版 面積×8（min 400/版），各圖各開版 */
+    var eLabor=eAreas.reduce(function(s,a){return s+Math.max(1500,a*0.01*Q);},0);      /* 工資：每道各走一次 max(1500,單版面積×0.01×張) */
+    rows.push(['打凸 凹版費',eAreas.length+'版×(面積×8, min 400)｜各圖各開版',money(ePlate)]);
+    rows.push(['打凸 加工費',eAreas.length+'道×max(1500, 單版面積×0.01×'+Q+')',money(eLabor)]);
     subtotal+=ePlate+eLabor;
     if(!eF&&!eB)warns.push('打凸已選但圖案面積未填。');
   }
