@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>喜成燙金印刷 ｜ 燙金・打凸・軋型・印刷後加工｜C CHENG ENTERPRISE</title>
+<meta name="description" content="喜成燙金印刷（喜成企業社）— 座落高雄阿蓮的印刷後加工職人工廠。專精燙金、打凸、軋型模切、水晶膜與名片、紙袋、紙盒加工，小量彈性、細節到位。" />
+<meta name="theme-color" content="#14110d" />
+<meta property="og:title" content="喜成燙金印刷｜燙金・打凸・軋型・印刷後加工" />
+<meta property="og:description" content="高雄阿蓮的印刷後加工職人工廠。燙金、打凸、軋型、水晶膜，為每一張紙鍍上細節。" />
+<meta property="og:type" content="website" />
+<meta property="og:image" content="assets/seal-gold.png" />
+<link rel="icon" type="image/png" href="assets/seal-only-gold.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;500;600;700;900&family=Noto+Sans+TC:wght@300;400;500;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet" />
+<style>
+:root{
+  --ink:#14110d;
+  --ink-2:#1e1a14;
+  --ink-soft:#2a251d;
+  --paper:#f6f2e9;
+  --paper-2:#efe8da;
+  --cream:#faf7f0;
+  --gold:#c6a15b;
+  --gold-lt:#e6cd8f;
+  --gold-dk:#a9843f;
+  --red:#7c1f1a;
+  --text:#efe8da;
+  --text-dk:#4a4234;
+  --text-mut:#8a7f6b;
+  --line:rgba(198,161,91,.28);
+  --gold-grad:linear-gradient(135deg,#a9843f 0%,#e6cd8f 34%,#c6a15b 52%,#8f6d31 78%,#e2c684 100%);
+  --serif:"Noto Serif TC",serif;
+  --sans:"Noto Sans TC",-apple-system,"PingFang TC","Microsoft JhengHei",sans-serif;
+  --latin:"Cormorant Garamond",serif;
+  --maxw:1160px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--sans);
+  color:var(--text-dk);
+  background:var(--paper);
+  line-height:1.75;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+img{max-width:100%;display:block}
+a{color:inherit;text-decoration:none}
+::selection{background:var(--gold);color:var(--ink)}
+
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 28px}
+.gold-text{
+  background:var(--gold-grad);
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;color:transparent;
+}
+.eyebrow{
+  font-family:var(--sans);
+  font-size:.78rem;font-weight:500;letter-spacing:.42em;
+  text-transform:uppercase;color:var(--gold-dk);
+  display:inline-flex;align-items:center;gap:.85em;
+}
+.eyebrow::before{content:"";width:34px;height:1px;background:var(--gold)}
+.sec-index{font-family:var(--latin);font-style:italic;font-size:1.05rem;color:var(--gold);opacity:.8}
+
+/* ============ HEADER ============ */
+header{
+  position:fixed;inset:0 0 auto 0;z-index:100;
+  padding:18px 0;transition:.45s ease;
+}
+header.scrolled{
+  background:rgba(20,17,13,.86);
+  backdrop-filter:blur(14px);
+  padding:11px 0;
+  box-shadow:0 1px 0 var(--line);
+}
+.nav{display:flex;align-items:center;justify-content:space-between;gap:24px}
+.brand{display:flex;align-items:center;gap:13px}
+.brand img{height:42px;width:auto;transition:.4s}
+header.scrolled .brand img{height:34px}
+.brand .bt{line-height:1.15}
+.brand .bt b{
+  font-family:var(--serif);font-weight:700;font-size:1.12rem;
+  letter-spacing:.16em;color:var(--cream);display:block;
+}
+.brand .bt span{
+  font-family:var(--latin);font-size:.72rem;letter-spacing:.34em;
+  color:var(--gold);text-transform:uppercase;
+}
+.menu{display:flex;align-items:center;gap:34px}
+.menu a{
+  font-size:.92rem;font-weight:500;color:var(--paper-2);
+  letter-spacing:.08em;position:relative;padding:4px 0;transition:.3s;
+}
+.menu a::after{
+  content:"";position:absolute;left:0;bottom:-2px;width:0;height:1px;
+  background:var(--gold);transition:.35s;
+}
+.menu a:hover{color:var(--gold-lt)}
+.menu a:hover::after{width:100%}
+.btn{
+  display:inline-flex;align-items:center;gap:.5em;
+  font-weight:500;letter-spacing:.06em;cursor:pointer;
+  border:1px solid var(--gold);color:var(--ink);
+  background:var(--gold-grad);background-size:180% 180%;
+  padding:.72em 1.5em;border-radius:2px;font-size:.92rem;
+  transition:.4s;white-space:nowrap;
+}
+.btn:hover{background-position:100% 0;box-shadow:0 8px 26px -12px rgba(198,161,91,.7);transform:translateY(-1px)}
+.btn.ghost{background:transparent;color:var(--gold-lt);border-color:var(--line)}
+.btn.ghost:hover{border-color:var(--gold);color:var(--gold-lt);box-shadow:none}
+.btn.dark{background:var(--ink);color:var(--gold-lt);border-color:var(--ink)}
+.burger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:6px}
+.burger span{width:26px;height:2px;background:var(--gold-lt);transition:.3s}
+
+/* ============ HERO ============ */
+.hero{
+  position:relative;min-height:100svh;display:flex;align-items:center;
+  background:radial-gradient(120% 90% at 78% 12%,#2a241a 0%,#14110d 55%,#0d0b08 100%);
+  color:var(--text);overflow:hidden;
+}
+.hero .grain{position:absolute;inset:0;opacity:.5;pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.045'/%3E%3C/svg%3E");}
+.hero::after{content:"";position:absolute;left:0;right:0;bottom:0;height:120px;
+  background:linear-gradient(to top,var(--paper),transparent);z-index:3}
+.hero-grid{
+  position:relative;z-index:2;display:grid;
+  grid-template-columns:1.15fr .85fr;gap:40px;align-items:center;
+  width:100%;padding:120px 0 90px;
+}
+.hero-copy .eyebrow{margin-bottom:30px}
+.hero h1{
+  font-family:var(--serif);font-weight:900;color:var(--cream);
+  font-size:clamp(2.5rem,5.6vw,4.35rem);line-height:1.28;
+  letter-spacing:.04em;margin-bottom:10px;
+}
+.hero h1 .gold-text{display:inline-block}
+.hero .latin-sub{
+  font-family:var(--latin);font-style:italic;font-size:clamp(1.1rem,2vw,1.5rem);
+  letter-spacing:.14em;color:var(--gold);margin:18px 0 26px;opacity:.9;
+}
+.hero p.lead{
+  font-size:1.06rem;color:#d8cfbb;max-width:35ch;line-height:2;
+  font-weight:300;margin-bottom:40px;
+}
+.hero-cta{display:flex;gap:16px;flex-wrap:wrap}
+.hero-seal{position:relative;display:flex;justify-content:center;align-items:center}
+.hero-seal .ring{position:absolute;width:118%;aspect-ratio:1;border:1px solid var(--line);border-radius:50%;
+  animation:spin 60s linear infinite}
+.hero-seal .ring.r2{width:135%;border-style:dashed;opacity:.5;animation-duration:90s;animation-direction:reverse}
+@keyframes spin{to{transform:rotate(360deg)}}
+.hero-seal img{
+  width:min(92%,420px);position:relative;
+  filter:drop-shadow(0 18px 50px rgba(0,0,0,.55));
+  animation:floaty 7s ease-in-out infinite;
+}
+@keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
+.hero-stamp{position:absolute;right:2%;bottom:14%;z-index:4;
+  font-family:var(--latin);font-style:italic;color:var(--gold);opacity:.5;
+  writing-mode:vertical-rl;letter-spacing:.3em;font-size:.8rem}
+
+.scroll-hint{position:absolute;left:50%;bottom:26px;transform:translateX(-50%);z-index:4;
+  color:var(--gold);font-size:.7rem;letter-spacing:.3em;text-align:center;opacity:.7}
+.scroll-hint .bar{width:1px;height:38px;background:linear-gradient(var(--gold),transparent);margin:8px auto 0;animation:drop 1.8s ease-in-out infinite}
+@keyframes drop{0%,100%{opacity:.3;transform:scaleY(.5)}50%{opacity:1;transform:scaleY(1)}}
+
+/* marquee band */
+.band{background:var(--ink);color:var(--gold-lt);overflow:hidden;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.band .track{display:flex;gap:0;white-space:nowrap;animation:march 32s linear infinite;padding:15px 0}
+.band .track span{font-family:var(--serif);font-size:1.02rem;letter-spacing:.28em;padding:0 30px;position:relative}
+.band .track span::after{content:"✦";color:var(--gold);opacity:.6;position:absolute;right:-6px}
+@keyframes march{to{transform:translateX(-50%)}}
+
+/* ============ SECTION SHELL ============ */
+section{position:relative}
+.block{padding:110px 0}
+.sec-head{margin-bottom:56px;max-width:720px}
+.sec-head h2{
+  font-family:var(--serif);font-weight:700;color:var(--ink);
+  font-size:clamp(1.9rem,3.6vw,2.9rem);line-height:1.35;letter-spacing:.03em;
+  margin:16px 0 18px;
+}
+.sec-head p{color:var(--text-mut);font-size:1.04rem;font-weight:300;line-height:2}
+.center{text-align:center;margin-left:auto;margin-right:auto}
+.center .eyebrow{justify-content:center}
+
+/* ABOUT */
+.about{background:var(--cream)}
+.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:70px;align-items:center}
+.about-copy h2{font-family:var(--serif);font-size:clamp(1.8rem,3.4vw,2.7rem);color:var(--ink);
+  font-weight:700;line-height:1.4;margin:18px 0 22px;letter-spacing:.02em}
+.about-copy p{color:#5a5140;font-size:1.05rem;line-height:2.05;font-weight:300;margin-bottom:18px}
+.about-copy strong{color:var(--red);font-weight:500}
+.stats{display:flex;gap:14px;margin-top:34px;flex-wrap:wrap}
+.stat{flex:1;min-width:120px;border:1px solid var(--line);border-radius:3px;padding:20px 18px;background:#fff8;transition:.4s}
+.stat:hover{border-color:var(--gold);transform:translateY(-4px);box-shadow:0 18px 40px -24px rgba(169,132,63,.6)}
+.stat b{display:block;font-family:var(--serif);font-size:1.9rem;color:var(--gold-dk);line-height:1;margin-bottom:8px}
+.stat span{font-size:.85rem;color:var(--text-mut);letter-spacing:.08em}
+.about-visual{position:relative;display:flex;justify-content:center}
+.about-visual .card{
+  aspect-ratio:3/4;width:100%;max-width:360px;border-radius:4px;
+  background:linear-gradient(160deg,#211c14,#14110d);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 40px 80px -40px rgba(0,0,0,.6);position:relative;overflow:hidden;
+}
+.about-visual .card::before{content:"";position:absolute;inset:14px;border:1px solid var(--line);border-radius:2px}
+.about-visual .card img{width:66%;filter:drop-shadow(0 10px 30px rgba(0,0,0,.5))}
+.about-visual .tag{position:absolute;bottom:-16px;left:50%;transform:translateX(-50%);
+  background:var(--gold-grad);color:var(--ink);font-size:.8rem;font-weight:500;letter-spacing:.16em;
+  padding:.6em 1.6em;border-radius:2px;white-space:nowrap;box-shadow:0 12px 28px -14px rgba(169,132,63,.8)}
+
+/* SERVICES */
+.services{background:var(--paper)}
+.svc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line)}
+.svc{
+  background:var(--cream);padding:40px 32px;transition:.45s;position:relative;overflow:hidden;
+}
+.svc::before{content:"";position:absolute;left:0;top:0;height:3px;width:0;background:var(--gold-grad);transition:.45s}
+.svc:hover{background:#fff}
+.svc:hover::before{width:100%}
+.svc .no{font-family:var(--latin);font-style:italic;color:var(--gold);font-size:1.1rem;opacity:.7}
+.svc .ic{margin:14px 0 18px;color:var(--gold-dk)}
+.svc .ic svg{width:40px;height:40px;stroke-width:1.3}
+.svc h3{font-family:var(--serif);font-size:1.4rem;color:var(--ink);font-weight:600;letter-spacing:.06em;margin-bottom:6px}
+.svc .en{font-family:var(--latin);font-style:italic;color:var(--gold-dk);font-size:.95rem;letter-spacing:.08em;margin-bottom:14px}
+.svc p{color:var(--text-mut);font-size:.95rem;line-height:1.9;font-weight:300}
+
+/* PRODUCTS strip */
+.products{background:var(--ink);color:var(--text)}
+.products .sec-head h2{color:var(--cream)}
+.products .sec-head p{color:#b8ac93}
+.prod-row{display:grid;grid-template-columns:repeat(4,1fr);gap:22px}
+.prod{border:1px solid var(--line);border-radius:4px;padding:34px 26px;text-align:center;transition:.45s;background:linear-gradient(160deg,rgba(255,255,255,.02),transparent)}
+.prod:hover{border-color:var(--gold);transform:translateY(-6px);background:linear-gradient(160deg,rgba(198,161,91,.08),transparent)}
+.prod .pi{color:var(--gold);margin-bottom:16px}
+.prod .pi svg{width:44px;height:44px;stroke-width:1.2;margin:0 auto}
+.prod h4{font-family:var(--serif);font-size:1.28rem;color:var(--cream);font-weight:500;letter-spacing:.1em;margin-bottom:8px}
+.prod p{font-size:.86rem;color:#a99e86;font-weight:300;letter-spacing:.04em}
+
+/* CRAFT / WHY */
+.why{background:var(--cream)}
+.why-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:34px}
+.why-item{text-align:left}
+.why-item .n{font-family:var(--latin);font-style:italic;font-size:2.4rem;color:var(--gold);opacity:.55;line-height:1}
+.why-item h4{font-family:var(--serif);font-size:1.25rem;color:var(--ink);font-weight:600;margin:12px 0 10px;letter-spacing:.04em}
+.why-item p{color:var(--text-mut);font-size:.94rem;font-weight:300;line-height:1.9}
+.why-item .hr{width:40px;height:2px;background:var(--gold-grad);margin:16px 0}
+
+/* QUOTE TOOLS */
+.quote{background:radial-gradient(120% 100% at 20% 0%,#241f16,#14110d);color:var(--text)}
+.quote .sec-head h2{color:var(--cream)}
+.quote .sec-head p{color:#b8ac93}
+.tool-row{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.tool{
+  border:1px solid var(--line);border-radius:6px;padding:34px 30px;
+  background:linear-gradient(165deg,rgba(255,255,255,.03),transparent);
+  display:flex;flex-direction:column;transition:.45s;position:relative;overflow:hidden;
+}
+.tool:hover{border-color:var(--gold);transform:translateY(-6px);box-shadow:0 30px 60px -34px rgba(0,0,0,.8)}
+.tool .badge{align-self:flex-start;font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;
+  border:1px solid var(--line);color:var(--gold-lt);padding:.3em .8em;border-radius:20px;margin-bottom:20px}
+.tool .badge.live{background:var(--gold-grad);color:var(--ink);border-color:transparent}
+.tool h3{font-family:var(--serif);font-size:1.45rem;color:var(--cream);font-weight:600;letter-spacing:.04em;margin-bottom:10px}
+.tool p{color:#b1a58d;font-size:.94rem;font-weight:300;line-height:1.9;flex:1;margin-bottom:24px}
+.tool .go{display:inline-flex;align-items:center;gap:.5em;color:var(--gold-lt);font-weight:500;font-size:.95rem;letter-spacing:.06em;transition:.3s}
+.tool:hover .go{gap:.9em;color:var(--gold-lt)}
+.tool .go svg{width:18px;height:18px}
+
+/* MATERIALS */
+.mat{background:var(--paper)}
+.mat-grid{display:grid;grid-template-columns:.9fr 1.1fr;gap:64px;align-items:center}
+.swatches{display:flex;gap:18px;margin:8px 0 30px;flex-wrap:wrap}
+.sw{text-align:center}
+.sw .chip{width:74px;height:96px;border-radius:3px;box-shadow:0 14px 30px -16px rgba(0,0,0,.5);border:1px solid rgba(0,0,0,.06);position:relative;overflow:hidden}
+.sw .chip.foil{background:var(--gold-grad)}
+.sw .chip.wu{background:#f7f4ec}
+.sw .chip.red{background:#6f1512}
+.sw .chip.ink{background:#141210}
+.sw span{display:block;margin-top:10px;font-size:.82rem;color:var(--text-mut);letter-spacing:.1em}
+.mat-copy h2{font-family:var(--serif);font-size:clamp(1.7rem,3.2vw,2.5rem);color:var(--ink);font-weight:700;line-height:1.4;margin:16px 0 20px}
+.mat-copy p{color:#5a5140;font-size:1.03rem;line-height:2.05;font-weight:300;margin-bottom:16px}
+.mat-copy .fine{font-size:.86rem;color:var(--text-mut);border-left:2px solid var(--gold);padding-left:16px;margin-top:24px;line-height:1.9}
+
+/* CONTACT */
+.contact{background:var(--ink);color:var(--text)}
+.contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:stretch}
+.contact .sec-head h2{color:var(--cream)}
+.contact .sec-head p{color:#b8ac93}
+.cinfo{display:flex;flex-direction:column;gap:4px}
+.cline{display:flex;gap:18px;padding:22px 0;border-bottom:1px solid rgba(198,161,91,.16);align-items:flex-start}
+.cline:first-of-type{border-top:1px solid rgba(198,161,91,.16)}
+.cline .ci{color:var(--gold);flex-shrink:0;margin-top:3px}
+.cline .ci svg{width:22px;height:22px;stroke-width:1.4}
+.cline .lbl{font-size:.72rem;letter-spacing:.24em;text-transform:uppercase;color:var(--gold-dk);margin-bottom:4px}
+.cline .val{color:var(--cream);font-size:1.06rem;font-weight:400}
+.cline .val a:hover{color:var(--gold-lt)}
+.cmap{border-radius:6px;overflow:hidden;border:1px solid var(--line);min-height:340px;filter:grayscale(.3) contrast(1.05)}
+.cmap iframe{width:100%;height:100%;min-height:340px;border:0;display:block}
+.contact-cta{margin-top:30px;display:flex;gap:14px;flex-wrap:wrap}
+
+/* FOOTER */
+footer{background:#0d0b08;color:#8a7f6b;padding:64px 0 30px;border-top:1px solid var(--line)}
+.foot-top{display:flex;justify-content:space-between;align-items:flex-start;gap:40px;flex-wrap:wrap;padding-bottom:40px;border-bottom:1px solid rgba(198,161,91,.14)}
+.foot-brand img{height:56px;margin-bottom:18px}
+.foot-brand p{max-width:34ch;font-size:.9rem;font-weight:300;line-height:1.9}
+.foot-links{display:flex;gap:60px;flex-wrap:wrap}
+.foot-col h5{font-family:var(--serif);color:var(--gold-lt);font-size:.95rem;letter-spacing:.16em;margin-bottom:16px;font-weight:500}
+.foot-col a,.foot-col p{display:block;font-size:.88rem;color:#8a7f6b;margin-bottom:10px;font-weight:300;transition:.3s}
+.foot-col a:hover{color:var(--gold-lt)}
+.foot-bot{display:flex;justify-content:space-between;align-items:center;gap:16px;padding-top:26px;flex-wrap:wrap;font-size:.8rem;letter-spacing:.06em}
+.foot-bot .latin{font-family:var(--latin);font-style:italic;color:var(--gold);letter-spacing:.2em}
+
+/* reveal */
+.reveal{opacity:0;transform:translateY(34px);transition:.9s cubic-bezier(.2,.7,.2,1)}
+.reveal.in{opacity:1;transform:none}
+.reveal.d1{transition-delay:.08s}.reveal.d2{transition-delay:.16s}.reveal.d3{transition-delay:.24s}.reveal.d4{transition-delay:.32s}
+
+/* ============ RESPONSIVE ============ */
+@media(max-width:940px){
+  .hero-grid{grid-template-columns:1fr;gap:10px;padding:130px 0 80px;text-align:center}
+  .hero-copy .eyebrow,.hero-cta{justify-content:center}
+  .hero p.lead{margin-left:auto;margin-right:auto}
+  .hero-seal{order:-1;margin-bottom:20px}
+  .hero-seal img{width:min(64%,300px)}
+  .hero-stamp{display:none}
+  .about-grid,.mat-grid,.contact-grid{grid-template-columns:1fr;gap:44px}
+  .svc-grid{grid-template-columns:repeat(2,1fr)}
+  .prod-row,.why-grid,.tool-row{grid-template-columns:repeat(2,1fr)}
+  .about-visual{order:-1}
+}
+@media(max-width:640px){
+  .wrap{padding:0 20px}
+  .menu{
+    position:fixed;inset:0 0 0 auto;width:min(78vw,320px);
+    flex-direction:column;justify-content:center;gap:30px;
+    background:rgba(20,17,13,.98);backdrop-filter:blur(16px);
+    transform:translateX(100%);transition:.45s;padding:40px;
+    border-left:1px solid var(--line);
+  }
+  .menu.open{transform:none}
+  .menu a{font-size:1.15rem}
+  .menu .btn{width:100%;justify-content:center}
+  .burger{display:flex}
+  .block{padding:78px 0}
+  .svc-grid,.prod-row,.why-grid,.tool-row{grid-template-columns:1fr}
+  .stats{gap:10px}
+  .hero h1{font-size:2.35rem}
+  .band .track span{font-size:.9rem;padding:0 20px}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ HEADER ============ -->
+<header id="hd">
+  <div class="wrap nav">
+    <a href="#top" class="brand" aria-label="喜成燙金印刷">
+      <img src="assets/seal-only-gold.png" alt="喜成印記" />
+      <span class="bt"><b>喜成燙金印刷</b><span>C Cheng Enterprise</span></span>
+    </a>
+    <nav class="menu" id="menu">
+      <a href="#about">關於喜成</a>
+      <a href="#services">工藝服務</a>
+      <a href="#products">品項</a>
+      <a href="#quote">線上報價</a>
+      <a href="#contact">聯絡我們</a>
+      <a href="#quote" class="btn">立即詢價</a>
+    </nav>
+    <div class="burger" id="burger" aria-label="選單"><span></span><span></span><span></span></div>
+  </div>
+</header>
+
+<!-- ============ HERO ============ -->
+<section class="hero" id="top">
+  <div class="grain"></div>
+  <div class="wrap hero-grid">
+    <div class="hero-copy">
+      <span class="eyebrow reveal in">高雄 · 阿蓮 ｜ 印刷後加工工廠</span>
+      <h1 class="reveal in d1">以火與金，<br><span class="gold-text">成一張紙的體面。</span></h1>
+      <div class="latin-sub reveal in d2">Foil&nbsp;·&nbsp;Emboss&nbsp;·&nbsp;Die-cut</div>
+      <p class="lead reveal in d2">喜成燙金印刷，專注於燙金、打凸、軋型與印刷後加工。<br>職人手感、小量彈性，為每一份名片、紙袋與紙盒，鍍上被記住的細節。</p>
+      <div class="hero-cta reveal in d3">
+        <a href="#quote" class="btn">線上報價試算 →</a>
+        <a href="#services" class="btn ghost">看看我們的工藝</a>
+      </div>
+    </div>
+    <div class="hero-seal reveal in d2">
+      <div class="ring"></div>
+      <div class="ring r2"></div>
+      <img src="assets/seal-gold.png" alt="喜成燙金印刷 品牌印記" />
+    </div>
+  </div>
+  <div class="hero-stamp">C CHENG ENTERPRISE · KAOHSIUNG</div>
+  <div class="scroll-hint">SCROLL<div class="bar"></div></div>
+</section>
+
+<!-- ============ MARQUEE ============ -->
+<div class="band">
+  <div class="track">
+    <span>燙金 FOIL STAMPING</span><span>打凸 EMBOSSING</span><span>軋型 DIE-CUTTING</span><span>印刷 PRINTING</span><span>水晶膜 CRYSTAL DOME</span><span>糊盒糊袋 GLUING</span>
+    <span>燙金 FOIL STAMPING</span><span>打凸 EMBOSSING</span><span>軋型 DIE-CUTTING</span><span>印刷 PRINTING</span><span>水晶膜 CRYSTAL DOME</span><span>糊盒糊袋 GLUING</span>
+  </div>
+</div>
+
+<!-- ============ ABOUT ============ -->
+<section class="about block" id="about">
+  <div class="wrap about-grid">
+    <div class="about-copy">
+      <span class="eyebrow reveal">壹 · 關於喜成</span>
+      <h2 class="reveal d1">南台灣的燙金職人，<br>把後加工做成一門手藝。</h2>
+      <p class="reveal d1">喜成燙金印刷（<strong>喜成企業社</strong>）座落於高雄阿蓮，是一間專注提升質感的工廠。我們相信，一張紙的價值，往往決定在最後一道工序——燙上的那層金、壓出的那道凸、切出的那個型。</p>
+      <p class="reveal d2">讓我們把每一批作品都當作自己的藝術品。從打樣、對位到燙印，親手盯著每一個細節，只為交出讓客戶願意遞出去的那份體面。</p>
+      <div class="stats reveal d2">
+        <div class="stat"><b>統編</b><span>92100012 · 喜成企業社</span></div>
+        <div class="stat"><b>高雄</b><span>阿蓮 · 在地生產</span></div>
+        <div class="stat"><b>品質</b><span>道道把關 · 細節到位</span></div>
+      </div>
+    </div>
+    <div class="about-visual reveal d1">
+      <div class="card">
+        <img src="assets/logo-vert-gold.png" alt="喜成燙金印刷 品牌識別" />
+        <div class="tag">職人 · 燙金 · 後加工</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SERVICES ============ -->
+<section class="services block" id="services">
+  <div class="wrap">
+    <div class="sec-head center">
+      <span class="eyebrow reveal">貳 · 工藝服務</span>
+      <h2 class="reveal d1">六道工序，成就一份被記住的印刷品</h2>
+      <p class="reveal d1">從一張平面的紙，到有溫度、有層次的成品——喜成把每一道後加工，做到位。</p>
+    </div>
+    <div class="svc-grid reveal d1">
+      <div class="svc">
+        <div class="no">01</div>
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2l2.4 6.4L21 9l-5 4.2L17.6 20 12 16.3 6.4 20 8 13.2 3 9l6.6-.6L12 2z"/></svg></div>
+        <h3>燙金・燙印</h3>
+        <div class="en">Foil Stamping</div>
+        <p>金、銀、鐳射、雷射與各色電化鋁箔燙印。喜成的看家本領，讓 logo 與字體在光下閃出質感。</p>
+      </div>
+      <div class="svc">
+        <div class="no">02</div>
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="8" width="18" height="8" rx="1"/><path d="M8 8V5h8v3M8 16v3h8v-3"/></svg></div>
+        <h3>打凸・打凹</h3>
+        <div class="en">Emboss / Deboss</div>
+        <p>以鋼模施壓，讓圖文浮起或凹陷。純壓凸的素雅，或搭配燙金的雙重立體，觸手皆是細節。</p>
+      </div>
+      <div class="svc">
+        <div class="no">03</div>
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 3v8a3 3 0 006 0M18 3v8a3 3 0 01-6 0"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="18" r="3"/></svg></div>
+        <h3>軋型・模切</h3>
+        <div class="en">Die-cutting</div>
+        <p>依設計開刀模，切出異形、圓角、鏤空與折線。讓紙盒、吊卡、卡片跳脫方正的框架。</p>
+      </div>
+      <div class="svc">
+        <div class="no">04</div>
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="4" y="4" width="16" height="16" rx="1"/><path d="M4 9h16M9 9v11"/></svg></div>
+        <h3>印刷</h3>
+        <div class="en">Printing</div>
+        <p>合版與獨立版印刷，銜接後加工一條龍。從印刷到燙金、軋型，交期與品質一手掌握。</p>
+      </div>
+      <div class="svc">
+        <div class="no">05</div>
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 3C7 3 3 7 3 12s4 9 9 9 9-4 9-9"/><path d="M12 7a5 5 0 00-5 5" opacity=".6"/></svg></div>
+        <h3>水晶膜</h3>
+        <div class="en">Crystal Dome</div>
+        <p>局部滴上透明樹脂，形成飽滿的水晶膜光澤，讓 logo 與標貼立體、耐磨、更有質感。</p>
+      </div>
+      <div class="svc">
+        <div class="no">06</div>
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 8l8-5 8 5v9l-8 5-8-5V8z"/><path d="M4 8l8 5 8-5M12 13v9"/></svg></div>
+        <h3>糊盒・糊袋・提繩</h3>
+        <div class="en">Gluing &amp; Finishing</div>
+        <p>紙盒成型糊貼、紙袋糊帶與穿繩，成品直接可用。後段加工一次備齊，省去轉手的時間。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PRODUCTS ============ -->
+<section class="products block" id="products">
+  <div class="wrap">
+    <div class="sec-head center">
+      <span class="eyebrow reveal">參 · 常見品項</span>
+      <h2 class="reveal d1">我們最擅長的四種紙上作品</h2>
+      <p class="reveal d1">不論單一工序，或印刷到成品的一條龍，都能交給喜成。</p>
+    </div>
+    <div class="prod-row reveal d1">
+      <div class="prod">
+        <div class="pi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="6" width="18" height="12" rx="1.5"/><path d="M7 15h6M7 11h10" opacity=".7"/></svg></div>
+        <h4>名片</h4>
+        <p>燙金・壓凸・特殊紙</p>
+      </div>
+      <div class="prod">
+        <div class="pi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 8h12l-1 12H7L6 8z"/><path d="M9 8V6a3 3 0 016 0v2"/></svg></div>
+        <h4>紙袋</h4>
+        <p>手提袋・包裝袋</p>
+      </div>
+      <div class="prod">
+        <div class="pi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 8l9-5 9 5-9 5-9-5z"/><path d="M3 8v8l9 5 9-5V8M12 13v8" opacity=".8"/></svg></div>
+        <h4>紙盒</h4>
+        <p>禮盒・包材・彩盒</p>
+      </div>
+      <div class="prod">
+        <div class="pi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M8 8h8M8 12h8M8 16h5" opacity=".7"/></svg></div>
+        <h4>DM・卡類</h4>
+        <p>吊卡・邀請卡・型錄</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ WHY ============ -->
+<section class="why block">
+  <div class="wrap">
+    <div class="sec-head center">
+      <span class="eyebrow reveal">肆 · 為什麼選喜成</span>
+      <h2 class="reveal d1">小工廠的堅持，藏在你摸得到的地方</h2>
+    </div>
+    <div class="why-grid">
+      <div class="why-item reveal d1"><div class="n">壹</div><div class="hr"></div><h4>職人手感</h4><p>親手對位、盯樣，燙金位置與壓力寸寸講究，不把細節交給運氣。</p></div>
+      <div class="why-item reveal d2"><div class="n">貳</div><div class="hr"></div><h4>小量彈性</h4><p>少量也接、急件也談。不用被大廠的起訂量綁住，一盒名片也能燙得漂亮。</p></div>
+      <div class="why-item reveal d3"><div class="n">參</div><div class="hr"></div><h4>一條龍</h4><p>印刷、燙金、打凸、軋型到糊盒穿繩，同一間完成，少一次轉手就少一分誤差。</p></div>
+      <div class="why-item reveal d4"><div class="n">肆</div><div class="hr"></div><h4>在地即時</h4><p>高雄阿蓮自有工廠，溝通直接、回覆快，改稿與確認不必等上好幾天。</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ QUOTE TOOLS ============ -->
+<section class="quote block" id="quote">
+  <div class="wrap">
+    <div class="sec-head center">
+      <span class="eyebrow reveal">伍 · 線上報價</span>
+      <h2 class="reveal d1">價格，先自己算算看</h2>
+      <p class="reveal d1">喜成自建的線上試算工具，輸入規格即時估價，透明、快速，不必來回等報價單。</p>
+    </div>
+    <div class="tool-row">
+      <div class="tool reveal d1">
+        <span class="badge live">已上線</span>
+        <h3>名片線上報價</h3>
+        <p>選紙材、磅數、數量與燙金打凸加工，即時算出名片價格。設計師與客戶自助試算的好幫手。</p>
+        <a class="go" href="https://xicheng-cards.netlify.app" target="_blank" rel="noopener">開始試算 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      </div>
+      <div class="tool reveal d2">
+        <span class="badge live">已上線</span>
+        <h3>同業燙金・打凸代工報價</h3>
+        <p>專為同業設計的代工估價工具。輸入版數、尺寸與加工方式，快速抓出燙金與打凸的工繳成本。</p>
+        <a class="go" href="https://xicheng-daigong-quote.netlify.app" target="_blank" rel="noopener">開始試算 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      </div>
+      <div class="tool reveal d3">
+        <span class="badge">內測中</span>
+        <h3>紙袋線上報價</h3>
+        <p>整合紙材牌價、印刷與後加工的全自動紙袋試算工具，正在最後測試。搶先體驗歡迎直接聯絡我們。</p>
+        <a class="go" href="#contact">搶先詢問 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MATERIALS ============ -->
+<section class="mat block">
+  <div class="wrap mat-grid">
+    <div class="mat-copy">
+      <span class="eyebrow reveal">陸 · 材質與箔色</span>
+      <h2 class="reveal d1">紙選對了，<br>燙金才會發光。</h2>
+      <p class="reveal d1">我們與恆成紙業合作，常用羅莎紙等質感紙材。同一款設計，換一種紙色與箔色，就是完全不同的氣質。</p>
+      <div class="swatches reveal d2">
+        <div class="sw"><div class="chip foil"></div><span>燙金箔</span></div>
+        <div class="sw"><div class="chip wu"></div><span>白 · 無垢</span></div>
+        <div class="sw"><div class="chip red"></div><span>濃赤</span></div>
+        <div class="sw"><div class="chip ink"></div><span>漆黑</span></div>
+      </div>
+      <p class="fine reveal d2">羅莎紙 151g 提供「白（無垢）、濃赤、漆黑」等紙色，搭配不同箔色燙印，呈現紙材上豐富的層次。金箔可依需求指定箔號，做出你想要的那種金。</p>
+    </div>
+    <div class="mat-copy reveal d1" style="display:flex;justify-content:center">
+      <div style="width:100%;max-width:380px;aspect-ratio:9/11;border-radius:6px;background:linear-gradient(155deg,#faf7f0,#efe8da);box-shadow:0 40px 80px -40px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;border:1px solid rgba(0,0,0,.05);position:relative">
+        <div style="position:absolute;inset:16px;border:1px solid var(--line);border-radius:3px"></div>
+        <img src="assets/seal-only-ink.png" alt="喜成印記" style="width:52%;opacity:.92" />
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CONTACT ============ -->
+<section class="contact block" id="contact">
+  <div class="wrap">
+    <div class="sec-head center">
+      <span class="eyebrow reveal">柒 · 聯絡我們</span>
+      <h2 class="reveal d1">有一份想做得漂亮的印刷品？</h2>
+      <p class="reveal d1">把你的想法、規格或設計檔傳給我們，喜成陪你把細節燙上去。</p>
+    </div>
+    <div class="contact-grid">
+      <div class="reveal d1">
+        <div class="cinfo">
+          <div class="cline">
+            <div class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 21s-7-6.2-7-11a7 7 0 0114 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></div>
+            <div><div class="lbl">工廠地址 · Address</div><div class="val">高雄市阿蓮區峰園路 58 號<br><span style="font-size:.86rem;color:#a99e86">No. 58, Fengyuan Rd., Alian Dist., Kaohsiung City 822009</span></div></div>
+          </div>
+          <div class="cline">
+            <div class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z"/></svg></div>
+            <div><div class="lbl">電話 · Phone</div><div class="val"><a href="tel:+886986990812">0986-990-812</a></div></div>
+          </div>
+          <div class="cline">
+            <div class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg></div>
+            <div><div class="lbl">Instagram</div><div class="val"><a href="https://instagram.com/c_cheng_c888" target="_blank" rel="noopener">@c_cheng_c888</a></div></div>
+          </div>
+        </div>
+        <div class="contact-cta">
+          <a href="tel:+886986990812" class="btn">撥打電話</a>
+          <a href="https://instagram.com/c_cheng_c888" target="_blank" rel="noopener" class="btn ghost">追蹤 IG →</a>
+        </div>
+      </div>
+      <div class="cmap reveal d2">
+        <iframe title="喜成燙金印刷 地圖" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
+          src="https://maps.google.com/maps?q=%E9%AB%98%E9%9B%84%E5%B8%82%E9%98%BF%E8%93%AE%E5%8D%80%E5%B3%B0%E5%9C%92%E8%B7%AF58%E8%99%9F&t=&z=15&ie=UTF8&iwloc=&output=embed"></iframe>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer>
+  <div class="wrap">
+    <div class="foot-top">
+      <div class="foot-brand">
+        <img src="assets/logo-horiz-gold.png" alt="喜成燙金印刷 C Cheng Enterprise" />
+        <p>喜成燙金印刷 · 喜成企業社。座落高雄阿蓮的印刷後加工職人工廠，專精燙金、打凸、軋型與印刷後加工。</p>
+      </div>
+      <div class="foot-links">
+        <div class="foot-col">
+          <h5>網站導覽</h5>
+          <a href="#about">關於喜成</a>
+          <a href="#services">工藝服務</a>
+          <a href="#products">常見品項</a>
+          <a href="#quote">線上報價</a>
+        </div>
+        <div class="foot-col">
+          <h5>線上工具</h5>
+          <a href="https://xicheng-cards.netlify.app" target="_blank" rel="noopener">名片報價 →</a>
+          <a href="https://xicheng-daigong-quote.netlify.app" target="_blank" rel="noopener">同業代工報價 →</a>
+          <a href="#quote">紙袋報價（內測）</a>
+        </div>
+        <div class="foot-col">
+          <h5>聯絡</h5>
+          <a href="tel:+886986990812">0986-990-812</a>
+          <a href="https://instagram.com/c_cheng_c888" target="_blank" rel="noopener">@c_cheng_c888</a>
+          <p>高雄市阿蓮區峰園路 58 號</p>
+        </div>
+      </div>
+    </div>
+    <div class="foot-bot">
+      <div>© 2026 喜成燙金印刷 · 喜成企業社（統編 92100012）. All rights reserved.</div>
+      <div class="latin">C CHENG ENTERPRISE</div>
+    </div>
+  </div>
+</footer>
+
+<script>
+// header scroll state
+const hd=document.getElementById('hd');
+addEventListener('scroll',()=>hd.classList.toggle('scrolled',scrollY>40),{passive:true});
+// mobile menu
+const burger=document.getElementById('burger'),menu=document.getElementById('menu');
+burger.addEventListener('click',()=>menu.classList.toggle('open'));
+menu.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>menu.classList.remove('open')));
+// reveal on scroll
+const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})},{threshold:.14});
+document.querySelectorAll('.reveal:not(.in)').forEach(el=>io.observe(el));
+</script>
+</body>
+</html>
