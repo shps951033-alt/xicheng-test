@@ -50,8 +50,11 @@ header{position:fixed;inset:0 0 auto 0;z-index:100;padding:14px 0;background:rgb
 .menu a:hover::after{width:100%}
 .menu a.on{color:var(--gold-lt)}
 .menu a.on::after{width:100%}
-.burger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:6px}
+.burger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:6px;position:relative;z-index:120}
 .burger span{width:26px;height:2px;background:var(--gold-lt);transition:.3s}
+.burger.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+.burger.open span:nth-child(2){opacity:0}
+.burger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
 
 /* PAGE HERO */
 .page-hero{background:radial-gradient(120% 100% at 75% 0%,#2a241a 0%,#14110d 60%,#0d0b08 100%);color:var(--text);padding:150px 0 64px;position:relative;overflow:hidden}
