@@ -298,6 +298,8 @@ section{position:relative}
 .svc h3{font-family:var(--serif);font-size:1.4rem;color:var(--ink);font-weight:600;letter-spacing:.06em;margin-bottom:6px}
 .svc .en{font-family:var(--latin);font-style:italic;color:var(--gold-dk);font-size:.95rem;letter-spacing:.08em;margin-bottom:14px}
 .svc p{color:var(--text-mut);font-size:.95rem;line-height:1.9;font-weight:300}
+.svc .more{display:inline-block;margin-top:14px;color:var(--gold-dk);font-size:.88rem;font-weight:500;letter-spacing:.08em;transition:.3s}
+.svc:hover .more{color:var(--gold);letter-spacing:.14em}
 
 /* PRODUCTS strip */
 .products{background:var(--ink);color:var(--text);position:relative;overflow:hidden}
@@ -553,6 +555,7 @@ footer{background:#0d0b08;color:#8a7f6b;padding:64px 0 30px;border-top:1px solid
         <h3>燙金・烙印</h3>
         <div class="en">Foil Stamping</div>
         <p>各種金屬光澤顏色燙印。喜成的看家本領，運用印刷工藝讓圖案或文字在光下閃出質感。</p>
+        <a class="more" href="foil/">深入了解 →</a>
       </div>
       <div class="svc">
         <div class="no">02</div>
@@ -560,6 +563,7 @@ footer{background:#0d0b08;color:#8a7f6b;padding:64px 0 30px;border-top:1px solid
         <h3>打凸・打凹</h3>
         <div class="en">Emboss / Deboss</div>
         <p>以鋼模施壓，讓圖文浮起或凹陷。純壓凸的素雅，或搭配燙金的雙重立體，觸手皆是細節。</p>
+        <a class="more" href="emboss/">深入了解 →</a>
       </div>
       <div class="svc">
         <div class="no">03</div>
@@ -567,6 +571,7 @@ footer{background:#0d0b08;color:#8a7f6b;padding:64px 0 30px;border-top:1px solid
         <h3>軋型・模切</h3>
         <div class="en">Die-cutting</div>
         <p>依設計開刀模，切出異形、圓角、鏤空與折線。讓紙盒、吊卡、卡片跳脫方正的框架。</p>
+        <a class="more" href="diecut/">深入了解 →</a>
       </div>
       <div class="svc">
         <div class="no">04</div>
@@ -574,6 +579,7 @@ footer{background:#0d0b08;color:#8a7f6b;padding:64px 0 30px;border-top:1px solid
         <h3>印刷</h3>
         <div class="en">Printing</div>
         <p>合版與獨立版印刷，銜接後加工一條龍。從印刷到燙金、軋型，交期與品質一手掌握。</p>
+        <a class="more" href="box-bag/">深入了解 →</a>
       </div>
       <div class="svc">
         <div class="no">05</div>
@@ -581,6 +587,7 @@ footer{background:#0d0b08;color:#8a7f6b;padding:64px 0 30px;border-top:1px solid
         <h3>水晶貼</h3>
         <div class="en">Crystal Sticker</div>
         <p>免開版的微浮雕轉印貼，貼上撕膜後只留圖案、沒有透明底邊，能讓您的物品一秒做出像專櫃一樣的印刷質感！價格極低、數量極少也可印，讓你不再為少量印刷品煩惱。</p>
+        <a class="more" href="faq/">深入了解 →</a>
       </div>
       <div class="svc">
         <div class="no">06</div>
@@ -588,6 +595,7 @@ footer{background:#0d0b08;color:#8a7f6b;padding:64px 0 30px;border-top:1px solid
         <h3>糊盒・糊袋・提繩</h3>
         <div class="en">Gluing &amp; Finishing</div>
         <p>紙盒成型糊貼、紙袋糊帶與穿繩，成品直接可用。後段加工一次備齊，省去轉手的時間。</p>
+        <a class="more" href="box-bag/">深入了解 →</a>
       </div>
     </div>
   </div>
@@ -829,14 +837,16 @@ document.addEventListener('click',e=>{if(menu.classList.contains('open')&&!menu.
 // reveal on scroll
 const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})},{threshold:.14});
 document.querySelectorAll('.reveal:not(.in)').forEach(el=>io.observe(el));
-// 工藝服務卡片 → 點擊跳到作品集
-const gallery=document.getElementById('gallery');
+// 工藝服務卡片 → 點擊進對應知識頁（連結取卡片內的「深入了解」）
 document.querySelectorAll('.svc').forEach(el=>{
+  const link=el.querySelector('.more');
+  if(!link)return;
   el.style.cursor='pointer';
   el.setAttribute('role','link');
   el.setAttribute('tabindex','0');
-  el.addEventListener('click',()=>gallery.scrollIntoView());
-  el.addEventListener('keydown',ev=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();gallery.scrollIntoView();}});
+  const go=()=>{location.href=link.getAttribute('href')};
+  el.addEventListener('click',ev=>{if(ev.target!==link)go();});
+  el.addEventListener('keydown',ev=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();go();}});
 });
 // 作品集照片 → 點擊跳到線上報價
 const quote=document.getElementById('quote');
