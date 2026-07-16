@@ -607,31 +607,21 @@ function syncAlign(){ applyZoneAlign(); fitFoil(); }
 document.querySelectorAll('input[name=align],input[name=talign]').forEach(function(r){ r.addEventListener('change',syncAlign); });
 
 /* ---------- 燙金字體 ---------- */
-/* 標楷體是 Windows 系統字，手機／Mac 多半沒有 → 沒偵測到才去載 cwTeXKai 網路楷書字型，
-   讓顧客在手機上也看得到楷書示意。實際燙金字體以完稿檔為準。 */
+/* 沒有任何一款標楷體是 Windows 與 iOS 都內建的（Windows＝DFKai-SB、iOS 的 Kaiti TC 屬
+   「可下載字型」網頁抓不到）→ 楷書一律用網路字型 LXGW WenKai TC（霞鶩文楷，開源可商用），
+   各平台長相一致。Google 已把它切成 115 片 woff2（每片約 50KB），瀏覽器只下載實際用到
+   的字所在的切片，選了才載。實際燙金字體以完稿檔為準。 */
 var FONTS=[
   {n:'黑體',   css:"'Noto Sans TC',sans-serif"},
-  {n:'標楷體', css:"'標楷體','DFKai-SB','BiauKai','cwTeXKai','Noto Serif TC',serif", kai:true}
+  {n:'標楷體', css:"'LXGW WenKai TC','標楷體','DFKai-SB','BiauKai',serif", kai:true}
 ];
-function hasLocalFont(name){
-  var s=document.createElement('span');
-  s.style.cssText='position:absolute;left:-9999px;top:-9999px;font-size:72px;white-space:nowrap';
-  s.textContent='喜成印刷燙金2027';
-  s.style.fontFamily='monospace'; document.body.appendChild(s);
-  var w0=s.offsetWidth;
-  s.style.fontFamily='"'+name+'",monospace';
-  var w1=s.offsetWidth;
-  document.body.removeChild(s);
-  return w1!==w0;
-}
 var kaiAsked=false;
 function ensureKaiFont(){
   if(kaiAsked) return;
   kaiAsked=true;
-  if(hasLocalFont('標楷體')||hasLocalFont('DFKai-SB')||hasLocalFont('BiauKai')) return;  // 本機有就不必下載
   var l=document.createElement('link');
   l.rel='stylesheet';
-  l.href='https://fonts.googleapis.com/earlyaccess/cwtexkai.css';
+  l.href='https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC&display=swap';
   l.onload=function(){ if(document.fonts&&document.fonts.ready) document.fonts.ready.then(fitFoil); };
   document.head.appendChild(l);
 }
@@ -644,6 +634,7 @@ FONTS.forEach(function(f,i){
   lb.appendChild(ip);
   lb.appendChild(document.createTextNode(f.n));
   lb.style.fontFamily=f.css;                    // 選項本身就用該字體顯示，直接看得出差別
+  if(f.kai) ensureKaiFont();                    // 選項要長得像楷書，字型就得先載（只會多載「標楷體」三個字的切片）
   fontBox.appendChild(lb);
 });
 function curFont(){
