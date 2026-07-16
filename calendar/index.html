@@ -104,14 +104,20 @@ textarea{min-height:88px;resize:vertical}
   border-radius:3px;padding:0 8px}
 .fp-zone.onmock{position:absolute;aspect-ratio:18 / 2.3;transform:translateY(-50%);
   border:1px dashed rgba(255,255,255,.28);border-radius:2px;padding:0 4px;background:none}
-.fp-zone span{display:block;width:100%;white-space:pre-line;word-break:break-word;
+/* 文字區塊：寬度依內容縮放，才能把「區塊位置」與「文字對齊」拆成兩件事 */
+.fp-zone span{display:block;max-width:100%;min-width:0;white-space:pre-line;word-break:break-word;
   font-weight:700;line-height:1.22;
   background:linear-gradient(115deg,var(--gold-2),var(--gold-1) 50%,var(--gold-2));
   -webkit-background-clip:text;background-clip:text;color:transparent;
   filter:drop-shadow(0 1px 0 rgba(90,70,40,.22))}
-.fp-zone.c{text-align:center}
-.fp-zone.l{text-align:left}
-.fp-zone.r{text-align:right}
+/* 燙金排版＝整塊文字擺在底板的哪個位置 */
+.fp-zone.pos-c{justify-content:center}
+.fp-zone.pos-l{justify-content:flex-start}
+.fp-zone.pos-r{justify-content:flex-end}
+/* 文字對齊＝多行文字彼此之間怎麼對齊 */
+.fp-zone.txt-c span{text-align:center}
+.fp-zone.txt-l span{text-align:left}
+.fp-zone.txt-r span{text-align:right}
 .foilpv .cap{font-size:11.5px;color:var(--ink-soft);text-align:center;margin-top:8px;line-height:1.8}
 .foilpv .cap b{color:var(--gold-2)}
 .foilpv .cap b.warn{color:#B4483C}
@@ -252,24 +258,39 @@ footer .gl{color:var(--gold-2)}
     <p class="hint">螢幕顏色僅供參考，實際以燙金箔樣品為準。</p>
   </div>
 
-  <!-- 燙金排版（勾選燙金才出現） -->
+  <!-- 燙金字體（勾選燙金才出現） -->
+  <div class="field" id="fFont">
+    <label class="t">燙金字體<small>（點選看示意圖）</small></label>
+    <div class="opts" id="foilFont"></div>
+  </div>
+
+  <!-- 燙金排版＋文字對齊（勾選燙金才出現） -->
   <div class="field" id="fAlign">
-    <label class="t">燙金排版<small>（點選看示意圖）</small></label>
+    <label class="t">燙金排版<small>（整塊文字擺在底板的哪個位置）</small></label>
     <div class="opts" id="align">
       <label><input type="radio" name="align" value="底板置中" checked>底板置中</label>
       <label><input type="radio" name="align" value="底板靠左">底板靠左</label>
       <label><input type="radio" name="align" value="底板靠右">底板靠右</label>
     </div>
+
+    <label class="t" style="margin-top:16px">文字對齊<small>（打兩行以上時，行與行之間怎麼對齊）</small></label>
+    <div class="opts" id="talign">
+      <label><input type="radio" name="talign" value="文字置中" checked>文字置中</label>
+      <label><input type="radio" name="talign" value="文字左齊">文字左齊</label>
+      <label><input type="radio" name="talign" value="文字右齊">文字右齊</label>
+    </div>
+
     <div class="foilpv">
       <div class="fp-dim" id="fpDim">← 18 cm →</div>
       <div class="fp-stage" id="fpStage">
         <img id="fpMockImg" alt="款式底板示意" style="display:none">
-        <div class="fp-zone generic c" id="fpZone"><span id="fpText">您的 LOGO／文字</span></div>
+        <div class="fp-zone generic pos-c txt-c" id="fpZone"><span id="fpText">您的 LOGO／文字</span></div>
       </div>
       <div class="cap">
         <span id="fpMode">選擇款式後，會顯示該款桌曆的底板示意。</span><br>
         底板燙金範圍 <b>18 × 2.3 cm</b><br>
-        位置：<b id="fpCap">置中</b>　字高：<b id="fpSize">—</b>
+        位置：<b id="fpCap">置中</b>　對齊：<b id="fpTCap">置中</b><br>
+        字體：<b id="fpFCap">黑體</b>　字高：<b id="fpSize">—</b>
       </div>
     </div>
   </div>
@@ -502,8 +523,11 @@ var fpZone=document.getElementById('fpZone'),fpText=document.getElementById('fpT
     fpCap=document.getElementById('fpCap'),fpSize=document.getElementById('fpSize'),
     foilChk=document.getElementById('foil'),foilTextEl=document.getElementById('foilText'),
     fpMockImg=document.getElementById('fpMockImg'),fpDim=document.getElementById('fpDim'),
-    fpMode=document.getElementById('fpMode');
-var ALIGN={'底板置中':['c','置中'],'底板靠左':['l','靠左'],'底板靠右':['r','靠右']};
+    fpMode=document.getElementById('fpMode'),fpTCap=document.getElementById('fpTCap'),
+    fpFCap=document.getElementById('fpFCap');
+/* 排版＝整塊文字在底板上的位置；對齊＝多行文字彼此之間的對齊。兩者獨立。 */
+var ALIGN={'底板置中':['pos-c','置中'],'底板靠左':['pos-l','靠左'],'底板靠右':['pos-r','靠右']};
+var TALIGN={'文字置中':['txt-c','置中'],'文字左齊':['txt-l','左齊'],'文字右齊':['txt-r','右齊']};
 var zoneMock=false;
 
 /* 燙金示意用哪一款：以點選的款為主；該款若已不在訂單內，退回第一款有訂的 */
@@ -571,13 +595,68 @@ function syncColor(){
   fpText.style.backgroundImage=curColor().css;   // 示意圖文字直接變成該燙金色
 }
 
+function curAlign(){ return document.querySelector('input[name=align]:checked').value; }
+function curTAlign(){ return document.querySelector('input[name=talign]:checked').value; }
 function applyZoneAlign(){
-  var a=ALIGN[document.querySelector('input[name=align]:checked').value];
-  fpZone.className='fp-zone '+(zoneMock?'onmock':'generic')+' '+a[0];
+  var a=ALIGN[curAlign()], t=TALIGN[curTAlign()];
+  fpZone.className='fp-zone '+(zoneMock?'onmock':'generic')+' '+a[0]+' '+t[0];
   fpCap.textContent=a[1];
+  fpTCap.textContent=t[1];
 }
 function syncAlign(){ applyZoneAlign(); fitFoil(); }
-document.querySelectorAll('input[name=align]').forEach(function(r){ r.addEventListener('change',syncAlign); });
+document.querySelectorAll('input[name=align],input[name=talign]').forEach(function(r){ r.addEventListener('change',syncAlign); });
+
+/* ---------- 燙金字體 ---------- */
+/* 標楷體是 Windows 系統字，手機／Mac 多半沒有 → 沒偵測到才去載 cwTeXKai 網路楷書字型，
+   讓顧客在手機上也看得到楷書示意。實際燙金字體以完稿檔為準。 */
+var FONTS=[
+  {n:'黑體',   css:"'Noto Sans TC',sans-serif"},
+  {n:'標楷體', css:"'標楷體','DFKai-SB','BiauKai','cwTeXKai','Noto Serif TC',serif", kai:true}
+];
+function hasLocalFont(name){
+  var s=document.createElement('span');
+  s.style.cssText='position:absolute;left:-9999px;top:-9999px;font-size:72px;white-space:nowrap';
+  s.textContent='喜成印刷燙金2027';
+  s.style.fontFamily='monospace'; document.body.appendChild(s);
+  var w0=s.offsetWidth;
+  s.style.fontFamily='"'+name+'",monospace';
+  var w1=s.offsetWidth;
+  document.body.removeChild(s);
+  return w1!==w0;
+}
+var kaiAsked=false;
+function ensureKaiFont(){
+  if(kaiAsked) return;
+  kaiAsked=true;
+  if(hasLocalFont('標楷體')||hasLocalFont('DFKai-SB')||hasLocalFont('BiauKai')) return;  // 本機有就不必下載
+  var l=document.createElement('link');
+  l.rel='stylesheet';
+  l.href='https://fonts.googleapis.com/earlyaccess/cwtexkai.css';
+  l.onload=function(){ if(document.fonts&&document.fonts.ready) document.fonts.ready.then(fitFoil); };
+  document.head.appendChild(l);
+}
+var fontBox=document.getElementById('foilFont');
+FONTS.forEach(function(f,i){
+  var lb=document.createElement('label');
+  var ip=document.createElement('input');
+  ip.type='radio'; ip.name='ffont'; ip.value=f.n; if(i===0) ip.checked=true;
+  ip.addEventListener('change',syncFont);
+  lb.appendChild(ip);
+  lb.appendChild(document.createTextNode(f.n));
+  lb.style.fontFamily=f.css;                    // 選項本身就用該字體顯示，直接看得出差別
+  fontBox.appendChild(lb);
+});
+function curFont(){
+  var v=document.querySelector('input[name=ffont]:checked').value;
+  return FONTS.filter(function(f){return f.n===v;})[0];
+}
+function syncFont(){
+  var f=curFont();
+  if(f.kai) ensureKaiFont();
+  fpText.style.fontFamily=f.css;
+  fpFCap.textContent=f.n;
+  fitFoil();
+}
 
 /* 二分搜尋出「塞得進燙金範圍」的最大字級：行數越多字越小 */
 function fitFoil(){
@@ -586,11 +665,14 @@ function fitFoil(){
   fpText.style.opacity = t ? 1 : .5;
   var availH=fpZone.clientHeight;
   if(!availH) return;                       // 欄位隱藏時不量測
+  // 文字區塊寬度隨內容縮放，量測基準改為燙金範圍框的內寬（clientWidth 含左右內距，要扣掉）
+  var cs=getComputedStyle(fpZone);
+  var availW=fpZone.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight);
   var lo=1.5, hi=24, best=1.5;
   for(var i=0;i<24 && hi-lo>0.05;i++){
     var mid=(lo+hi)/2;
     fpText.style.fontSize=mid+'px';
-    var fits = fpText.scrollHeight<=availH+0.5 && fpText.scrollWidth<=fpText.clientWidth+0.5;
+    var fits = fpText.scrollHeight<=availH+0.5 && fpText.scrollWidth<=availW+0.5;
     if(fits){ best=mid; lo=mid; } else { hi=mid; }
   }
   fpText.style.fontSize=best+'px';
@@ -604,13 +686,13 @@ if(document.fonts && document.fonts.ready) document.fonts.ready.then(fitFoil);
 
 function syncFoil(){
   var on=foilChk.checked;
-  document.getElementById('fColor').style.display=on?'':'none';
-  document.getElementById('fAlign').style.display=on?'':'none';
-  document.getElementById('fFoilText').style.display=on?'':'none';
+  ['fColor','fFont','fAlign','fFoilText'].forEach(function(id){
+    document.getElementById(id).style.display=on?'':'none';
+  });
   if(on) fitFoil();                          // 顯示後才量得到尺寸
 }
 foilChk.addEventListener('change',syncFoil);
-syncColor(); updateFoilMock(); syncFoil();
+syncColor(); syncFont(); updateFoilMock(); syncFoil();
 
 /* ---------- 運費：全部款式合併算，100 本/箱，每箱 150 元，未滿一箱以一箱計 ---------- */
 var PER_BOX=100, BOX_FEE=150;
@@ -641,7 +723,6 @@ document.getElementById('genBtn').addEventListener('click',function(){
   var list=orders();
   var bag=document.getElementById('bag').checked;
   var foilOn=foilChk.checked;
-  var align=document.querySelector('input[name=align]:checked').value;
   var ftxt=foilTextEl.value.trim();
   var nm=document.getElementById('rcName').value.trim();
   var ph=document.getElementById('rcPhone').value.trim();
@@ -662,7 +743,9 @@ document.getElementById('genBtn').addEventListener('click',function(){
   msg+='底板燙金：'+(foilOn?'要':'不用')+'\n';
   if(foilOn){
     msg+='　燙金顏色：'+curColor().n+'\n';
-    msg+='　燙金排版：'+align+'\n';
+    msg+='　燙金字體：'+curFont().n+'\n';
+    msg+='　燙金排版：'+curAlign()+'\n';
+    msg+='　文字對齊：'+curTAlign()+'\n';
     // 多行燙金內容：續行對齊「燙金內容：」後方
     msg+='　燙金內容：'+(ftxt?ftxt.replace(/\n/g,'\n　　　　　　'):'（未填，稍後提供）')+'\n';
   }
