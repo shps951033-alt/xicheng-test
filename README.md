@@ -1,2 +1,1 @@
-# xicheng-test
-Xicheng quote tools - internal test (cards + daigong)
+﻿Xicheng staging: quote tools at root, official website staging under /site/.
