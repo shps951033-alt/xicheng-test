@@ -21,8 +21,10 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--paper);color:var(--i
 
 /* hero */
 .hero{padding:44px 0 36px;text-align:center;border-bottom:1px solid #E6D8BC}
-.hero .brand{display:inline-flex;align-items:center;gap:10px;margin-bottom:26px;color:var(--ink-soft);font-size:14px;letter-spacing:.2em}
-.hero .brand::before,.hero .brand::after{content:"";width:36px;height:1px;background:var(--gold-line)}
+.hero .brand{display:flex;justify-content:center;margin-bottom:26px}
+.hero .brand img{height:72px;width:auto;display:block;border-radius:8px;
+  box-shadow:0 4px 14px rgba(40,50,45,.18)}
+@media(max-width:420px){ .hero .brand img{height:60px} }
 .year{font-family:'Noto Serif TC',serif;font-weight:900;font-size:clamp(88px,26vw,132px);line-height:1;
   background:linear-gradient(115deg,var(--gold-2) 0%,var(--gold-1) 38%,#F6E3AE 50%,var(--gold-1) 62%,var(--gold-2) 100%);
   background-size:220% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;
@@ -60,6 +62,7 @@ h2{font-family:'Noto Serif TC',serif;font-weight:900;font-size:22px;letter-spaci
 .field{margin-bottom:20px}
 label.t{display:block;font-weight:700;font-size:15px;margin-bottom:8px}
 label.t small{color:var(--ink-soft);font-weight:400;margin-left:6px}
+.hint{font-size:12.5px;color:var(--ink-soft);margin-top:7px;line-height:1.6}
 input[type=text],input[type=number],textarea,select{
   width:100%;background:var(--card);border:1.5px solid #DECBA4;border-radius:10px;
   padding:12px 14px;font-size:16px;font-family:inherit;color:var(--ink)}
@@ -71,6 +74,44 @@ input:focus,textarea:focus,select:focus{outline:2px solid var(--gold-line);outli
 .opts label:has(input:checked){border-color:var(--gold-2);background:#F6E9CB;font-weight:700}
 .opts label:has(input:focus-visible){outline:2px solid var(--gold-line);outline-offset:2px}
 textarea{min-height:88px;resize:vertical}
+
+/* 款式示意圖（選了品項後出現） */
+.pv{display:none;margin-top:12px;background:var(--card);border:1.5px solid var(--gold-line);
+  border-radius:12px;padding:10px;gap:12px;align-items:center}
+.pv.show{display:flex}
+.pv img{width:108px;aspect-ratio:4/3;object-fit:cover;border-radius:8px;flex:none;background:#EFE3C6}
+.pv .pvb{min-width:0}
+.pv .pvb b{display:block;font-size:15px}
+.pv .pvb span{font-size:12.5px;color:var(--ink-soft)}
+.pv .pvb button{margin-top:7px;background:none;border:1px solid var(--gold-line);color:var(--gold-2);
+  border-radius:999px;padding:4px 13px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}
+
+/* 燙金顏色色票 */
+.swatches label{display:inline-flex;align-items:center;gap:7px;padding:7px 14px 7px 9px}
+.swatches i{width:16px;height:16px;border-radius:50%;flex:none;display:block;
+  border:1px solid rgba(60,45,20,.25);box-shadow:inset 0 1px 1px rgba(255,255,255,.35)}
+
+/* 燙金排版示意圖（燙金範圍實際比例 18 × 2.3 cm） */
+.foilpv{margin-top:12px;background:var(--card);border:1.5px solid #DECBA4;border-radius:12px;padding:12px}
+.fp-dim{font-size:10.5px;color:var(--ink-soft);text-align:center;letter-spacing:.12em;margin-bottom:4px}
+.fp-stage{position:relative}
+.fp-stage img{width:100%;display:block;border-radius:6px}
+.fp-zone{display:flex;align-items:center;overflow:hidden}
+.fp-zone.generic{width:100%;aspect-ratio:18 / 2.3;background:#EFE1C6;border:1px dashed var(--gold-line);
+  border-radius:3px;padding:0 8px}
+.fp-zone.onmock{position:absolute;aspect-ratio:18 / 2.3;transform:translateY(-50%);
+  border:1px dashed rgba(255,255,255,.28);border-radius:2px;padding:0 4px;background:none}
+.fp-zone span{display:block;width:100%;white-space:pre-line;word-break:break-word;
+  font-weight:700;line-height:1.22;
+  background:linear-gradient(115deg,var(--gold-2),var(--gold-1) 50%,var(--gold-2));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 1px 0 rgba(90,70,40,.22))}
+.fp-zone.c{text-align:center}
+.fp-zone.l{text-align:left}
+.fp-zone.r{text-align:right}
+.foilpv .cap{font-size:11.5px;color:var(--ink-soft);text-align:center;margin-top:8px;line-height:1.8}
+.foilpv .cap b{color:var(--gold-2)}
+.foilpv .cap b.warn{color:#B4483C}
 
 .gen{width:100%;border:none;border-radius:12px;padding:15px;font-size:17px;font-weight:700;
   font-family:inherit;letter-spacing:.1em;cursor:pointer;color:#3A2C12;
@@ -84,6 +125,11 @@ textarea{min-height:88px;resize:vertical}
 .btn2{flex:1;text-align:center;text-decoration:none;border-radius:10px;padding:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit}
 .copy{background:#EFE3C6;border:1.5px solid var(--gold-line);color:var(--ink)}
 .line{background:#06C755;border:1.5px solid #06C755;color:#fff}
+.notebar{background:#FFF4DC;border:1px solid #E8D5A6;border-radius:10px;padding:11px 13px;font-size:12.5px;color:#7A6438;margin-bottom:20px;line-height:1.65}
+.shipbox{margin-top:9px;background:#F3EEDF;border:1px solid #E2D3AE;border-radius:9px;
+  padding:10px 12px;font-size:12.5px;color:var(--ink-soft);line-height:1.7}
+.shipbox b{color:var(--gold-2);font-size:14px}
+.shipbox .mut{opacity:.75}
 
 /* steps */
 .steps{counter-reset:s;display:grid;gap:12px}
@@ -106,14 +152,15 @@ footer .gl{color:var(--gold-2)}
 .stycard{position:relative;background:var(--card);border:1.5px solid #DECBA4;border-radius:12px;overflow:hidden;cursor:pointer;transition:border-color .15s}
 .stycard img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;background:linear-gradient(135deg,#E8D8B8,#D2B98C)}
 .stycard .nm{padding:9px 10px;font-size:14px;font-weight:700;display:flex;justify-content:space-between;align-items:center;gap:6px}
-.stycard .cd{color:var(--ink-soft);font-weight:400;font-size:12px}
 .stycard.sel{border-color:var(--gold-2);box-shadow:0 0 0 2px var(--gold-1)}
 .stycard.sel::after{content:"✓ 已選";position:absolute;top:8px;left:8px;background:var(--gold-2);color:#fff;font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px}
-/* 授權審核中：可看，不可下單 */
+/* 授權審核中：可看內頁，不可下單 */
 .stycard.pending{cursor:default}
 .stycard.pending img{filter:saturate(.55) brightness(.94)}
 .stycard.pending::after{content:"授權審核中 · 敬請期待";position:absolute;top:8px;left:8px;right:8px;background:rgba(58,48,32,.9);color:#F2E6C8;font-size:11.5px;font-weight:700;padding:4px 8px;border-radius:999px;text-align:center}
 .stycard.pending .nm>span:first-child{color:var(--ink-soft)}
+.opts label.pending{opacity:.5;cursor:default;border-style:dashed}
+.opts label.pending:has(input:checked){border-color:#DECBA4;background:var(--card);font-weight:400}
 
 /* gallery lightbox */
 .stycard .nm .view{font-size:12px;color:var(--gold-2);font-weight:700;border:1px solid var(--gold-line);border-radius:999px;padding:2px 10px;white-space:nowrap}
@@ -134,7 +181,7 @@ footer .gl{color:var(--gold-2)}
 <body>
 
 <header class="hero wrap">
-  <div class="brand">喜 成 印 刷</div>
+  <div class="brand"><img src="img/logo.png" alt="喜成燙金印刷 C CHENG ENTERPRISE"></div>
   <div class="year">2027</div>
   <h1>客製桌曆 · 日曆 · 年曆</h1>
   <p>你的照片、你的品牌，陪客戶過完 2027 一整年。</p>
@@ -153,15 +200,15 @@ footer .gl{color:var(--gold-2)}
   <h2>為什麼值得做一本</h2>
   <div class="points">
     <div class="point"><b>桌上的隱形業務</b><span>名片會被收進抽屜，桌曆在客戶桌上站一整年，品牌天天被看見。</span></div>
-    <div class="point"><b>桌曆・日曆・年曆 三種選</b><span>站桌上、掛牆上、天天撕一頁——照片、LOGO 全客製。</span></div>
-    <div class="point"><b>封面可加燙金 LOGO</b><span>喜成本業就是燙金，質感直接拉滿，送禮特別體面。</span></div>
+    <div class="point"><b>十二款設計現貨開訂</b><span>授權角色、風景名畫、療癒動物——挑好款式直接下訂。</span></div>
+    <div class="point"><b>底板可加燙金 LOGO</b><span>喜成本業就是燙金，質感直接拉滿，送禮特別體面。</span></div>
   </div>
 </section>
 
 <section class="wrap" id="styles">
   <div class="eyebrow">2027 STYLES</div>
   <h2>現成款式，直接挑</h2>
-  <p style="color:var(--ink-soft);font-size:14px;margin:-10px 0 18px">八款設計現貨開訂，兩款授權審核中。點「看內頁」翻整本，點卡片選款式。</p>
+  <p style="color:var(--ink-soft);font-size:14px;margin:-10px 0 18px">十二款設計現貨開訂。點「看內頁」翻整本，點卡片選款式。</p>
   <div class="cat" id="catGrid"></div>
 </section>
 
@@ -169,54 +216,99 @@ footer .gl{color:var(--gold-2)}
   <div class="eyebrow">PRE-ORDER</div>
   <h2>預訂登記</h2>
 
+  <div class="notebar">
+    燙金、塑膠袋費用<b>另計</b>，由專人核算後回覆報價。<br>
+    運費：每 <b>100 本</b>裝一箱，每箱 <b>150 元</b>，未滿一箱以一箱計。
+  </div>
+
+  <!-- 款式 -->
   <div class="field">
-    <label class="t">想預訂的品項</label>
-    <div class="opts" id="prod">
-      <label><input type="radio" name="prod" value="現成款式桌曆" checked>現成款式桌曆</label>
-      <label><input type="radio" name="prod" value="全客製照片桌曆">全客製照片桌曆</label>
-      <label><input type="radio" name="prod" value="撕頁日曆">撕頁日曆</label>
-      <label><input type="radio" name="prod" value="掛牆年曆">掛牆年曆</label>
-      <label><input type="radio" name="prod" value="都想了解">都想了解</label>
+    <label class="t">想預訂的款式</label>
+    <div class="opts" id="prod"></div>
+    <div class="pv" id="stylePv">
+      <img id="pvImg" alt="款式示意圖">
+      <div class="pvb">
+        <b class="pv-n"></b>
+        <span class="pv-c"></span><br>
+        <button type="button" id="pvView">看內頁 ▸</button>
+      </div>
     </div>
   </div>
 
+  <!-- 數量 -->
   <div class="field">
     <label class="t" for="qty">數量<small>（本）</small></label>
     <input type="number" id="qty" min="1" inputmode="numeric" placeholder="例如：50">
+    <div class="shipbox" id="shipBox"></div>
   </div>
 
-  <div class="field" id="fSize">
-    <label class="t">尺寸偏好</label>
-    <div class="opts" id="size">
-      <label><input type="radio" name="size" value="橫式（標準）" checked>橫式（標準）</label>
-      <label><input type="radio" name="size" value="直式">直式</label>
-      <label><input type="radio" name="size" value="想再討論">想再討論</label>
-    </div>
-  </div>
-
-  <div class="field" id="fPhoto">
-    <label class="t">照片怎麼提供</label>
-    <div class="opts" id="photo">
-      <label><input type="radio" name="photo" value="自備 12 張照片" checked>自備照片</label>
-      <label><input type="radio" name="photo" value="需要協助設計">需要協助設計</label>
-    </div>
-  </div>
-
+  <!-- 加購 -->
   <div class="field">
     <label class="t">加購項目</label>
     <div class="opts">
-      <label><input type="checkbox" id="foil">封面燙金 LOGO</label>
+      <label><input type="checkbox" id="foil" checked>底板燙金 LOGO</label>
+      <label><input type="checkbox" id="bag">包塑膠袋（費用另計）</label>
     </div>
   </div>
 
-  <div class="field">
-    <label class="t" for="name">怎麼稱呼您</label>
-    <input type="text" id="name" placeholder="姓名／公司名">
+  <!-- 燙金顏色（勾選燙金才出現） -->
+  <div class="field" id="fColor">
+    <label class="t">燙金顏色<small>（點選看示意圖）</small></label>
+    <div class="opts swatches" id="foilColor"></div>
+    <p class="hint">螢幕顏色僅供參考，實際以燙金箔樣品為準。</p>
   </div>
 
+  <!-- 燙金排版（勾選燙金才出現） -->
+  <div class="field" id="fAlign">
+    <label class="t">燙金排版<small>（點選看示意圖）</small></label>
+    <div class="opts" id="align">
+      <label><input type="radio" name="align" value="底板置中" checked>底板置中</label>
+      <label><input type="radio" name="align" value="底板靠左">底板靠左</label>
+      <label><input type="radio" name="align" value="底板靠右">底板靠右</label>
+    </div>
+    <div class="foilpv">
+      <div class="fp-dim" id="fpDim">← 18 cm →</div>
+      <div class="fp-stage" id="fpStage">
+        <img id="fpMockImg" alt="款式底板示意" style="display:none">
+        <div class="fp-zone generic c" id="fpZone"><span id="fpText">您的 LOGO／文字</span></div>
+      </div>
+      <div class="cap">
+        <span id="fpMode">選擇款式後，會顯示該款桌曆的底板示意。</span><br>
+        底板燙金範圍 <b>18 × 2.3 cm</b><br>
+        位置：<b id="fpCap">置中</b>　字高：<b id="fpSize">—</b>
+      </div>
+    </div>
+  </div>
+
+  <!-- 燙金內容 -->
+  <div class="field" id="fFoilText">
+    <label class="t" for="foilText">欲燙金的資訊</label>
+    <textarea id="foilText" placeholder="例如：喜成印刷有限公司　敬賀 2027"></textarea>
+    <p class="hint">打上想燙的文字，上方示意圖會同步顯示。<br>
+      若有 <b>LOGO 圖檔</b>，請加官方 LINE（@623bfkyg）再把圖檔傳給我們。</p>
+  </div>
+
+  <!-- 收件資訊 -->
   <div class="field">
-    <label class="t" for="note">備註<small>（想放的內容、交期需求…）</small></label>
-    <textarea id="note" placeholder="例如：想放我們的甜點照片，11 月中前要拿到"></textarea>
+    <label class="t" for="rcName">收件人姓名</label>
+    <input type="text" id="rcName" placeholder="王小明">
+  </div>
+  <div class="field">
+    <label class="t" for="rcPhone">聯絡電話</label>
+    <input type="text" id="rcPhone" inputmode="tel" placeholder="0912-345-678">
+  </div>
+  <div class="field">
+    <label class="t" for="rcAddr">寄送地址</label>
+    <input type="text" id="rcAddr" placeholder="台北市信義區信義路五段 7 號">
+  </div>
+  <div class="field">
+    <label class="t" for="inv">發票抬頭<small>（不需要可留空）</small></label>
+    <input type="text" id="inv" placeholder="○○有限公司">
+  </div>
+  <div class="field">
+    <label class="t" for="tax">統一編號<small>（8 碼，不需要可留空）</small></label>
+    <input type="text" id="tax" inputmode="numeric" maxlength="8" placeholder="12345678">
+    <p class="hint" id="taxHint" style="display:none;color:#B4483C">統一編號應為 8 碼數字</p>
   </div>
 
   <button class="gen" id="genBtn" type="button">產生預訂訊息</button>
@@ -234,9 +326,9 @@ footer .gl{color:var(--gold-2)}
   <div class="eyebrow">HOW</div>
   <h2>預訂流程</h2>
   <div class="steps">
-    <div class="step">填上面的預訂登記，把訊息傳到我們 LINE</div>
-    <div class="step">確認規格與報價，傳照片給我們排版</div>
-    <div class="step">看過打樣確認後印製，準時交貨</div>
+    <div class="step">填上面的預訂登記，把訊息傳到我們 LINE（有 LOGO 圖檔一併傳）</div>
+    <div class="step">確認款式、燙金排版與報價（含燙金／塑膠袋／運費）</div>
+    <div class="step">專人以 LINE 提供匯款帳號，匯款後安排製作，完成後準時寄達</div>
   </div>
 </section>
 
@@ -260,136 +352,300 @@ footer .gl{color:var(--gold-2)}
   </div>
 </div>
 
+<script src="data.js"></script>
+<script src="mocks.js"></script>
 <script>
-var STYLES=[
- {c:"25002",n:"動物方程式",extraCover:["CAZT-001_2027年動物方城市桌曆.jpg"],seq:{pre:"CAZT-001_動物方城市桌曆_內頁-",n:24}},
- {c:"25003",n:"維尼",extraCover:["CAWP-014_2027年小熊維尼桌曆.jpg"],seq:{pre:"CAWP-014_小熊維尼桌曆_內頁_工作區域 ",n:24}},
- {c:"25005",n:"北境晨光",base:"風景",pre:null},
- {c:"25006",n:"名畫",pre:["2027-名畫內頁_"]},
- {c:"25007",n:"豐時四季",base:"水果",pre:["2027-水果25k內頁_"]},
- {c:"25008",n:"水豚寶",pre:null},
- {c:"25010",n:"柴語錄",pre:["2027-柴語錄內頁_"],extraCover:["2027柴語錄示意圖  .jpg"]},
- {c:"25012",n:"比得兔",base:"彼得兔",pre:["2027-彼得兔25K內頁_"]},
- {c:"25009",n:"白爛貓",pre:["2027-白爛貓內頁_"],pending:true},
- {c:"25011",n:"超人力霸王",extraCover:["超人力霸王封面.jpg"],seq:{pre:"2027三角桌曆25K-Ultrman-大圖_頁面_",n:16},pending:true}
-];
-function baseName(st){return st.base||st.n;}
-function coverCands(st){
-  var b=baseName(st);
-  var arr=["2027-"+b+"25K封面_封面.jpg","2027-"+b+"_25K封面_封面.jpg"];
-  if(st.extraCover) arr=st.extraCover.concat(arr);
-  return arr.map(function(f){return "img/"+st.c+"/"+f;});
+var STYLES = window.STYLES || [];
+var selStyle = null;
+
+/* 授權審核中：可瀏覽內頁，但不可下單。授權通過後把該品號從這裡移除即可開賣。 */
+var PENDING = {'25009':1, '25011':1};
+function isPending(st){ return !!(st && PENDING[st.c]); }
+
+function pageLabel(p){
+  if(p.kind==='start') return '2026/12 內頁';
+  if(p.kind==='month') return p.val+'月 內頁';
+  return '內頁 '+p.val;
 }
-function pageCands(st,m){
-  var b=baseName(st);
-  var pres=st.pre||["2027-"+b+"內頁_","2027-"+b+"25K內頁_","2027-"+b+"25k內頁_"];
-  return pres.map(function(p){return "img/"+st.c+"/"+p+m+"月.jpg";});
-}
-/* 廠商原始檔名款（內頁為 01…N 流水號，非月份） */
-function seqSlides(st){
-  var out=[];
-  for(var i=1;i<=st.seq.n;i++){
-    var num=(i<10?"0":"")+i;
-    out.push({label:"內頁 "+i,cands:["img/"+st.c+"/"+st.seq.pre+num+".jpg"]});
-  }
-  return out;
-}
-function chainLoad(imgEl,cands,onFail){
-  var i=0;
-  imgEl.onerror=function(){ i++; if(i<cands.length){imgEl.src=cands[i];} else {imgEl.onerror=null; if(onFail)onFail(imgEl);} };
-  imgEl.src=cands[0];
-}
-var selStyle=null;
+
+/* ---------- 款式卡片牆 ---------- */
 var grid=document.getElementById('catGrid');
 STYLES.forEach(function(st){
-  var el=document.createElement('div'); el.className='stycard'+(st.pending?' pending':'');
+  var el=document.createElement('div'); el.className='stycard'+(isPending(st)?' pending':'');
   var im=document.createElement('img'); im.alt=st.n+' 2027桌曆'; im.loading='lazy';
-  chainLoad(im,coverCands(st),function(x){x.style.height='110px';});
+  im.onerror=function(){ this.style.opacity=.35; };
+  im.src=st.cover;
   var nm=document.createElement('div'); nm.className='nm';
   nm.innerHTML='<span>'+st.n+'</span><span class="view">看內頁 ▸</span>';
   el.appendChild(im); el.appendChild(nm); grid.appendChild(el);
   el.addEventListener('click',function(e){
     if(e.target.classList.contains('view')){ openLb(st); return; }
-    if(st.pending){ return; }
-    selectStyle(st,el);
+    if(isPending(st)) return;
+    selectStyle(st);
   });
 });
-function selectStyle(st,el){
-  if(st&&st.pending) return;
-  document.querySelectorAll('.stycard').forEach(x=>x.classList.remove('sel'));
-  if(el) el.classList.add('sel');
-  else{ var idx=STYLES.indexOf(st); var card=grid.children[idx]; if(card)card.classList.add('sel'); }
+
+/* ---------- 款式選項（品項＝款式名稱） ---------- */
+var prodBox=document.getElementById('prod');
+STYLES.forEach(function(st){
+  var lb=document.createElement('label');
+  var ip=document.createElement('input');
+  ip.type='radio'; ip.name='prod'; ip.value=st.c;
+  ip.addEventListener('change',function(){ if(ip.checked) selectStyle(st); });
+  lb.appendChild(ip);
+  if(isPending(st)){
+    ip.disabled=true;
+    lb.className='pending';
+    lb.title='此款授權審核中，尚未開放預訂';
+    lb.appendChild(document.createTextNode(st.n+'（審核中）'));
+  } else {
+    lb.appendChild(document.createTextNode(st.n));
+  }
+  prodBox.appendChild(lb);
+});
+
+var stylePv=document.getElementById('stylePv');
+function selectStyle(st){
+  if(isPending(st)) return;
   selStyle=st;
-  document.querySelector('input[name=prod][value=現成款式桌曆]').checked=true; syncFields();
+  document.querySelectorAll('.stycard').forEach(function(x,i){
+    x.classList.toggle('sel', STYLES[i]===st);
+  });
+  var r=document.querySelector('input[name=prod][value="'+st.c+'"]');
+  if(r) r.checked=true;
+  document.getElementById('pvImg').src=st.cover;
+  document.getElementById('pvImg').alt=st.n+' 款式示意圖';
+  stylePv.querySelector('.pv-n').textContent=st.n;
+  stylePv.querySelector('.pv-c').textContent='品號 '+st.c+'　內頁 '+st.pages.length+' 頁';
+  stylePv.classList.add('show');
+  if(typeof updateFoilMock==='function') updateFoilMock();
 }
-/* lightbox */
+document.getElementById('pvView').addEventListener('click',function(){ if(selStyle) openLb(selStyle); });
+
+/* ---------- 內頁 lightbox ---------- */
 var lb=document.getElementById('lb'),lbStage=document.getElementById('lbStage'),
     lbName=document.getElementById('lbName'),lbCnt=document.getElementById('lbCnt');
 var lbStyle=null,lbIdx=0,lbSlides=[];
 function openLb(st){
   lbStyle=st; lbIdx=0;
-  lbSlides=[{label:"封面",cands:coverCands(st)}];
-  if(st.seq){ lbSlides=lbSlides.concat(seqSlides(st)); }
-  else { for(var m=1;m<=12;m++) lbSlides.push({label:m+"月 內頁",cands:pageCands(st,m)}); }
+  lbSlides=[{label:'封面',src:st.cover}];
+  st.pages.forEach(function(p){ lbSlides.push({label:pageLabel(p),src:p.src}); });
   lbName.textContent=st.n; lb.classList.add('show'); showSlide();
   var pk=document.getElementById('lbPick');
-  pk.textContent=st.pending?'授權審核中':'選這款';
-  pk.disabled=!!st.pending;
-  pk.style.opacity=st.pending?'.45':'';
-  pk.style.cursor=st.pending?'default':'pointer';
+  pk.textContent=isPending(st)?'授權審核中':'選這款';
+  pk.disabled=isPending(st);
+  pk.style.opacity=isPending(st)?'.45':'';
+  pk.style.cursor=isPending(st)?'default':'pointer';
   document.body.style.overflow='hidden';
 }
 function showSlide(){
   var s=lbSlides[lbIdx];
-  lbCnt.textContent=s.label+"（"+(lbIdx+1)+"/"+lbSlides.length+"）";
+  lbCnt.textContent=s.label+'（'+(lbIdx+1)+'/'+lbSlides.length+'）';
   lbStage.innerHTML='';
-  var im=document.createElement('img'); im.alt=lbStyle.n+" "+s.label;
-  chainLoad(im,s.cands,function(){ lbStage.innerHTML='<span class="miss">此頁圖片準備中</span>'; });
+  var im=document.createElement('img'); im.alt=lbStyle.n+' '+s.label;
+  im.onerror=function(){ lbStage.innerHTML='<span class="miss">此頁圖片準備中</span>'; };
+  im.src=s.src;
   lbStage.appendChild(im);
 }
+function closeLb(){ lb.classList.remove('show'); document.body.style.overflow=''; }
 document.getElementById('lbPrev').onclick=function(){ lbIdx=(lbIdx-1+lbSlides.length)%lbSlides.length; showSlide(); };
 document.getElementById('lbNext').onclick=function(){ lbIdx=(lbIdx+1)%lbSlides.length; showSlide(); };
-document.getElementById('lbClose').onclick=function(){ lb.classList.remove('show'); document.body.style.overflow=''; };
+document.getElementById('lbClose').onclick=closeLb;
 document.getElementById('lbPick').onclick=function(){
-  if(lbStyle&&lbStyle.pending) return;
-  selectStyle(lbStyle,null); lb.classList.remove('show'); document.body.style.overflow='';
+  if(isPending(lbStyle)) return;
+  selectStyle(lbStyle); closeLb();
   document.getElementById('order').scrollIntoView({behavior:'smooth'});
 };
-lb.addEventListener('click',function(e){ if(e.target===lb) { lb.classList.remove('show'); document.body.style.overflow=''; } });
-function syncFields(){
-  var p=document.querySelector('input[name=prod]:checked').value;
-  document.getElementById('fSize').style.display=(p==='全客製照片桌曆')?'':'none';
-  document.getElementById('fPhoto').style.display=(p==='全客製照片桌曆')?'':'none';
-  document.getElementById('styles').style.opacity=(p==='現成款式桌曆')?'1':'.5';
-}
-document.querySelectorAll('input[name=prod]').forEach(r=>r.addEventListener('change',syncFields));
-syncFields();
-document.getElementById('genBtn').addEventListener('click',function(){
-  var prod=document.querySelector('input[name=prod]:checked').value;
-  var qty=document.getElementById('qty').value.trim();
-  var size=document.querySelector('input[name=size]:checked').value;
-  var photo=document.querySelector('input[name=photo]:checked').value;
-  var foil=document.getElementById('foil').checked?'要':'先不用';
-  var name=document.getElementById('name').value.trim()||'（未填）';
-  var note=document.getElementById('note').value.trim()||'（無）';
-  var msg='【2027 曆製品預訂】\n'+'品項：'+prod+'\n';
-  if(prod==='現成款式桌曆'){
-    msg+='款式：'+(selStyle?('#'+selStyle.c+' '+selStyle.n):'（尚未點選款式）')+'\n';
+lb.addEventListener('click',function(e){ if(e.target===lb) closeLb(); });
+document.addEventListener('keydown',function(e){
+  if(!lb.classList.contains('show'))return;
+  if(e.key==='Escape') closeLb();
+  if(e.key==='ArrowLeft'){ lbIdx=(lbIdx-1+lbSlides.length)%lbSlides.length; showSlide(); }
+  if(e.key==='ArrowRight'){ lbIdx=(lbIdx+1)%lbSlides.length; showSlide(); }
+});
+
+/* ---------- 燙金排版示意圖（18 × 2.3 cm，文字自動縮放） ---------- */
+var FOIL_H_MM = 23;   // 燙金範圍高度 2.3cm = 23mm
+var fpZone=document.getElementById('fpZone'),fpText=document.getElementById('fpText'),
+    fpCap=document.getElementById('fpCap'),fpSize=document.getElementById('fpSize'),
+    foilChk=document.getElementById('foil'),foilTextEl=document.getElementById('foilText'),
+    fpMockImg=document.getElementById('fpMockImg'),fpDim=document.getElementById('fpDim'),
+    fpMode=document.getElementById('fpMode');
+var ALIGN={'底板置中':['c','置中'],'底板靠左':['l','靠左'],'底板靠右':['r','靠右']};
+var zoneMock=false;
+
+/* 依所選款式切換：真實桌曆底板示意 或 通用示意條 */
+function updateFoilMock(){
+  var m=(selStyle && window.MOCKS) ? window.MOCKS[selStyle.c] : null;
+  zoneMock=!!m;
+  if(m){
+    fpMockImg.style.display='block';
+    if(fpMockImg.getAttribute('src')!==m.src){ fpMockImg.onload=fitFoil; fpMockImg.src=m.src; }
+    // 燙金區疊在底板上：左右各內縮底板寬的3%，高度依 18:2.3 實際比例
+    var span=m.x1-m.x0, inset=span*0.03;
+    fpZone.style.left=(m.x0+inset)+'%';
+    fpZone.style.width=(span-inset*2)+'%';
+    fpZone.style.top=(m.top+m.h/2)+'%';
+    fpDim.style.display='none';
+    fpMode.textContent='底板示意：'+selStyle.n;
+  }else{
+    fpMockImg.style.display='none';
+    fpZone.style.left='';fpZone.style.width='';fpZone.style.top='';
+    fpDim.style.display='';
+    fpMode.textContent='選擇款式後，會顯示該款桌曆的底板示意。';
   }
-  msg+='稱呼：'+name+'\n'+'數量：'+(qty?qty+' 本':'（未填）')+'\n';
-  if(prod==='全客製照片桌曆'){ msg+='尺寸：'+size+'\n'+'照片：'+photo+'\n'; }
-  msg+='封面燙金：'+foil+'\n'+'備註：'+note;
+  applyZoneAlign();
+  fitFoil();
+}
+
+/* 燙金顏色：金屬色用漸層模擬反光，平光色用單色 */
+var FOILS=[
+  {n:'亮金',  css:'linear-gradient(115deg,#A8752E,#F4E0A8 42%,#E0BC69 58%,#A8752E)'},
+  {n:'霧金',  css:'linear-gradient(115deg,#C3A667,#C3A667)'},
+  {n:'古銅金',css:'linear-gradient(115deg,#5F3F1E,#B98A50 48%,#7A5228)'},
+  {n:'亮銀',  css:'linear-gradient(115deg,#8A8F92,#F4F6F7 42%,#C6CACD 58%,#8A8F92)'},
+  {n:'霧銀',  css:'linear-gradient(115deg,#B4B9BC,#B4B9BC)'},
+  {n:'紅',    css:'linear-gradient(115deg,#A50F26,#D6273F 50%,#A50F26)'},
+  {n:'藍',    css:'linear-gradient(115deg,#093A7D,#1B62B8 50%,#093A7D)'},
+  {n:'綠',    css:'linear-gradient(115deg,#0E6039,#1E8A56 50%,#0E6039)'},
+  {n:'黑',    css:'linear-gradient(115deg,#141414,#3A3A3A 50%,#141414)'},
+  {n:'白',    css:'linear-gradient(115deg,#FFFFFF,#FFFFFF)'},
+  {n:'雷射',  css:'linear-gradient(100deg,#EE9CC4,#F7E79C 20%,#93E9C4 40%,#8AD2F5 60%,#C2A4F2 80%,#EE9CC4)'}
+];
+var colorBox=document.getElementById('foilColor');
+FOILS.forEach(function(f,i){
+  var lb=document.createElement('label');
+  var ip=document.createElement('input');
+  ip.type='radio'; ip.name='fcolor'; ip.value=f.n; if(i===0) ip.checked=true;
+  ip.addEventListener('change',syncColor);
+  var sw=document.createElement('i'); sw.style.background=f.css;
+  lb.appendChild(ip); lb.appendChild(sw);
+  lb.appendChild(document.createTextNode(f.n));
+  colorBox.appendChild(lb);
+});
+function curColor(){
+  var v=document.querySelector('input[name=fcolor]:checked').value;
+  return FOILS.filter(function(f){return f.n===v;})[0];
+}
+function syncColor(){
+  fpText.style.backgroundImage=curColor().css;   // 示意圖文字直接變成該燙金色
+}
+
+function applyZoneAlign(){
+  var a=ALIGN[document.querySelector('input[name=align]:checked').value];
+  fpZone.className='fp-zone '+(zoneMock?'onmock':'generic')+' '+a[0];
+  fpCap.textContent=a[1];
+}
+function syncAlign(){ applyZoneAlign(); fitFoil(); }
+document.querySelectorAll('input[name=align]').forEach(function(r){ r.addEventListener('change',syncAlign); });
+
+/* 二分搜尋出「塞得進燙金範圍」的最大字級：行數越多字越小 */
+function fitFoil(){
+  var t=foilTextEl.value.trim();
+  fpText.textContent = t ? t : '您的 LOGO／文字';
+  fpText.style.opacity = t ? 1 : .5;
+  var availH=fpZone.clientHeight;
+  if(!availH) return;                       // 欄位隱藏時不量測
+  var lo=1.5, hi=24, best=1.5;
+  for(var i=0;i<24 && hi-lo>0.05;i++){
+    var mid=(lo+hi)/2;
+    fpText.style.fontSize=mid+'px';
+    var fits = fpText.scrollHeight<=availH+0.5 && fpText.scrollWidth<=fpText.clientWidth+0.5;
+    if(fits){ best=mid; lo=mid; } else { hi=mid; }
+  }
+  fpText.style.fontSize=best+'px';
+  var mm = best*(FOIL_H_MM/fpZone.offsetHeight);   // 2.3cm 對應整個範圍框（含框線）
+  fpSize.textContent='約 '+mm.toFixed(1)+' mm';
+  fpSize.className = mm<2 ? 'warn' : '';
+}
+foilTextEl.addEventListener('input',fitFoil);
+window.addEventListener('resize',fitFoil);
+if(document.fonts && document.fonts.ready) document.fonts.ready.then(fitFoil);
+
+function syncFoil(){
+  var on=foilChk.checked;
+  document.getElementById('fColor').style.display=on?'':'none';
+  document.getElementById('fAlign').style.display=on?'':'none';
+  document.getElementById('fFoilText').style.display=on?'':'none';
+  if(on) fitFoil();                          // 顯示後才量得到尺寸
+}
+foilChk.addEventListener('change',syncFoil);
+syncColor(); updateFoilMock(); syncFoil();
+
+/* ---------- 運費：100 本/箱，每箱 150 元，未滿一箱以一箱計 ---------- */
+var PER_BOX=100, BOX_FEE=150;
+var qtyEl=document.getElementById('qty'), shipBox=document.getElementById('shipBox');
+function shipCalc(){
+  var q=parseInt(qtyEl.value,10);
+  if(!q || q<1){
+    shipBox.innerHTML='運費：每 <b>100 本</b>裝一箱，每箱 <b>150 元</b><span class="mut">（未滿一箱以一箱計）</span>';
+    return null;
+  }
+  var boxes=Math.ceil(q/PER_BOX), fee=boxes*BOX_FEE;
+  shipBox.innerHTML=q+' 本 → <b>'+boxes+' 箱</b>　運費 <b>NT$ '+fee+'</b> '+
+    '<span class="mut">（'+boxes+' × 150，100 本/箱，未滿一箱以一箱計）</span>';
+  return {q:q, boxes:boxes, fee:fee};
+}
+qtyEl.addEventListener('input',shipCalc);
+shipCalc();
+
+/* ---------- 統一編號：只收數字，提示需 8 碼 ---------- */
+var taxEl=document.getElementById('tax'), taxHint=document.getElementById('taxHint');
+taxEl.addEventListener('input',function(){
+  var v=taxEl.value.replace(/\D/g,'').slice(0,8);   // 非數字直接濾掉
+  if(v!==taxEl.value) taxEl.value=v;
+  taxHint.style.display = (v.length>0 && v.length<8) ? '' : 'none';
+});
+
+/* ---------- 產生預訂訊息 ---------- */
+document.getElementById('genBtn').addEventListener('click',function(){
+  var qty=document.getElementById('qty').value.trim();
+  var bag=document.getElementById('bag').checked;
+  var foilOn=foilChk.checked;
+  var align=document.querySelector('input[name=align]:checked').value;
+  var ftxt=foilTextEl.value.trim();
+  var nm=document.getElementById('rcName').value.trim();
+  var ph=document.getElementById('rcPhone').value.trim();
+  var ad=document.getElementById('rcAddr').value.trim();
+  var iv=document.getElementById('inv').value.trim();
+  var tax=document.getElementById('tax').value.trim();
+  var U='（未填）';
+
+  var msg='【2027 曆製品預訂】\n';
+  msg+='款式：'+(selStyle?('#'+selStyle.c+' '+selStyle.n):'（尚未選款式）')+'\n';
+  msg+='數量：'+(qty?qty+' 本':U)+'\n';
+  msg+='包塑膠袋：'+(bag?'需要（費用另計）':'不需要')+'\n';
+  msg+='底板燙金：'+(foilOn?'要':'不用')+'\n';
+  if(foilOn){
+    msg+='　燙金顏色：'+curColor().n+'\n';
+    msg+='　燙金排版：'+align+'\n';
+    // 多行燙金內容：續行對齊「燙金內容：」後方
+    msg+='　燙金內容：'+(ftxt?ftxt.replace(/\n/g,'\n　　　　　　'):'（未填，稍後提供）')+'\n';
+  }
+  var sh=shipCalc();
+  msg+='運費：'+(sh ? sh.boxes+' 箱 × 150 = NT$ '+sh.fee+'（100 本/箱，未滿一箱以一箱計）'
+                   : '（未填數量，無法計算）')+'\n';
+  msg+='收件人：'+(nm||U)+'\n';
+  msg+='電話：'+(ph||U)+'\n';
+  msg+='地址：'+(ad||U)+'\n';
+  msg+='發票抬頭：'+(iv||'（不需要）')+'\n';
+  msg+='統一編號：'+(tax||'（不需要）')+'\n';
+  msg+='※ 燙金／塑膠袋費用另計，待報價';
+  if(foilOn) msg+='\n※ 如有 LOGO 圖檔，將另以 LINE 傳送';
+
   document.getElementById('msg').textContent=msg;
   document.getElementById('result').classList.add('show');
   document.getElementById('result').scrollIntoView({behavior:'smooth',block:'center'});
 });
 document.getElementById('copyBtn').addEventListener('click',function(){
   var t=document.getElementById('msg').textContent;
-  navigator.clipboard.writeText(t).then(()=>{
-    this.textContent='已複製 ✓';
-    setTimeout(()=>{this.textContent='複製訊息'},1600);
+  var self=this;
+  navigator.clipboard.writeText(t).then(function(){
+    self.textContent='已複製 ✓';
+    setTimeout(function(){self.textContent='複製訊息';},1600);
   });
 });
 </script>
+
 </body>
 </html>
