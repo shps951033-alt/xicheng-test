@@ -317,10 +317,10 @@
           <option value="四色">四色</option><option value="K色">K色（黑）</option><option value="不印刷">不印刷</option>
         </select>
         <select id="duSpot" style="flex:1.3">
-          <option value="無">特別色：無</option><option value="1色">特別色 1色</option><option value="1色近滿版">特別色 1色近滿版</option><option value="2色">特別色 2色</option><option value="2色近滿版">特別色 2色近滿版</option>
+          <option value="無">特別色：無</option><option value="1色">特別色 1色</option><option value="1色近滿版">特別色 1色近滿版</option><option value="2色">特別色 2色</option><option value="2色近滿版">特別色 2色近滿版</option><option value="金銀1色">金／銀 1色</option><option value="金銀1色近滿版">金／銀 1色近滿版</option><option value="金銀2色">金／銀 2色</option><option value="金銀2色近滿版">金／銀 2色近滿版</option>
         </select>
       </div>
-      <div class="hint">K色＝1版＋1色印工(500/令)；四色＝4版；特別色每色 2000/令、近滿版加 500/令。金／銀特色請備註(2500/令)</div>
+      <div class="hint">K色＝1版＋1色印工(500/令)；四色＝4版；特別色每色 2000/令、金／銀每色 2500/令、近滿版加 500/令</div>
     </div>
     <div class="field">
       <span class="label"><span class="n">4</span>印刷面</span>
@@ -381,9 +381,10 @@
   </div>
   <div class="foot" id="footDu" style="display:none">
     選紙張（濬宇牌價）＋大紙尺寸＋開數＋完成數量 → 自動算大紙（含放損100張）＋紙張成本<br>
-    印刷：<b>四色</b>(4版、4×500/令)／<b>K色</b>(1版、1×500/令)／<b>不印刷</b>；特別色每色 2000/令、近滿版+500；版費 500/版（雙面正背各自開版）<br>
+    印刷：<b>四色</b>(4版、4×500/令)／<b>K色</b>(1版、1×500/令)／<b>不印刷</b>；特別色每色 2000/令、金／銀每色 2500/令、近滿版+500；版費 500/版（雙面正背各自開版）<br>
     印工令數＝印張×面數÷門檻（全開500、對開以下1000；最低1令）　·　量大折扣：每多1令連乘 95 折、下限 7 折<br>
-    勾「紙袋」→ 填長寬高，自動展開落版＋提繩，含軋型／糊袋；接法自動判：落版≤菊全走單接，超菊全→有燙金/打凸拆 A/B 雙接、無工藝則單雙接比價取低（雙接版費依 A/B 共版判、軋型走 A 面×2袋數、糊袋6/個）<br>
+    勾「紙袋」→ 填長寬高，自動展開落版＋提繩，含軋型／糊袋；落版排法自動比價：全開／對開／三開／四開／<b>直裁</b>，價差1%內優先取對開<br>
+    　接法自動判：落版≤菊全走單接，超菊全→有燙金/打凸拆 A/B 雙接、無工藝則單雙接比價取低（雙接版費依 A/B 共版判、軋型走 A 面×2袋數、糊袋6/個）<br>
     後加工（可複選勾選）：上光／燙金／打凸／軋型可同時勾；上光／軋型面積自動抓落版，上光已含毛利、打凸暫估待定價<br>
     報價未稅，另加 5% 營業稅｜濬宇牌價2026-01＋獨立版印刷引擎＋後加工積木｜建置 2026-07-10
   </div>
@@ -407,10 +408,13 @@ function calcGold(colors,areaPer,qty){
   var labor=colors*Math.max(1500, areaPer*0.01*qty);
   return {cost:Math.round(plate+labor), lines:[['燙金版費（max 階梯/面積×4）',plate],['燙金工資（'+colors+'色×每色max(1500,面積×0.01×張)）',Math.round(labor)]]};
 }
-function calcDiecut(area,qty,molds){
+/* oversize＝落版「形狀」放不進菊全（長邊超過88.9）→ 一律走超菊全委外。
+   只看面積會漏判細長件：如 90×39cm 面積僅 3,510 卻上不了菊全機（2026-07-17 修） */
+function calcDiecut(area,qty,molds,oversize){
   var die,labor,s;
-  if(area<=310.8){ s='塑膠刀'; die=400*molds; var mult=1+0.5*(molds-1); labor=Math.max(1*mult*qty, stairCard(qty)); }
-  else { if(area<=1073){s='木刀·8K';die=1200;} else if(area<=2146){s='木刀·4K';die=1600;} else if(area<=4297){s='木刀·對開';die=2500;} else if(area<=5645){s='木刀·菊全';die=3000;} else {s='超菊全委外';die=4000;}
+  if(!oversize && area<=310.8){ s='塑膠刀'; die=400*molds; var mult=1+0.5*(molds-1); labor=Math.max(1*mult*qty, stairCard(qty)); }
+  else { if(oversize){s='超菊全委外';die=4000;}
+    else if(area<=1073){s='木刀·8K';die=1200;} else if(area<=2146){s='木刀·4K';die=1600;} else if(area<=4297){s='木刀·對開';die=2500;} else if(area<=5645){s='木刀·菊全';die=3000;} else {s='超菊全委外';die=4000;}
     if(s==='超菊全委外'){ labor=Math.max(2500,2.5*qty); }
     else { var per=qty<=1499?1.5:qty<=2999?1.2:qty<=4999?1:qty<=9999?0.8:0.6; labor=Math.max(1500,per*qty); } }
   return {cost:Math.round(die+labor), lines:[['軋型刀模費（'+s+'）',die],['軋型工資',Math.round(labor)]]};
@@ -472,17 +476,22 @@ function planCandidates(tw,th2,need,pd){
   for(var sk in pd.priceOf){ var fam=SHEETS_STOCK[sk];
     for(var k=1;k<=4;k++){ var pc=pieceDims(fam.S,fam.L,k); if(!fitsPress(pc[0],pc[1]))continue;
       var m=nUp(tw,th2,pc[0],pc[1]); if(m<1)continue;
-      out.push(mkPlan(sk,fam,k,pc[0],pc[1],m,need,pd,({1:'全開',2:'對開',3:'三開',4:'四開'})[k])); }
+      out.push(mkPlan(sk,fam,k,false,pc[0],pc[1],m,need,pd,({1:'全開',2:'對開',3:'三開',4:'四開'})[k])); }
+    if(fitsPress(tw,th2)){ var f=nUp(tw,th2,fam.S,fam.L);
+      if(f>=1) out.push(mkPlan(sk,fam,f,true,tw,th2,1,need,pd,'直裁')); }
   }
   return out;
 }
-function mkPlan(sk,fam,f,w,h,m,need,pd,label){
+function mkPlan(sk,fam,f,custom,w,h,m,need,pd,label){
   var P=Math.ceil(need/m), raw=(P+100)/f, pcs=paperCost(pd,sk,raw);
   var duiL=fam.L/2, small=((w<=duiL&&h<=fam.S)||(w<=fam.S&&h<=duiL));
-  return {sk:sk,f:f,m:m,P:P,raw:raw,pcs:pcs,small:small,thresh:small?1000:500,ling:Math.max(1,P/(small?1000:500)),label:label};
+  return {sk:sk,f:f,custom:custom,m:m,P:P,raw:raw,pcs:pcs,small:small,thresh:small?1000:500,ling:Math.max(1,P/(small?1000:500)),label:label};
 }
+/* 平手（1% 內）優先選對開：好上機、好管理（2026-07-17 老闆確認，全頁套用） */
 function pickBest(cands,scoreFn){ var best=null,bs=0;
-  cands.forEach(function(c){ var s=scoreFn(c); if(!best||s<bs){best=c;bs=s;} }); return best; }
+  cands.forEach(function(c){ var s=scoreFn(c);
+    if(!best||s<bs-1||(Math.abs(s-bs)<=bs*0.01&&c.label==='對開'&&best.label!=='對開')){best=c;bs=s;} });
+  return best; }
 
 /* 獨立版後加工狀態（可複選；上光／軋型面積自動抓落版） */
 const DUH={ coat:{on:false,craft:'霧膜',side:1}, gold:{on:false,colors:1,area:20}, emboss:{on:false,passes:1}, diecut:{on:false,molds:1} };
@@ -568,7 +577,7 @@ function heBagResult(){
   var grades=sz.grades, grade=grades[Math.min(S.gradeIdx,grades.length-1)];
   var rows=finalRows(mat,{key:sz.key},grade), row=heRowNearest(rows,Q);
   var paperPrint=Math.round(row[S.side+1]*1.2);
-  var die=calcDiecut(pArea,Q,1), glue=4*Q;
+  var die=calcDiecut(pArea,Q,1,!fitsJu(pW,pH)), glue=4*Q;
   var lines=[['印刷＋紙張（'+mat.id+' '+grade.g+'）','套 '+sz.key+'｜'+row[0].toLocaleString()+'張批價×1.2', paperPrint],
              ['軋型（自動）',die.lines[0][0]+'＋工資',die.cost],
              ['糊袋成型','單接 4×'+Q+'個',glue]];
@@ -1036,6 +1045,8 @@ function duColor(){
   if(DU.print==='四色')c.four=1; else if(DU.print==='K色')c.k=1;
   if(DU.spot==='1色'){c.n1=1;} else if(DU.spot==='1色近滿版'){c.n1=1;c.nm=1;}
   else if(DU.spot==='2色'){c.n1=2;} else if(DU.spot==='2色近滿版'){c.n1=2;c.nm=2;}
+  else if(DU.spot==='金銀1色'){c.n2=1;} else if(DU.spot==='金銀1色近滿版'){c.n2=1;c.nm=1;}
+  else if(DU.spot==='金銀2色'){c.n2=2;} else if(DU.spot==='金銀2色近滿版'){c.n2=2;c.nm=2;}
   return c;
 }
 function colTxt2(){ var a=[DU.print]; if(DU.spot!=='無')a.push(DU.spot); return a.join('＋'); }
@@ -1069,8 +1080,8 @@ function duGeom(){
     if(mode==='single'||mode==='compare') sBest=pickBest(planCandidates(pW,pH,Q2,pd),scoreS);
     if(mode==='dual'||mode==='compare') dBest=pickBest(planCandidates(aW,aH,2*Q2,pd),scoreD);
     if(mode==='compare'){
-      var sTot=sBest?scoreS(sBest)+calcDiecut(pArea,Q2,1).cost+4*Q2:Infinity;
-      var dTot=dBest?scoreD(dBest)+calcDiecut(aArea,2*Q2,1).cost+6*Q2:Infinity;
+      var sTot=sBest?scoreS(sBest)+calcDiecut(pArea,Q2,1,!fitsJu(pW,pH)).cost+4*Q2:Infinity;
+      var dTot=dBest?scoreD(dBest)+calcDiecut(aArea,2*Q2,1,!fitsJu(aW,aH)).cost+6*Q2:Infinity;
       if(sTot===Infinity&&dTot===Infinity){ warns.push('單接超印刷機、雙接亦無可行方案 → 人工核算'); }
       else if(sTot<=dTot){ mode='single'; best=sBest; warns.push('無燙金/打凸：單接(直裁+委外軋)較省，已採單接'); }
       else { mode='dual'; best=dBest; warns.push('無燙金/打凸：雙接較省，已採雙接'); }
@@ -1162,7 +1173,7 @@ function duRender(){
   total+=hl.total; hl.warns.forEach(function(w){warns.push(w);});
   if(g.bag && g.best){
     var dArea=g.dual?g.aArea:g.pArea, dPcs=g.dual?2*g.bagQty:g.bagQty;
-    var die=calcDiecut(dArea,dPcs,1);
+    var die=calcDiecut(dArea,dPcs,1, g.dual?!fitsJu(g.aW,g.aH):!fitsJu(g.pW,g.pH));
     lines.push(['軋型（自動）', die.lines[0][0]+'＋工資'+(g.dual?'（A/B '+dPcs.toLocaleString()+'片）':''), die.cost]); total+=die.cost;
     var glueU=g.dual?6:4;
     lines.push(['糊袋成型', (g.dual?'雙接 6':'單接 4')+'×'+g.bagQty+'個', glueU*g.bagQty]); total+=glueU*g.bagQty;
