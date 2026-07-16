@@ -1,186 +1,394 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>工商日曆・三角桌曆訂購｜公版現貨・可加印公司名燙金｜喜成燙金印刷</title>
-<meta name="description" content="工商日曆、三角桌曆線上訂購：公版月曆內頁、免設計費，可加印公司名或 LOGO（燙金／印刷）。高雄工廠直營，填表單一鍵送 LINE 完成訂購。" />
-<meta name="theme-color" content="#14110d" />
-<link rel="canonical" href="https://xicheng-print.com/shop/calendar/" />
-<meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1" />
-<meta property="og:title" content="工商日曆・三角桌曆訂購｜公版現貨" />
-<meta property="og:description" content="公版月曆內頁、免設計費，可加印公司名或 LOGO。填表單一鍵送 LINE 完成訂購。" />
-<meta property="og:type" content="website" />
-<meta property="og:url" content="https://xicheng-print.com/shop/calendar/" />
-<meta property="og:site_name" content="喜成燙金印刷" />
-<meta property="og:locale" content="zh_TW" />
-<meta name="geo.region" content="TW-KHH" />
-<link rel="icon" href="../../favicon.ico" sizes="48x48" />
-<link rel="icon" type="image/png" sizes="192x192" href="../../favicon-192.png" />
-<link rel="apple-touch-icon" sizes="180x180" href="../../apple-touch-icon.png" />
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;500;600;700;900&family=Noto+Sans+TC:wght@300;400;500;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="../../assets/pages.css" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2027 客製桌曆・日曆・年曆｜喜成印刷 預訂</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@700;900&display=swap" rel="stylesheet">
 <style>
-.order-form{background:#fff;border:1px solid #e6ddcf;border-radius:14px;padding:26px 22px;margin:18px 0}
-.order-form h3{margin:0 0 14px;font-family:"Noto Serif TC",serif}
-.of-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.of-field{display:flex;flex-direction:column;gap:6px}
-.of-field.full{grid-column:1/-1}
-.of-field label{font-size:13px;font-weight:700;color:#6b5d45}
-.of-field label em{font-style:normal;color:#b08a3e}
-.of-field input,.of-field select,.of-field textarea{font:inherit;padding:10px 12px;border:1px solid #d9cdb8;border-radius:8px;background:#fdfbf7;color:#2b2115}
-.of-field input:focus,.of-field select:focus,.of-field textarea:focus{outline:2px solid #c9a962;border-color:#c9a962}
-.of-send{display:block;width:100%;margin-top:16px;padding:14px;border:0;border-radius:10px;background:linear-gradient(120deg,#b08a3e,#d8b25b);color:#fff;font:inherit;font-size:16px;font-weight:700;letter-spacing:2px;cursor:pointer}
-.of-send:hover{filter:brightness(1.06)}
-.of-note{font-size:12.5px;color:#8a7a5e;margin-top:10px;line-height:1.7}
-@media(max-width:640px){.of-grid{grid-template-columns:1fr}}
+:root{
+  --paper:#FAF3E6; --ink:#3A3020; --ink-soft:#6B5B42;
+  --kraft:#C8A46C; --wood:#6B4E32; --card:#FFFDF7;
+  --gold-1:#E8C980; --gold-2:#B8873C; --gold-line:#C9A24B;
+  --ok:#2E7A4A;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Noto Sans TC',sans-serif;background:var(--paper);color:var(--ink);line-height:1.7;padding-bottom:84px}
+.wrap{max-width:560px;margin:0 auto;padding:0 20px}
+.eyebrow{letter-spacing:.35em;font-size:12px;color:var(--gold-2);font-weight:700;text-transform:uppercase}
+
+/* hero */
+.hero{padding:44px 0 36px;text-align:center;border-bottom:1px solid #E6D8BC}
+.hero .brand{display:inline-flex;align-items:center;gap:10px;margin-bottom:26px;color:var(--ink-soft);font-size:14px;letter-spacing:.2em}
+.hero .brand::before,.hero .brand::after{content:"";width:36px;height:1px;background:var(--gold-line)}
+.year{font-family:'Noto Serif TC',serif;font-weight:900;font-size:clamp(88px,26vw,132px);line-height:1;
+  background:linear-gradient(115deg,var(--gold-2) 0%,var(--gold-1) 38%,#F6E3AE 50%,var(--gold-1) 62%,var(--gold-2) 100%);
+  background-size:220% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;
+  animation:sheen 5.5s ease-in-out infinite}
+@keyframes sheen{0%,100%{background-position:0% 0}50%{background-position:100% 0}}
+@media (prefers-reduced-motion:reduce){.year{animation:none}}
+.hero h1{font-family:'Noto Serif TC',serif;font-weight:900;font-size:30px;margin:6px 0 12px;letter-spacing:.08em}
+.hero p{color:var(--ink-soft);font-size:15px}
+.badge{display:inline-block;margin-top:16px;border:1px solid var(--gold-line);color:var(--gold-2);
+  padding:6px 16px;border-radius:999px;font-size:13px;letter-spacing:.12em;background:#FFF9EC}
+
+/* 三角桌曆示意 */
+.calmodel{margin:30px auto 4px;width:210px;position:relative;height:150px}
+.calmodel .face{position:absolute;left:0;bottom:8px;width:168px;height:126px;background:var(--card);
+  border:1.5px solid var(--gold-line);border-radius:3px;box-shadow:0 10px 18px rgba(80,58,30,.18)}
+.calmodel .side{position:absolute;left:166px;bottom:8px;width:0;height:0;
+  border-left:34px solid var(--kraft);border-top:126px solid transparent}
+.calmodel .rings{position:absolute;left:8px;top:8px;display:flex;gap:9px}
+.calmodel .rings i{width:9px;height:13px;border:2.5px solid var(--wood);border-radius:50%;display:block;margin-top:-9px;background:var(--paper)}
+.calmodel .photo{position:absolute;left:12px;top:14px;width:144px;height:52px;border-radius:2px;
+  background:linear-gradient(135deg,#D8B47E,#BE9560)}
+.calmodel .grid{position:absolute;left:12px;top:74px;width:144px;height:42px;
+  background:repeating-linear-gradient(90deg,#F3EBDC 0 16px,transparent 16px 20px),
+             repeating-linear-gradient(0deg,#F3EBDC 0 15px,transparent 15px 19px)}
+
+/* sections */
+section{padding:36px 0;border-bottom:1px solid #E6D8BC}
+h2{font-family:'Noto Serif TC',serif;font-weight:900;font-size:22px;letter-spacing:.1em;margin:8px 0 20px}
+.points{display:grid;gap:14px}
+.point{background:var(--card);border:1px solid #E8DCC2;border-left:4px solid var(--gold-line);border-radius:10px;padding:16px 18px}
+.point b{display:block;font-size:16px;margin-bottom:4px}
+.point span{color:var(--ink-soft);font-size:14px}
+
+/* form */
+.field{margin-bottom:20px}
+label.t{display:block;font-weight:700;font-size:15px;margin-bottom:8px}
+label.t small{color:var(--ink-soft);font-weight:400;margin-left:6px}
+input[type=text],input[type=number],textarea,select{
+  width:100%;background:var(--card);border:1.5px solid #DECBA4;border-radius:10px;
+  padding:12px 14px;font-size:16px;font-family:inherit;color:var(--ink)}
+input:focus,textarea:focus,select:focus{outline:2px solid var(--gold-line);outline-offset:1px;border-color:var(--gold-line)}
+.opts{display:flex;flex-wrap:wrap;gap:10px}
+.opts label{border:1.5px solid #DECBA4;background:var(--card);border-radius:999px;
+  padding:9px 16px;font-size:14.5px;cursor:pointer;user-select:none}
+.opts input{position:absolute;opacity:0;pointer-events:none}
+.opts label:has(input:checked){border-color:var(--gold-2);background:#F6E9CB;font-weight:700}
+.opts label:has(input:focus-visible){outline:2px solid var(--gold-line);outline-offset:2px}
+textarea{min-height:88px;resize:vertical}
+
+.gen{width:100%;border:none;border-radius:12px;padding:15px;font-size:17px;font-weight:700;
+  font-family:inherit;letter-spacing:.1em;cursor:pointer;color:#3A2C12;
+  background:linear-gradient(115deg,var(--gold-2),var(--gold-1) 45%,#F2DFA6 55%,var(--gold-2));
+  box-shadow:0 4px 12px rgba(150,110,50,.28)}
+.gen:active{transform:translateY(1px)}
+.result{display:none;margin-top:18px;background:var(--card);border:1.5px dashed var(--gold-line);border-radius:12px;padding:16px}
+.result.show{display:block}
+.result pre{white-space:pre-wrap;font-family:inherit;font-size:14.5px;color:var(--ink);margin-bottom:14px}
+.row2{display:flex;gap:10px}
+.btn2{flex:1;text-align:center;text-decoration:none;border-radius:10px;padding:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit}
+.copy{background:#EFE3C6;border:1.5px solid var(--gold-line);color:var(--ink)}
+.line{background:#06C755;border:1.5px solid #06C755;color:#fff}
+
+/* steps */
+.steps{counter-reset:s;display:grid;gap:12px}
+.step{background:var(--card);border:1px solid #E8DCC2;border-radius:10px;padding:14px 16px 14px 56px;position:relative;font-size:14.5px}
+.step::before{counter-increment:s;content:counter(s);position:absolute;left:16px;top:50%;transform:translateY(-50%);
+  width:28px;height:28px;border-radius:50%;background:var(--gold-2);color:#fff;font-weight:700;
+  display:flex;align-items:center;justify-content:center;font-size:14px}
+
+footer{padding:30px 0 20px;text-align:center;color:var(--ink-soft);font-size:13px;letter-spacing:.06em}
+footer .gl{color:var(--gold-2)}
+
+/* sticky CTA */
+.sticky{position:fixed;left:0;right:0;bottom:0;background:rgba(58,48,32,.96);backdrop-filter:blur(4px);
+  padding:12px 16px;display:flex;gap:12px;align-items:center;justify-content:center;z-index:9}
+.sticky span{color:#F2E6C8;font-size:14px}
+.sticky a{background:#06C755;color:#fff;text-decoration:none;font-weight:700;border-radius:999px;padding:10px 22px;font-size:15px}
+
+/* catalog */
+.cat{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.stycard{position:relative;background:var(--card);border:1.5px solid #DECBA4;border-radius:12px;overflow:hidden;cursor:pointer;transition:border-color .15s}
+.stycard img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;background:linear-gradient(135deg,#E8D8B8,#D2B98C)}
+.stycard .nm{padding:9px 10px;font-size:14px;font-weight:700;display:flex;justify-content:space-between;align-items:center;gap:6px}
+.stycard .cd{color:var(--ink-soft);font-weight:400;font-size:12px}
+.stycard.sel{border-color:var(--gold-2);box-shadow:0 0 0 2px var(--gold-1)}
+.stycard.sel::after{content:"✓ 已選";position:absolute;top:8px;left:8px;background:var(--gold-2);color:#fff;font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px}
+/* 授權審核中：可看，不可下單 */
+.stycard.pending{cursor:default}
+.stycard.pending img{filter:saturate(.55) brightness(.94)}
+.stycard.pending::after{content:"授權審核中 · 敬請期待";position:absolute;top:8px;left:8px;right:8px;background:rgba(58,48,32,.9);color:#F2E6C8;font-size:11.5px;font-weight:700;padding:4px 8px;border-radius:999px;text-align:center}
+.stycard.pending .nm>span:first-child{color:var(--ink-soft)}
+
+/* gallery lightbox */
+.stycard .nm .view{font-size:12px;color:var(--gold-2);font-weight:700;border:1px solid var(--gold-line);border-radius:999px;padding:2px 10px;white-space:nowrap}
+.lb{position:fixed;inset:0;background:rgba(40,32,20,.93);z-index:50;display:none;flex-direction:column}
+.lb.show{display:flex}
+.lb .top{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;color:#F2E6C8}
+.lb .top b{font-size:16px}
+.lb .cnt{font-size:13px;opacity:.85}
+.lb .x{background:none;border:1.5px solid #C9A24B;color:#F2E6C8;border-radius:999px;padding:6px 16px;font-size:14px;cursor:pointer;font-family:inherit}
+.lb .stage{flex:1;display:flex;align-items:center;justify-content:center;min-height:0;padding:0 8px}
+.lb .stage img{max-width:100%;max-height:100%;object-fit:contain;border-radius:6px;background:#fff}
+.lb .miss{color:#D8C49A;font-size:14px}
+.lb .nav{display:flex;gap:10px;padding:14px 16px 18px;align-items:center;justify-content:center}
+.lb .nv{background:#5C4A2E;border:none;color:#F2E6C8;border-radius:10px;padding:12px 22px;font-size:16px;cursor:pointer;font-family:inherit}
+.lb .pick{background:linear-gradient(115deg,var(--gold-2),var(--gold-1));border:none;color:#3A2C12;font-weight:700;border-radius:10px;padding:12px 22px;font-size:16px;cursor:pointer;font-family:inherit}
 </style>
 </head>
 <body>
 
-<header>
-  <div class="nav">
-    <a href="../../" class="brand" aria-label="喜成燙金印刷 首頁">
-      <img src="../../assets/seal-only-gold.png" alt="喜成印記" />
-      <span class="bt"><b>喜成燙金印刷</b><span>C Cheng Enterprise</span></span>
-    </a>
-    <nav class="menu" id="menu">
-      <a href="../../">首頁</a>
-      <a href="../" class="on">公版商品</a>
-      <a href="../../foil/">燙金</a>
-      <a href="../../emboss/">打凸打凹</a>
-      <a href="../../diecut/">軋型</a>
-      <a href="../../oem/">同業代工</a>
-      <a href="../../faq/">問答</a>
-      <a href="tel:+886986990812" class="btn">立即詢價</a>
-    </nav>
-    <div class="burger" id="burger" aria-label="選單"><span></span><span></span><span></span></div>
+<header class="hero wrap">
+  <div class="brand">喜 成 印 刷</div>
+  <div class="year">2027</div>
+  <h1>客製桌曆 · 日曆 · 年曆</h1>
+  <p>你的照片、你的品牌，陪客戶過完 2027 一整年。</p>
+  <div class="calmodel" aria-hidden="true">
+    <div class="face">
+      <div class="rings"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="photo"></div><div class="grid"></div>
+    </div>
+    <div class="side"></div>
   </div>
+  <span class="badge">早鳥預訂中 · 留資料享優先報價</span>
 </header>
 
-<section class="page-hero">
-  <div class="wrap">
-    <div class="crumb"><a href="../../">首頁</a><span class="sep">›</span><a href="../">公版商品購買</a><span class="sep">›</span>工商日曆・三角桌曆</div>
-    <div class="latin-sub">Business Calendar</div>
-    <h1>工商日曆・三角桌曆訂購<br><span class="gold-text">公版現貨，印上你的公司名就出貨</span></h1>
-    <p class="lead">年前送客戶最不會出錯的一份禮。公版月曆內頁、免設計費——加印公司名、電話或 LOGO（可選燙金），客戶桌上擺一整年，你的品牌也曝光一整年。</p>
+<section class="wrap">
+  <div class="eyebrow">WHY</div>
+  <h2>為什麼值得做一本</h2>
+  <div class="points">
+    <div class="point"><b>桌上的隱形業務</b><span>名片會被收進抽屜，桌曆在客戶桌上站一整年，品牌天天被看見。</span></div>
+    <div class="point"><b>桌曆・日曆・年曆 三種選</b><span>站桌上、掛牆上、天天撕一頁——照片、LOGO 全客製。</span></div>
+    <div class="point"><b>封面可加燙金 LOGO</b><span>喜成本業就是燙金，質感直接拉滿，送禮特別體面。</span></div>
   </div>
 </section>
 
-<article class="article">
-  <div class="wrap">
+<section class="wrap" id="styles">
+  <div class="eyebrow">2027 STYLES</div>
+  <h2>現成款式，直接挑</h2>
+  <p style="color:var(--ink-soft);font-size:14px;margin:-10px 0 18px">八款設計現貨開訂，兩款授權審核中。點「看內頁」翻整本，點卡片選款式。</p>
+  <div class="cat" id="catGrid"></div>
+</section>
 
-    <h2>商品說明</h2>
-    <div class="spec-wrap">
-      <table class="spec">
-        <tr><th>項目</th><th>內容</th></tr>
-        <tr><td>形式</td><td>三角立式桌曆（自立式，免支架）</td></tr>
-        <tr><td>內頁</td><td>公版月曆內頁（隔年年度，含國定假日）</td></tr>
-        <tr><td>加印</td><td>公司名／電話／LOGO，可選 <b>燙金</b> 或印刷</td></tr>
-        <tr><td>設計費</td><td>公版免設計費（LOGO 加印提供 AI／PDF 檔即可）</td></tr>
-        <tr><td>價格與交期</td><td>依數量與加印方式報價——送出訂購單後 LINE 當日回覆</td></tr>
-      </table>
-    </div>
-    <div class="callout"><b>建議提早訂。</b>工商日曆是季節品，每年 Q3 開始收單、年底前交貨；越接近年底檔期越滿，提早下單交期最有保障。</div>
+<section class="wrap" id="order">
+  <div class="eyebrow">PRE-ORDER</div>
+  <h2>預訂登記</h2>
 
-    <h2>填寫訂購單</h2>
-    <div class="order-form">
-      <h3>三角桌曆 訂購單</h3>
-      <div class="of-grid">
-        <div class="of-field"><label>公司／店家名稱 <em>*</em></label><input id="f-company" type="text" placeholder="例：喜成企業社" /></div>
-        <div class="of-field"><label>聯絡人 <em>*</em></label><input id="f-name" type="text" placeholder="怎麼稱呼您" /></div>
-        <div class="of-field"><label>聯絡電話 <em>*</em></label><input id="f-phone" type="tel" placeholder="0900-000-000" /></div>
-        <div class="of-field"><label>數量（份）<em>*</em></label><input id="f-qty" type="number" min="1" placeholder="例：200" /></div>
-        <div class="of-field"><label>加印方式</label><select id="f-imprint"><option>燙金加印（質感推薦）</option><option>印刷加印</option><option>不加印（純公版）</option><option>還不確定，先詢價</option></select></div>
-        <div class="of-field"><label>加印內容</label><input id="f-content" type="text" placeholder="例：公司名＋電話，或 LOGO（有檔案）" /></div>
-        <div class="of-field full"><label>備註（交貨地區、希望交期、其他需求）</label><textarea id="f-note" rows="3" placeholder="例：高雄市區，11 月中前要"></textarea></div>
-      </div>
-      <button class="of-send" id="of-submit">送出訂購單到 LINE ↗</button>
-      <div class="of-note">ℹ️ 送出後會開啟 LINE，選「喜成印刷」按送出即可（訂購內容已自動帶好、也已複製備份）。送出訂購單不等於成立訂單，我們會先回覆報價與樣式圖，確認後才算數。</div>
-    </div>
-
-    <h2>常見問題</h2>
-    <details class="qa"><summary>最少要訂多少份？</summary><div class="a"><p>小量也可以問。公版商品免開版，少量的門檻比客製品低很多；填單時寫上你要的數量，我們直接回你這個量的價格。</p></div></details>
-    <details class="qa"><summary>可以印我們公司的 LOGO 嗎？</summary><div class="a"><p>可以。提供 AI 或向量 PDF 檔即可，加印位置與尺寸我們會出樣式圖給你確認後才生產。想要更有質感，推薦 LOGO 用<a href="../../foil/" style="color:var(--gold-dk)">燙金</a>處理。</p></div></details>
-    <details class="qa"><summary>什麼時候訂比較好？</summary><div class="a"><p>每年第三季（7–9 月）就可以下單，年底前交貨。12 月是交貨高峰，越早訂交期越從容。</p></div></details>
-
-    <div class="cta-band">
-      <h2>想先看樣品再決定？</h2>
-      <p>加官方 LINE 跟我們說「想看桌曆樣品」，直接傳實品照給你。</p>
-      <div class="row">
-        <a href="https://line.me/R/ti/p/%40623bfkyg" target="_blank" rel="noopener" class="btn">加 LINE 詢問 →</a>
-        <a href="tel:+886986990812" class="btn ghost">撥打 0986-990-812</a>
-      </div>
+  <div class="field">
+    <label class="t">想預訂的品項</label>
+    <div class="opts" id="prod">
+      <label><input type="radio" name="prod" value="現成款式桌曆" checked>現成款式桌曆</label>
+      <label><input type="radio" name="prod" value="全客製照片桌曆">全客製照片桌曆</label>
+      <label><input type="radio" name="prod" value="撕頁日曆">撕頁日曆</label>
+      <label><input type="radio" name="prod" value="掛牆年曆">掛牆年曆</label>
+      <label><input type="radio" name="prod" value="都想了解">都想了解</label>
     </div>
   </div>
-</article>
 
-<section class="related">
-  <div class="wrap">
-    <h2>延伸閱讀</h2>
-    <div class="rel-row">
-      <a class="rel" href="../"><b>公版商品購買</b><span>更多現成品項，直接訂、快速出。</span><span class="go">回總覽 →</span></a>
-      <a class="rel" href="../../foil/"><b>燙金完全指南</b><span>加印想用燙金？先看懂版費與工繳怎麼算。</span><span class="go">閱讀 →</span></a>
-      <a class="rel" href="../../box-bag/"><b>紙盒紙袋客製</b><span>連禮盒提袋一起做，送禮體面一次到位。</span><span class="go">閱讀 →</span></a>
+  <div class="field">
+    <label class="t" for="qty">數量<small>（本）</small></label>
+    <input type="number" id="qty" min="1" inputmode="numeric" placeholder="例如：50">
+  </div>
+
+  <div class="field" id="fSize">
+    <label class="t">尺寸偏好</label>
+    <div class="opts" id="size">
+      <label><input type="radio" name="size" value="橫式（標準）" checked>橫式（標準）</label>
+      <label><input type="radio" name="size" value="直式">直式</label>
+      <label><input type="radio" name="size" value="想再討論">想再討論</label>
+    </div>
+  </div>
+
+  <div class="field" id="fPhoto">
+    <label class="t">照片怎麼提供</label>
+    <div class="opts" id="photo">
+      <label><input type="radio" name="photo" value="自備 12 張照片" checked>自備照片</label>
+      <label><input type="radio" name="photo" value="需要協助設計">需要協助設計</label>
+    </div>
+  </div>
+
+  <div class="field">
+    <label class="t">加購項目</label>
+    <div class="opts">
+      <label><input type="checkbox" id="foil">封面燙金 LOGO</label>
+    </div>
+  </div>
+
+  <div class="field">
+    <label class="t" for="name">怎麼稱呼您</label>
+    <input type="text" id="name" placeholder="姓名／公司名">
+  </div>
+
+  <div class="field">
+    <label class="t" for="note">備註<small>（想放的內容、交期需求…）</small></label>
+    <textarea id="note" placeholder="例如：想放我們的甜點照片，11 月中前要拿到"></textarea>
+  </div>
+
+  <button class="gen" id="genBtn" type="button">產生預訂訊息</button>
+
+  <div class="result" id="result">
+    <pre id="msg"></pre>
+    <div class="row2">
+      <button class="btn2 copy" id="copyBtn" type="button">複製訊息</button>
+      <a class="btn2 line" href="https://line.me/R/ti/p/@623bfkyg" target="_blank" rel="noopener">加 LINE 傳送</a>
     </div>
   </div>
 </section>
 
-<footer>
-  <div class="foot-inner">
-    <div class="foot-top">
-      <div class="foot-brand">
-        <img src="../../assets/logo-horiz-gold.png" alt="喜成燙金印刷 C Cheng Enterprise" />
-        <p>喜成燙金印刷 · 喜成企業社。高雄阿蓮的一條龍印刷職人團隊，從印刷、燙金、打凸到軋型成型，一站完成。</p>
-      </div>
-      <div class="foot-links">
-        <div class="foot-col">
-          <h5>公版商品</h5>
-          <a href="./">工商日曆・三角桌曆</a>
-          <a href="../">全部品項</a>
-        </div>
-        <div class="foot-col">
-          <h5>聯絡</h5>
-          <a href="tel:+886986990812">0986-990-812</a>
-          <a href="https://line.me/R/ti/p/%40623bfkyg" target="_blank" rel="noopener">官方 LINE</a>
-          <a href="https://instagram.com/c_cheng_c888" target="_blank" rel="noopener">@c_cheng_c888</a>
-          <p>高雄市阿蓮區峰園路 58 號</p>
-        </div>
-      </div>
-    </div>
-    <div class="foot-bot">
-      <div>© 2026 喜成燙金印刷 · 喜成企業社（統編 92100012）. All rights reserved.</div>
-      <div class="latin">C CHENG ENTERPRISE</div>
-    </div>
+<section class="wrap">
+  <div class="eyebrow">HOW</div>
+  <h2>預訂流程</h2>
+  <div class="steps">
+    <div class="step">填上面的預訂登記，把訊息傳到我們 LINE</div>
+    <div class="step">確認規格與報價，傳照片給我們排版</div>
+    <div class="step">看過打樣確認後印製，準時交貨</div>
   </div>
+</section>
+
+<footer class="wrap">
+  喜成印刷｜燙金 · 軋型 · 紙袋 · 紙盒 · 禮盒<br>
+  <span class="gl">諮詢 LINE：@623bfkyg</span>
 </footer>
 
-<script>
-const burger=document.getElementById('burger'),menu=document.getElementById('menu');
-const closeMenu=()=>{menu.classList.remove('open');burger.classList.remove('open')};
-burger.addEventListener('click',e=>{e.stopPropagation();menu.classList.toggle('open');burger.classList.toggle('open')});
-menu.querySelectorAll('a').forEach(a=>a.addEventListener('click',closeMenu));
-document.addEventListener('click',e=>{if(menu.classList.contains('open')&&!menu.contains(e.target))closeMenu()});
+<div class="sticky">
+  <span>2027 桌曆・日曆・年曆 預訂中</span>
+  <a href="https://line.me/R/ti/p/@623bfkyg" target="_blank" rel="noopener">LINE 詢問</a>
+</div>
 
-document.getElementById('of-submit').addEventListener('click',()=>{
-  const v=id=>document.getElementById(id).value.trim();
-  const company=v('f-company'),name=v('f-name'),phone=v('f-phone'),qty=v('f-qty');
-  if(!company||!name||!phone||!qty){alert('請先填好：公司名稱、聯絡人、電話、數量');return;}
-  const imprint=document.getElementById('f-imprint').value,content=v('f-content'),note=v('f-note');
-  const msg=['【三角桌曆 訂購單】',
-    '公司／店家：'+company,
-    '聯絡人：'+name,
-    '電話：'+phone,
-    '數量：'+qty+' 份',
-    '加印方式：'+imprint,
-    content?'加印內容：'+content:null,
-    note?'備註：'+note:null,
-    '——來自官網 公版商品訂購頁'].filter(Boolean).join('\n');
-  if(navigator.clipboard)navigator.clipboard.writeText(msg).catch(()=>{});
-  window.open('https://line.me/R/msg/text/?'+encodeURIComponent(msg),'_blank');
-  alert('正開啟 LINE，選「喜成印刷」送出即可 ✦（訂購內容已帶好、也已複製備份）');
+<div class="lb" id="lb" role="dialog" aria-label="桌曆內頁預覽">
+  <div class="top"><b id="lbName"></b><span class="cnt" id="lbCnt"></span><button class="x" id="lbClose" type="button">關閉 ✕</button></div>
+  <div class="stage" id="lbStage"></div>
+  <div class="nav">
+    <button class="nv" id="lbPrev" type="button">‹ 上一頁</button>
+    <button class="pick" id="lbPick" type="button">選這款</button>
+    <button class="nv" id="lbNext" type="button">下一頁 ›</button>
+  </div>
+</div>
+
+<script>
+var STYLES=[
+ {c:"25002",n:"動物方程式",extraCover:["CAZT-001_2027年動物方城市桌曆.jpg"],seq:{pre:"CAZT-001_動物方城市桌曆_內頁-",n:24}},
+ {c:"25003",n:"維尼",extraCover:["CAWP-014_2027年小熊維尼桌曆.jpg"],seq:{pre:"CAWP-014_小熊維尼桌曆_內頁_工作區域 ",n:24}},
+ {c:"25005",n:"北境晨光",base:"風景",pre:null},
+ {c:"25006",n:"名畫",pre:["2027-名畫內頁_"]},
+ {c:"25007",n:"豐時四季",base:"水果",pre:["2027-水果25k內頁_"]},
+ {c:"25008",n:"水豚寶",pre:null},
+ {c:"25010",n:"柴語錄",pre:["2027-柴語錄內頁_"],extraCover:["2027柴語錄示意圖  .jpg"]},
+ {c:"25012",n:"比得兔",base:"彼得兔",pre:["2027-彼得兔25K內頁_"]},
+ {c:"25009",n:"白爛貓",pre:["2027-白爛貓內頁_"],pending:true},
+ {c:"25011",n:"超人力霸王",extraCover:["超人力霸王封面.jpg"],seq:{pre:"2027三角桌曆25K-Ultrman-大圖_頁面_",n:16},pending:true}
+];
+function baseName(st){return st.base||st.n;}
+function coverCands(st){
+  var b=baseName(st);
+  var arr=["2027-"+b+"25K封面_封面.jpg","2027-"+b+"_25K封面_封面.jpg"];
+  if(st.extraCover) arr=st.extraCover.concat(arr);
+  return arr.map(function(f){return "img/"+st.c+"/"+f;});
+}
+function pageCands(st,m){
+  var b=baseName(st);
+  var pres=st.pre||["2027-"+b+"內頁_","2027-"+b+"25K內頁_","2027-"+b+"25k內頁_"];
+  return pres.map(function(p){return "img/"+st.c+"/"+p+m+"月.jpg";});
+}
+/* 廠商原始檔名款（內頁為 01…N 流水號，非月份） */
+function seqSlides(st){
+  var out=[];
+  for(var i=1;i<=st.seq.n;i++){
+    var num=(i<10?"0":"")+i;
+    out.push({label:"內頁 "+i,cands:["img/"+st.c+"/"+st.seq.pre+num+".jpg"]});
+  }
+  return out;
+}
+function chainLoad(imgEl,cands,onFail){
+  var i=0;
+  imgEl.onerror=function(){ i++; if(i<cands.length){imgEl.src=cands[i];} else {imgEl.onerror=null; if(onFail)onFail(imgEl);} };
+  imgEl.src=cands[0];
+}
+var selStyle=null;
+var grid=document.getElementById('catGrid');
+STYLES.forEach(function(st){
+  var el=document.createElement('div'); el.className='stycard'+(st.pending?' pending':'');
+  var im=document.createElement('img'); im.alt=st.n+' 2027桌曆'; im.loading='lazy';
+  chainLoad(im,coverCands(st),function(x){x.style.height='110px';});
+  var nm=document.createElement('div'); nm.className='nm';
+  nm.innerHTML='<span>'+st.n+'</span><span class="view">看內頁 ▸</span>';
+  el.appendChild(im); el.appendChild(nm); grid.appendChild(el);
+  el.addEventListener('click',function(e){
+    if(e.target.classList.contains('view')){ openLb(st); return; }
+    if(st.pending){ return; }
+    selectStyle(st,el);
+  });
+});
+function selectStyle(st,el){
+  if(st&&st.pending) return;
+  document.querySelectorAll('.stycard').forEach(x=>x.classList.remove('sel'));
+  if(el) el.classList.add('sel');
+  else{ var idx=STYLES.indexOf(st); var card=grid.children[idx]; if(card)card.classList.add('sel'); }
+  selStyle=st;
+  document.querySelector('input[name=prod][value=現成款式桌曆]').checked=true; syncFields();
+}
+/* lightbox */
+var lb=document.getElementById('lb'),lbStage=document.getElementById('lbStage'),
+    lbName=document.getElementById('lbName'),lbCnt=document.getElementById('lbCnt');
+var lbStyle=null,lbIdx=0,lbSlides=[];
+function openLb(st){
+  lbStyle=st; lbIdx=0;
+  lbSlides=[{label:"封面",cands:coverCands(st)}];
+  if(st.seq){ lbSlides=lbSlides.concat(seqSlides(st)); }
+  else { for(var m=1;m<=12;m++) lbSlides.push({label:m+"月 內頁",cands:pageCands(st,m)}); }
+  lbName.textContent=st.n; lb.classList.add('show'); showSlide();
+  var pk=document.getElementById('lbPick');
+  pk.textContent=st.pending?'授權審核中':'選這款';
+  pk.disabled=!!st.pending;
+  pk.style.opacity=st.pending?'.45':'';
+  pk.style.cursor=st.pending?'default':'pointer';
+  document.body.style.overflow='hidden';
+}
+function showSlide(){
+  var s=lbSlides[lbIdx];
+  lbCnt.textContent=s.label+"（"+(lbIdx+1)+"/"+lbSlides.length+"）";
+  lbStage.innerHTML='';
+  var im=document.createElement('img'); im.alt=lbStyle.n+" "+s.label;
+  chainLoad(im,s.cands,function(){ lbStage.innerHTML='<span class="miss">此頁圖片準備中</span>'; });
+  lbStage.appendChild(im);
+}
+document.getElementById('lbPrev').onclick=function(){ lbIdx=(lbIdx-1+lbSlides.length)%lbSlides.length; showSlide(); };
+document.getElementById('lbNext').onclick=function(){ lbIdx=(lbIdx+1)%lbSlides.length; showSlide(); };
+document.getElementById('lbClose').onclick=function(){ lb.classList.remove('show'); document.body.style.overflow=''; };
+document.getElementById('lbPick').onclick=function(){
+  if(lbStyle&&lbStyle.pending) return;
+  selectStyle(lbStyle,null); lb.classList.remove('show'); document.body.style.overflow='';
+  document.getElementById('order').scrollIntoView({behavior:'smooth'});
+};
+lb.addEventListener('click',function(e){ if(e.target===lb) { lb.classList.remove('show'); document.body.style.overflow=''; } });
+function syncFields(){
+  var p=document.querySelector('input[name=prod]:checked').value;
+  document.getElementById('fSize').style.display=(p==='全客製照片桌曆')?'':'none';
+  document.getElementById('fPhoto').style.display=(p==='全客製照片桌曆')?'':'none';
+  document.getElementById('styles').style.opacity=(p==='現成款式桌曆')?'1':'.5';
+}
+document.querySelectorAll('input[name=prod]').forEach(r=>r.addEventListener('change',syncFields));
+syncFields();
+document.getElementById('genBtn').addEventListener('click',function(){
+  var prod=document.querySelector('input[name=prod]:checked').value;
+  var qty=document.getElementById('qty').value.trim();
+  var size=document.querySelector('input[name=size]:checked').value;
+  var photo=document.querySelector('input[name=photo]:checked').value;
+  var foil=document.getElementById('foil').checked?'要':'先不用';
+  var name=document.getElementById('name').value.trim()||'（未填）';
+  var note=document.getElementById('note').value.trim()||'（無）';
+  var msg='【2027 曆製品預訂】\n'+'品項：'+prod+'\n';
+  if(prod==='現成款式桌曆'){
+    msg+='款式：'+(selStyle?('#'+selStyle.c+' '+selStyle.n):'（尚未點選款式）')+'\n';
+  }
+  msg+='稱呼：'+name+'\n'+'數量：'+(qty?qty+' 本':'（未填）')+'\n';
+  if(prod==='全客製照片桌曆'){ msg+='尺寸：'+size+'\n'+'照片：'+photo+'\n'; }
+  msg+='封面燙金：'+foil+'\n'+'備註：'+note;
+  document.getElementById('msg').textContent=msg;
+  document.getElementById('result').classList.add('show');
+  document.getElementById('result').scrollIntoView({behavior:'smooth',block:'center'});
+});
+document.getElementById('copyBtn').addEventListener('click',function(){
+  var t=document.getElementById('msg').textContent;
+  navigator.clipboard.writeText(t).then(()=>{
+    this.textContent='已複製 ✓';
+    setTimeout(()=>{this.textContent='複製訊息'},1600);
+  });
 });
 </script>
 </body>
