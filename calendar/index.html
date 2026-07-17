@@ -249,7 +249,8 @@ footer .gl{color:var(--gold-2)}
     一律<b>附贈透明 OPP 袋</b>（不包裝）；需要代客包裝每本 <b>+1 元</b>。<br>
     底板燙金：單面每本 <b>+2.5 元</b>、雙面每本 <b>+4.5 元</b>（同一塊版）。
     整張單<b>不足 100 本</b>另收上機費（單面 300 元／雙面 500 元）。<br>
-    運費：每 <b>100 本</b>裝一箱，每箱 <b>150 元</b>，未滿一箱以一箱計。
+    運費：每 <b>100 本</b>裝一箱，每箱 <b>150 元</b>，未滿一箱以一箱計。<br>
+    以上單價均為<b>未稅價</b>；下方費用明細會自動加計 <b>5% 營業稅</b>，總計即為<b>實付金額</b>。
   </div>
 
   <!-- 訂購明細（數量在上方款式牆各款照片下方填） -->
@@ -427,6 +428,8 @@ var FOIL_UNIT  = {'單面':2.5, '雙面':4.5};
 var FOIL_SETUP = {'單面':300, '雙面':500};
 var SETUP_MIN  = 100;
 var PACK_FEE   = 1;      // 代客包裝，每本 1 元（OPP 袋一律附贈，不包裝）
+/* 老闆給的單價全為未稅價 → 網站直接算含稅價給客人看（2026-07-17 確認）。稅額四捨五入到整數。 */
+var TAX_RATE   = 0.05;
 
 function fmt(n){ return n.toLocaleString('en-US',{maximumFractionDigits:1}); }
 
@@ -451,7 +454,7 @@ STYLES.forEach(function(st){
 
   if(!isPending(st)){
     var pr=document.createElement('div'); pr.className='pr';
-    pr.innerHTML='NT$ <b>'+priceOf(st.c)+'</b> / 本';
+    pr.innerHTML='NT$ <b>'+priceOf(st.c)+'</b> / 本<span style="opacity:.7"> 未稅</span>';
     el.appendChild(pr);
     var q=document.createElement('div'); q.className='qty';
     var l1=document.createElement('em'); l1.textContent='數量';
@@ -772,8 +775,10 @@ function calcCost(){
   var setup = (foilOn && q>0 && q<SETUP_MIN) ? FOIL_SETUP[side] : 0;   // 不足 100 本看整張單總數
   var pack  = packChk.checked ? q*PACK_FEE : 0;
   var sh=shipCalc(), ship=sh?sh.fee:0;
+  var net=cal+foil+setup+pack+ship;          // 未稅小計
+  var tax=Math.round(net*TAX_RATE);
   return {q:q, foilOn:foilOn, side:side, cal:cal, foil:foil, setup:setup, pack:pack,
-          sh:sh, ship:ship, total:cal+foil+setup+pack+ship};
+          sh:sh, ship:ship, net:net, tax:tax, total:net+tax};
 }
 
 function renderCost(){
@@ -797,7 +802,9 @@ function renderCost(){
   costBox.innerHTML = rows.map(function(r){
     return '<div class="r '+r[3]+'"><span class="k">'+r[0]+r[1]+'</span><span class="v">'+r[2]+'</span></div>';
   }).join('') +
-  '<div class="r sum"><span class="k">總計</span><span class="v">NT$ '+fmt(c.total)+'</span></div>';
+  '<div class="r"><span class="k">未稅小計</span><span class="v">NT$ '+fmt(c.net)+'</span></div>' +
+  '<div class="r"><span class="k">營業稅<em>5%</em></span><span class="v">NT$ '+fmt(c.tax)+'</span></div>' +
+  '<div class="r sum"><span class="k">總計<em>含稅・實付金額</em></span><span class="v">NT$ '+fmt(c.total)+'</span></div>';
 }
 
 /* 上機費提示：講清楚現在會不會被收、差多少免收 */
@@ -870,7 +877,9 @@ document.getElementById('genBtn').addEventListener('click',function(){
   msg+='運費：'+(c.sh ? c.sh.boxes+' 箱 × 150 = NT$ '+fmt(c.ship)+'（各款合併，100 本/箱，未滿一箱以一箱計）'
                      : '（未填數量，無法計算）')+'\n';
   msg+='─────────────\n';
-  msg+='總計：NT$ '+fmt(c.total)+'\n';
+  msg+='未稅小計：NT$ '+fmt(c.net)+'\n';
+  msg+='營業稅 5%：NT$ '+fmt(c.tax)+'\n';
+  msg+='總計（含稅）：NT$ '+fmt(c.total)+'\n';
   msg+='─────────────\n';
   msg+='收件人：'+(nm||U)+'\n';
   msg+='電話：'+(ph||U)+'\n';
