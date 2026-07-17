@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>內頁挑選｜挑出不要放在網站的照片</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@700;900&display=swap" rel="stylesheet">
+<style>
+:root{ --paper:#FAF3E6; --ink:#3A3020; --ink-soft:#6B5B42; --card:#FFFDF7;
+       --gold-1:#E8C980; --gold-2:#B8873C; --gold-line:#C9A24B; --del:#B4483C; --ok:#2E7A4A; }
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{font-family:'Noto Sans TC',sans-serif;background:var(--paper);color:var(--ink);line-height:1.6;padding-bottom:96px}
+.wrap{max-width:900px;margin:0 auto;padding:0 16px}
+header{padding:26px 0 18px;border-bottom:1px solid #E6D8BC;text-align:center}
+h1{font-family:'Noto Serif TC',serif;font-size:24px;letter-spacing:.06em}
+header p{color:var(--ink-soft);font-size:14px;margin-top:8px}
+.note{background:#FFF4DC;border:1px solid #E8D5A6;border-radius:10px;padding:12px 14px;
+  font-size:13.5px;color:#7A6438;margin:18px 0;line-height:1.75}
+.note b{color:var(--del)}
+h2{font-family:'Noto Serif TC',serif;font-size:19px;margin:26px 0 4px;letter-spacing:.06em}
+h2 small{font-weight:400;font-size:13px;color:var(--ink-soft);margin-left:8px;font-family:'Noto Sans TC',sans-serif}
+.acts{display:flex;gap:8px;margin:10px 0 12px;flex-wrap:wrap}
+.acts button{border:1.5px solid #DECBA4;background:var(--card);color:var(--ink-soft);
+  border-radius:999px;padding:7px 14px;font-size:12.5px;cursor:pointer;font-family:inherit}
+.acts button:hover{border-color:var(--gold-2);color:var(--gold-2)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:10px}
+.pg{position:relative;background:var(--card);border:2px solid #DECBA4;border-radius:10px;
+  overflow:hidden;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent}
+.pg img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;background:#EFE3C6}
+.pg .lb{padding:6px 4px;font-size:12px;text-align:center;color:var(--ink-soft)}
+.pg .mk{position:absolute;top:6px;left:6px;width:22px;height:22px;border-radius:50%;
+  border:2px solid rgba(255,255,255,.9);background:rgba(58,48,32,.35);
+  display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700}
+.pg.del{border-color:var(--del)}
+.pg.del img{filter:grayscale(.8) brightness(.72)}
+.pg.del .mk{background:var(--del);border-color:#fff}
+.pg.del .lb{color:var(--del);font-weight:700}
+.pg.del::after{content:"刪除";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-8deg);
+  background:var(--del);color:#fff;font-size:13px;font-weight:700;padding:3px 12px;border-radius:5px;letter-spacing:.08em}
+.bar{position:fixed;left:0;right:0;bottom:0;background:rgba(58,48,32,.97);backdrop-filter:blur(4px);
+  padding:12px 16px;display:flex;gap:12px;align-items:center;justify-content:center;z-index:20;flex-wrap:wrap}
+.bar span{color:#F2E6C8;font-size:14.5px}
+.bar span b{color:var(--gold-1);font-size:18px}
+.bar button{background:linear-gradient(115deg,var(--gold-2),var(--gold-1) 45%,#F2DFA6 55%,var(--gold-2));
+  border:none;color:#3A2C12;font-weight:700;border-radius:999px;padding:11px 22px;font-size:15px;
+  cursor:pointer;font-family:inherit;letter-spacing:.06em}
+.bar button:disabled{opacity:.45;cursor:default}
+.out{display:none;position:fixed;inset:0;background:rgba(40,32,20,.94);z-index:30;
+  align-items:center;justify-content:center;padding:20px}
+.out.show{display:flex}
+.out .box{background:var(--card);border-radius:14px;padding:20px;max-width:520px;width:100%}
+.out h3{font-family:'Noto Serif TC',serif;font-size:19px;margin-bottom:6px}
+.out p{font-size:13.5px;color:var(--ink-soft);margin-bottom:12px;line-height:1.7}
+.out textarea{width:100%;min-height:110px;border:1.5px solid #DECBA4;border-radius:10px;padding:12px;
+  font-family:ui-monospace,monospace;font-size:14px;background:var(--paper);color:var(--ink);resize:vertical}
+.out .row{display:flex;gap:10px;margin-top:12px}
+.out .row button{flex:1;border-radius:10px;padding:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;border:1.5px solid var(--gold-line)}
+.out .cp{background:linear-gradient(115deg,var(--gold-2),var(--gold-1));border:none;color:#3A2C12}
+.out .cl{background:#EFE3C6;color:var(--ink)}
+.sum{font-size:13px;color:var(--ink-soft);margin-top:10px;line-height:1.8}
+</style>
+</head>
+<body>
+
+<header class="wrap">
+  <h1>內頁挑選</h1>
+  <p>點一下照片＝標記為<b style="color:#B4483C">要刪除</b>，再點一下取消</p>
+</header>
+
+<div class="wrap">
+  <div class="note">
+    這頁只是<b>挑選工具</b>，點了不會馬上刪。<br>
+    挑完按下面的「產生刪除清單」，會給你一組代碼 —— <b>把代碼貼回給 Jesper</b>，我才會真的刪、然後更新網站。
+  </div>
+  <div class="note" style="background:#F3EEDF;border-color:#E2D3AE;color:#6B5B42">
+    <b style="color:#B8873C">超人力霸王有兩套圖</b>，這裡兩套都放上來了，請挑掉不要的那些：<br>
+    ・<b>內頁 1～16</b>　＝「大圖」那套（<code>大圖_頁面_01～16</code>）<br>
+    ・<b>內頁 17～31</b>＝ 另一套（<code>頁面_02～16</code>，沒有 01）<br>
+    這款沒有「封面_」系列的檔，所以只能從這兩套裡挑。
+  </div>
+  <div id="app"></div>
+  <div class="sum" id="sum"></div>
+</div>
+
+<div class="bar">
+  <span>已選 <b id="cnt">0</b> 張要刪除</span>
+  <button id="gen" disabled>產生刪除清單</button>
+</div>
+
+<div class="out" id="out">
+  <div class="box">
+    <h3>把這組代碼貼回給 Jesper</h3>
+    <p>Jesper 會依這組代碼刪除照片、重新產生 data.js，並同步到內測站與正式站。</p>
+    <textarea id="code" readonly></textarea>
+    <div class="row">
+      <button class="cp" id="cp">複製代碼</button>
+      <button class="cl" id="cl">回去改</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* 要挑哪幾款、各幾頁 —— 改這裡就能挑別款（頁數要跟 data.js 目前的一致）。
+   2026-07-17 第一輪挑了 25001~25004；第二輪只挑 25011（兩套 31 頁全放待挑）。 */
+var STYLES=[
+  {c:'25011', n:'超人力霸王', pages:31}
+];
+var IMG='../calendar/img/';          // 與照片同網域，圖才載得出來
+var sel={};                          // 品號 -> Set(頁碼)
+
+var app=document.getElementById('app');
+STYLES.forEach(function(st){
+  sel[st.c]=new Set();
+  var h=document.createElement('h2');
+  h.innerHTML=st.n+'<small>#'+st.c+'　共 '+st.pages+' 頁</small>';
+  app.appendChild(h);
+
+  var acts=document.createElement('div'); acts.className='acts';
+  var bAll=document.createElement('button'); bAll.textContent='這款全選';
+  var bNone=document.createElement('button'); bNone.textContent='這款全不選';
+  acts.appendChild(bAll); acts.appendChild(bNone);
+  app.appendChild(acts);
+
+  var g=document.createElement('div'); g.className='grid';
+  app.appendChild(g);
+
+  for(var i=1;i<=st.pages;i++){
+    (function(n){
+      var pad=(n<10?'0':'')+n;
+      var el=document.createElement('div'); el.className='pg';
+      var im=document.createElement('img'); im.loading='lazy';
+      im.src=IMG+st.c+'/p'+pad+'.jpg'; im.alt=st.n+' 內頁 '+n;
+      im.onerror=function(){ this.style.opacity=.3; };
+      var mk=document.createElement('div'); mk.className='mk'; mk.textContent='';
+      var lb=document.createElement('div'); lb.className='lb'; lb.textContent='內頁 '+n;
+      el.appendChild(im); el.appendChild(mk); el.appendChild(lb);
+      el.addEventListener('click',function(){
+        if(sel[st.c].has(n)){ sel[st.c].delete(n); el.classList.remove('del'); mk.textContent=''; }
+        else { sel[st.c].add(n); el.classList.add('del'); mk.textContent='✕'; }
+        refresh();
+      });
+      el.dataset.n=n;
+      g.appendChild(el);
+    })(i);
+  }
+  bAll.addEventListener('click',function(){
+    g.querySelectorAll('.pg').forEach(function(el){
+      var n=+el.dataset.n; sel[st.c].add(n); el.classList.add('del'); el.querySelector('.mk').textContent='✕';
+    });
+    refresh();
+  });
+  bNone.addEventListener('click',function(){
+    sel[st.c].clear();
+    g.querySelectorAll('.pg').forEach(function(el){ el.classList.remove('del'); el.querySelector('.mk').textContent=''; });
+    refresh();
+  });
+});
+
+function total(){ return STYLES.reduce(function(s,st){ return s+sel[st.c].size; },0); }
+function makeCode(){
+  var parts=[];
+  STYLES.forEach(function(st){
+    if(sel[st.c].size){
+      var ns=Array.from(sel[st.c]).sort(function(a,b){return a-b;});
+      parts.push(st.c+':'+ns.join(','));
+    }
+  });
+  return 'DEL '+parts.join(' | ');
+}
+function refresh(){
+  var t=total();
+  document.getElementById('cnt').textContent=t;
+  document.getElementById('gen').disabled = t===0;
+  var lines=STYLES.filter(function(st){return sel[st.c].size;}).map(function(st){
+    var ns=Array.from(sel[st.c]).sort(function(a,b){return a-b;});
+    return st.n+'：刪 '+sel[st.c].size+' 張（內頁 '+ns.join('、')+'）→ 剩 '+(st.pages-sel[st.c].size)+' 頁';
+  });
+  document.getElementById('sum').innerHTML = lines.length ? '<b>目前選擇：</b><br>'+lines.join('<br>') : '';
+}
+
+document.getElementById('gen').addEventListener('click',function(){
+  document.getElementById('code').value=makeCode();
+  document.getElementById('out').classList.add('show');
+});
+document.getElementById('cl').addEventListener('click',function(){
+  document.getElementById('out').classList.remove('show');
+});
+document.getElementById('cp').addEventListener('click',function(){
+  var ta=document.getElementById('code');
+  ta.select(); ta.setSelectionRange(0,99999);
+  var self=this;
+  function done(){ self.textContent='已複製 ✓'; setTimeout(function(){ self.textContent='複製代碼'; },1600); }
+  if(navigator.clipboard){ navigator.clipboard.writeText(ta.value).then(done, function(){ document.execCommand('copy'); done(); }); }
+  else { document.execCommand('copy'); done(); }
+});
+refresh();
+</script>
+</body>
+</html>
