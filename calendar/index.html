@@ -235,9 +235,9 @@ footer .gl{color:var(--gold-2)}
 </section>
 
 <section class="wrap" id="styles">
-  <div class="eyebrow">2027 STYLES</div>
+  <div class="eyebrow">2027 STYLES · 25K</div>
   <h2>現成款式，直接挑</h2>
-  <p style="color:var(--ink-soft);font-size:14px;margin:-10px 0 18px">十二款設計現貨開訂。點「看內頁」翻整本；<b>在照片下方填數量即可下訂，可同時訂多款</b>。</p>
+  <p style="color:var(--ink-soft);font-size:14px;margin:-10px 0 18px">十二款設計現貨開訂，皆為 <b>25K 三角桌曆</b>。點「看內頁」翻整本；<b>在照片下方填數量即可下訂，可同時訂多款</b>。</p>
   <div class="cat" id="catGrid"></div>
 </section>
 
@@ -767,7 +767,8 @@ function curSide(){ return document.querySelector('input[name=side]:checked').va
 function calcCost(){
   var q=totalQty(), foilOn=foilChk.checked, side=curSide();
   var cal=calSub();
-  var foil  = foilOn ? q*FOIL_UNIT[side] : 0;
+  // 燙金 2.5／4.5 元 × 奇數本會出現 0.5 元尾數 → 小計四捨五入到整數（2026-07-17 老闆指定）
+  var foil  = foilOn ? Math.round(q*FOIL_UNIT[side]) : 0;
   var setup = (foilOn && q>0 && q<SETUP_MIN) ? FOIL_SETUP[side] : 0;   // 不足 100 本看整張單總數
   var pack  = packChk.checked ? q*PACK_FEE : 0;
   var sh=shipCalc(), ship=sh?sh.fee:0;
@@ -784,7 +785,10 @@ function renderCost(){
                'NT$ '+fmt(getQty(st.c)*priceOf(st.c)), '']);
   });
   if(c.foilOn){
-    rows.push(['底板燙金（'+c.side+'）', '<em>'+c.q+' 本 × '+FOIL_UNIT[c.side]+' 元</em>', 'NT$ '+fmt(c.foil), '']);
+    var raw=c.q*FOIL_UNIT[c.side];
+    rows.push(['底板燙金（'+c.side+'）',
+               '<em>'+c.q+' 本 × '+FOIL_UNIT[c.side]+' 元'+(raw!==c.foil?'＝'+raw+'，四捨五入':'')+'</em>',
+               'NT$ '+fmt(c.foil), '']);
     if(c.setup) rows.push(['燙金上機費', '<em>整張單不足 '+SETUP_MIN+' 本（'+c.side+'）</em>', 'NT$ '+fmt(c.setup), 'setup']);
   }
   if(c.pack) rows.push(['代客包裝', '<em>'+c.q+' 本 × '+PACK_FEE+' 元</em>', 'NT$ '+fmt(c.pack), '']);
@@ -838,6 +842,7 @@ document.getElementById('genBtn').addEventListener('click',function(){
 
   var c=calcCost();
   var msg='【2027 曆製品預訂】\n';
+  msg+='規格：25K 三角桌曆\n';
   if(list.length){
     msg+='款式與數量：\n';
     list.forEach(function(st){
@@ -851,7 +856,9 @@ document.getElementById('genBtn').addEventListener('click',function(){
   msg+='代客包裝：'+(bag?'需要（'+c.q+' 本 × 1 元 = NT$ '+fmt(c.pack)+'）':'不需要（附贈 OPP 袋、不代裝）')+'\n';
   msg+='底板燙金：'+(foilOn?'要（'+c.side+'，同一塊版）':'不用')+'\n';
   if(foilOn){
-    msg+='　燙金工資：'+c.q+' 本 × '+FOIL_UNIT[c.side]+' 元 = NT$ '+fmt(c.foil)+'\n';
+    var rawFoil=c.q*FOIL_UNIT[c.side];
+    msg+='　燙金工資：'+c.q+' 本 × '+FOIL_UNIT[c.side]+' 元 = NT$ '+fmt(c.foil)+
+         (rawFoil!==c.foil?'（'+rawFoil+' 四捨五入）':'')+'\n';
     if(c.setup) msg+='　燙金上機費：NT$ '+fmt(c.setup)+'（整張單不足 '+SETUP_MIN+' 本）\n';
     msg+='　燙金顏色：'+curColor().n+'\n';
     msg+='　燙金字體：'+curFont().n+'\n';
