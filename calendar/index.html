@@ -278,7 +278,7 @@ footer .fnote{line-height:1.9}
   <h2>預訂登記</h2>
 
   <div class="notebar">
-    一律<b>附贈透明 OPP 袋</b>（不包裝）；需要代客包裝每本 <b>+1 元</b>。<br>
+    一律<b>附贈透明 OPP 袋</b>（不包裝）；需要代客包裝每本 <b>+<span class="packfee"></span> 元</b>。<br>
     底板燙金：單面每本 <b>+2.5 元</b>、雙面每本 <b>+4.5 元</b>（同一塊版）。
     版費一塊 <b>200 元</b>（<b>一次性</b>，日後再版免收）；各款要燙<b>不同內容</b>就是各一塊版。
     每塊版<b>不足 100 本</b>另收上機費（單面 300 元／雙面 500 元）。<br>
@@ -299,7 +299,7 @@ footer .fnote{line-height:1.9}
     <label class="t">加購項目</label>
     <div class="opts">
       <label><input type="checkbox" id="foil" checked>底板燙金 LOGO</label>
-      <label><input type="checkbox" id="bag">代客包裝（每本 +1 元）</label>
+      <label><input type="checkbox" id="bag">代客包裝（每本 +<span class="packfee"></span> 元）</label>
     </div>
     <p class="hint">所有款式皆<b>附贈透明 OPP 袋</b>，但不代為裝入。需要我們裝好再出貨請勾「代客包裝」。</p>
   </div>
@@ -414,7 +414,7 @@ function priceOf(c){ return PRICE[c]||0; }
 var FOIL_UNIT  = {'單面':2.5, '雙面':4.5};
 var FOIL_SETUP = {'單面':300, '雙面':500};
 var SETUP_MIN  = 100;
-var PACK_FEE   = 1;      // 代客包裝，每本 1 元（OPP 袋一律附贈，不包裝）
+var PACK_FEE   = 2;      // 代客包裝，每本 2 元（2026-07-17 由 1 元調整；OPP 袋一律附贈，不代裝）
 /* 燙金版費：一塊版 200 元，一次性。之後再版不收版費（沿用舊版者另行以官方 LINE 通知）。
    單面／雙面都是同一塊版 → 一律只收一塊。 */
 var PLATE_FEE  = 200;
@@ -422,6 +422,10 @@ var PLATE_FEE  = 200;
 var TAX_RATE   = 0.05;
 
 function fmt(n){ return n.toLocaleString('en-US',{maximumFractionDigits:1}); }
+
+/* 頁面上寫著包裝費的地方一律由 PACK_FEE 填入 → 改價只要改上面那個常數，
+   不會發生「常數改了、文案還寫舊價」的兩套數字。（本腳本在 body 末端，元素都已存在） */
+document.querySelectorAll('.packfee').forEach(function(el){ el.textContent=PACK_FEE; });
 
 function pageLabel(p){
   if(p.kind==='start') return '2026/12 內頁';
@@ -995,7 +999,7 @@ document.getElementById('genBtn').addEventListener('click',function(){
   } else {
     msg+='款式與數量：'+U+'（尚未選款式）\n';
   }
-  msg+='代客包裝：'+(bag?'需要（'+c.q+' 本 × 1 元 = NT$ '+fmt(c.pack)+'）':'不需要（附贈 OPP 袋、不代裝）')+'\n';
+  msg+='代客包裝：'+(bag?'需要（'+c.q+' 本 × '+PACK_FEE+' 元 = NT$ '+fmt(c.pack)+'）':'不需要（附贈 OPP 袋、不代裝）')+'\n';
   msg+='底板燙金：'+(foilOn?'要':'不用')+(c.groups.length>1?'（各款分開設定，共 '+c.groups.length+' 塊版）':'')+'\n';
   c.groups.forEach(function(g){
     var ind='　';
