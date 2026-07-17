@@ -285,8 +285,9 @@ footer .gl{color:var(--gold-2)}
   <!-- 燙金製版（勾選燙金才出現） -->
   <div class="field" id="fPlate">
     <label class="t">燙金版<small>（一塊版 200 元，一次性費用）</small></label>
-    <div class="opts">
-      <label><input type="checkbox" id="reuse">沿用舊版（免版費）</label>
+    <div class="opts" id="plate">
+      <label><input type="radio" name="plate" value="新製版" checked>新製版（+200 元）</label>
+      <label><input type="radio" name="plate" value="沿用舊版">沿用舊版（免版費）</label>
     </div>
     <p class="hint" id="plateHint"></p>
     <p class="hint">沿用舊版請另行以官方 LINE（<b>@623bfkyg</b>）通知我們，由專人確認版是否可續用。</p>
@@ -778,9 +779,10 @@ function shipCalc(){
 
 /* ---------- 費用試算 ---------- */
 var costBox=document.getElementById('costBox'), packChk=document.getElementById('bag'),
-    setupHint=document.getElementById('setupHint'), reuseChk=document.getElementById('reuse'),
+    setupHint=document.getElementById('setupHint'),
     plateHint=document.getElementById('plateHint');
 function curSide(){ return document.querySelector('input[name=side]:checked').value; }
+function isReuse(){ return document.querySelector('input[name=plate]:checked').value==='沿用舊版'; }
 
 function calcCost(){
   var q=totalQty(), foilOn=foilChk.checked, side=curSide();
@@ -788,7 +790,7 @@ function calcCost(){
   // 燙金 2.5／4.5 元 × 奇數本會出現 0.5 元尾數 → 小計四捨五入到整數（2026-07-17 老闆指定）
   var foil  = foilOn ? Math.round(q*FOIL_UNIT[side]) : 0;
   var setup = (foilOn && q>0 && q<SETUP_MIN) ? FOIL_SETUP[side] : 0;   // 不足 100 本看整張單總數
-  var reuse = reuseChk.checked;
+  var reuse = isReuse();
   var plate = (foilOn && !reuse) ? PLATE_FEE : 0;                      // 單／雙面同一塊版，只收一塊
   var pack  = packChk.checked ? q*PACK_FEE : 0;
   var sh=shipCalc(), ship=sh?sh.fee:0;
@@ -813,7 +815,7 @@ function renderCost(){
                'NT$ '+fmt(c.foil), '']);
     if(c.setup) rows.push(['燙金上機費', '<em>整張單不足 '+SETUP_MIN+' 本（'+c.side+'）</em>', 'NT$ '+fmt(c.setup), 'setup']);
     rows.push(['燙金版費',
-               '<em>'+(c.reuse ? '沿用舊版，免收' : '一塊版（一次性，日後再版免收）')+'</em>',
+               '<em>'+(c.reuse ? '沿用舊版，免收' : '新製版一塊（一次性，日後再版免收）')+'</em>',
                c.reuse ? '免費' : 'NT$ '+fmt(c.plate), '']);
   }
   if(c.pack) rows.push(['代客包裝', '<em>'+c.q+' 本 × '+PACK_FEE+' 元</em>', 'NT$ '+fmt(c.pack), '']);
@@ -841,15 +843,15 @@ function renderSetupHint(){
 }
 
 function renderPlateHint(){
-  plateHint.innerHTML = reuseChk.checked
-    ? '已沿用先前製作的燙金版，<b style="color:var(--ok)">免收版費</b>。'
+  plateHint.innerHTML = isReuse()
+    ? '沿用先前製作的燙金版，<b style="color:var(--ok)">免收版費</b>。'
     : '第一次燙金需製版，<b>NT$ '+PLATE_FEE+'</b>（一塊版）。這是<b>一次性費用</b>，日後同一組內容再版就不再收。';
 }
 
 function recalc(){ renderCart(); shipCalc(); renderCost(); renderSetupHint(); renderPlateHint(); }
 document.querySelectorAll('input[name=side]').forEach(function(r){ r.addEventListener('change',recalc); });
 packChk.addEventListener('change',recalc);
-reuseChk.addEventListener('change',recalc);
+document.querySelectorAll('input[name=plate]').forEach(function(r){ r.addEventListener('change',recalc); });
 
 recalc();
 
@@ -894,8 +896,8 @@ document.getElementById('genBtn').addEventListener('click',function(){
     msg+='　燙金工資：'+c.q+' 本 × '+FOIL_UNIT[c.side]+' 元 = NT$ '+fmt(c.foil)+
          (rawFoil!==c.foil?'（'+rawFoil+' 四捨五入）':'')+'\n';
     if(c.setup) msg+='　燙金上機費：NT$ '+fmt(c.setup)+'（整張單不足 '+SETUP_MIN+' 本）\n';
-    msg+='　燙金版費：'+(c.reuse ? '免收（沿用舊版，將另以 LINE 通知）'
-                                : 'NT$ '+fmt(c.plate)+'（一塊版，一次性）')+'\n';
+    msg+='　燙金版費：'+(c.reuse ? '沿用舊版，免收（將另以 LINE 通知）'
+                                : '新製版 NT$ '+fmt(c.plate)+'（一塊版，一次性）')+'\n';
     msg+='　燙金顏色：'+curColor().n+'\n';
     msg+='　燙金字體：'+curFont().n+'\n';
     msg+='　燙金排版：'+curAlign()+'\n';
