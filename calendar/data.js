@@ -825,11 +825,6 @@ window.STYLES = [
                           "src":  "img/25011/p14.jpg",
                           "kind":  "seq",
                           "val":  14
-                      },
-                      {
-                          "src":  "img/25011/p15.jpg",
-                          "kind":  "seq",
-                          "val":  15
                       }
                   ]
     }
