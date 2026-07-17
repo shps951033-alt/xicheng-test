@@ -22,6 +22,9 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--paper);color:var(--i
 /* hero */
 .hero{padding:44px 0 36px;text-align:center;border-bottom:1px solid #E6D8BC}
 .hero .brand{display:flex;justify-content:center;margin-bottom:26px}
+.hero .brand a{display:block;border-radius:8px;transition:transform .15s}
+.hero .brand a:hover{transform:translateY(-2px)}
+.hero .brand a:focus-visible{outline:2px solid var(--gold-line);outline-offset:4px}
 .hero .brand img{height:72px;width:auto;display:block;border-radius:8px;
   box-shadow:0 4px 14px rgba(40,50,45,.18)}
 @media(max-width:420px){ .hero .brand img{height:60px} }
@@ -180,6 +183,12 @@ textarea{min-height:88px;resize:vertical}
 
 footer{padding:30px 0 20px;text-align:center;color:var(--ink-soft);font-size:13px;letter-spacing:.06em}
 footer .gl{color:var(--gold-2)}
+/* 回官網：頁尾明確出口（頁首 logo 也可點，那是慣例但不夠明顯） */
+.homelink{display:inline-block;margin-bottom:20px;padding:11px 24px;border-radius:999px;
+  border:1.5px solid var(--gold-line);background:#FFF9EC;color:var(--gold-2);
+  font-size:14.5px;font-weight:700;letter-spacing:.06em;text-decoration:none;transition:background .15s}
+.homelink:hover{background:#F6E9CB}
+footer .fnote{line-height:1.9}
 
 /* sticky CTA */
 .sticky{position:fixed;left:0;right:0;bottom:0;background:rgba(58,48,32,.96);backdrop-filter:blur(4px);
@@ -227,7 +236,11 @@ footer .gl{color:var(--gold-2)}
 <body>
 
 <header class="hero wrap">
-  <div class="brand"><img src="img/logo.png" alt="喜成燙金印刷 C CHENG ENTERPRISE"></div>
+  <div class="brand">
+    <a href="https://xicheng-print.com/" title="回喜成燙金印刷官網">
+      <img src="img/logo.png" alt="喜成燙金印刷 C CHENG ENTERPRISE">
+    </a>
+  </div>
   <div class="year">2027</div>
   <h1>客製桌曆</h1>
   <p>你的品牌，陪客戶過完 2027 一整年。</p>
@@ -353,8 +366,11 @@ footer .gl{color:var(--gold-2)}
 </section>
 
 <footer class="wrap">
-  喜成印刷｜燙金 · 軋型 · 紙袋 · 紙盒 · 禮盒<br>
-  <span class="gl">諮詢 LINE：@623bfkyg</span>
+  <a class="homelink" href="https://xicheng-print.com/">← 回喜成官網</a>
+  <div class="fnote">
+    喜成印刷｜燙金 · 軋型 · 紙袋 · 紙盒 · 禮盒<br>
+    <span class="gl">諮詢 LINE：@623bfkyg</span>
+  </div>
 </footer>
 
 <div class="sticky">
