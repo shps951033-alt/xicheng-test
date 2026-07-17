@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>2027 客製桌曆・日曆・年曆｜喜成印刷 預訂</title>
+<title>2027 客製桌曆｜喜成印刷 預訂</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@700;900&display=swap" rel="stylesheet">
 <style>
@@ -75,16 +75,50 @@ input:focus,textarea:focus,select:focus{outline:2px solid var(--gold-line);outli
 .opts label:has(input:focus-visible){outline:2px solid var(--gold-line);outline-offset:2px}
 textarea{min-height:88px;resize:vertical}
 
-/* 款式示意圖（選了品項後出現） */
-.pv{display:none;margin-top:12px;background:var(--card);border:1.5px solid var(--gold-line);
-  border-radius:12px;padding:10px;gap:12px;align-items:center}
-.pv.show{display:flex}
-.pv img{width:108px;aspect-ratio:4/3;object-fit:cover;border-radius:8px;flex:none;background:#EFE3C6}
-.pv .pvb{min-width:0}
-.pv .pvb b{display:block;font-size:15px}
-.pv .pvb span{font-size:12.5px;color:var(--ink-soft)}
-.pv .pvb button{margin-top:7px;background:none;border:1px solid var(--gold-line);color:var(--gold-2);
-  border-radius:999px;padding:4px 13px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}
+/* 訂購明細 */
+.cart{background:var(--card);border:1.5px solid #DECBA4;border-radius:12px;padding:4px 13px}
+.cart .li{display:flex;align-items:center;gap:9px;padding:10px 0;border-bottom:1px dashed #E9DCBE;font-size:14.5px}
+.cart .li img{width:44px;aspect-ratio:4/3;object-fit:cover;border-radius:5px;flex:none;background:#EFE3C6}
+.cart .li .n{flex:1;min-width:0}
+.cart .li .q{font-weight:700;color:var(--gold-2);white-space:nowrap}
+.cart .li .rm{background:none;border:1px solid #DECBA4;color:var(--ink-soft);border-radius:999px;
+  width:26px;height:26px;font-size:13px;line-height:1;cursor:pointer;font-family:inherit;flex:none}
+.cart .empty{padding:14px 0;color:var(--ink-soft);font-size:14px;text-align:center}
+.cart .tot{display:flex;justify-content:space-between;align-items:center;padding:11px 0;
+  border-top:1.5px solid #E6D8BC;font-weight:700;font-size:15px}
+.cart .tot b{color:var(--gold-2);font-size:17px}
+.backlink{display:inline-block;margin-top:9px;color:var(--gold-2);font-weight:700;font-size:13px;text-decoration:none}
+
+/* 費用明細 */
+.cost{background:var(--card);border:1.5px solid var(--gold-line);border-radius:12px;padding:6px 14px}
+.cost .r{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:9px 0;
+  border-bottom:1px dashed #E9DCBE;font-size:14.5px}
+.cost .r:last-child{border-bottom:none}
+.cost .r .k{color:var(--ink-soft)}
+.cost .r .k em{font-style:normal;font-size:12px;display:block;opacity:.85}
+.cost .r .v{font-weight:700;white-space:nowrap}
+.cost .r.sum{border-top:2px solid var(--gold-line);border-bottom:none;margin-top:2px;padding:13px 0}
+.cost .r.sum .k{color:var(--ink);font-weight:700;font-size:16px}
+.cost .r.sum .v{color:var(--gold-2);font-size:22px}
+.cost .r.setup .v{color:#B4483C}
+.cost .empty{padding:14px 0;color:var(--ink-soft);font-size:14px;text-align:center}
+
+/* 燙金設定區塊（同一組＝1 塊；分款＝每款 1 塊） */
+.foilblk{background:#FFFBF0;border:1.5px solid #E4D5B2;border-radius:14px;padding:14px;margin-bottom:14px}
+.foilblk.off{opacity:.7}
+.foilblk.off .fb-body{display:none}
+.fb-hd{display:flex;align-items:center;gap:10px}
+.foilblk .fb-hd{padding-bottom:12px;border-bottom:1px dashed #E4D5B2;margin-bottom:14px}
+.foilblk.off .fb-hd{padding-bottom:0;border-bottom:none;margin-bottom:0}
+.fb-hd img{width:46px;aspect-ratio:4/3;object-fit:cover;border-radius:5px;flex:none;background:#EFE3C6}
+.fb-nm{flex:1;min-width:0;font-size:14.5px;line-height:1.4}
+.fb-nm b{display:block}
+.fb-nm .fb-q{font-size:12px;color:var(--ink-soft)}
+.fb-sw{flex:none;display:inline-flex;align-items:center;gap:6px;border:1.5px solid #DECBA4;
+  background:var(--card);border-radius:999px;padding:7px 13px;font-size:13px;cursor:pointer;user-select:none}
+.fb-sw input{margin:0;accent-color:var(--gold-2)}
+.fb-body>label.t{margin-top:16px}
+.fb-body>label.t:first-child{margin-top:0}
 
 /* 燙金顏色色票 */
 .swatches label{display:inline-flex;align-items:center;gap:7px;padding:7px 14px 7px 9px}
@@ -101,14 +135,20 @@ textarea{min-height:88px;resize:vertical}
   border-radius:3px;padding:0 8px}
 .fp-zone.onmock{position:absolute;aspect-ratio:18 / 2.3;transform:translateY(-50%);
   border:1px dashed rgba(255,255,255,.28);border-radius:2px;padding:0 4px;background:none}
-.fp-zone span{display:block;width:100%;white-space:pre-line;word-break:break-word;
+/* 文字區塊：寬度依內容縮放，才能把「區塊位置」與「文字對齊」拆成兩件事 */
+.fp-zone span{display:block;max-width:100%;min-width:0;white-space:pre-line;word-break:break-word;
   font-weight:700;line-height:1.22;
   background:linear-gradient(115deg,var(--gold-2),var(--gold-1) 50%,var(--gold-2));
   -webkit-background-clip:text;background-clip:text;color:transparent;
   filter:drop-shadow(0 1px 0 rgba(90,70,40,.22))}
-.fp-zone.c{text-align:center}
-.fp-zone.l{text-align:left}
-.fp-zone.r{text-align:right}
+/* 燙金排版＝整塊文字擺在底板的哪個位置 */
+.fp-zone.pos-c{justify-content:center}
+.fp-zone.pos-l{justify-content:flex-start}
+.fp-zone.pos-r{justify-content:flex-end}
+/* 文字對齊＝多行文字彼此之間怎麼對齊 */
+.fp-zone.txt-c span{text-align:center}
+.fp-zone.txt-l span{text-align:left}
+.fp-zone.txt-r span{text-align:right}
 .foilpv .cap{font-size:11.5px;color:var(--ink-soft);text-align:center;margin-top:8px;line-height:1.8}
 .foilpv .cap b{color:var(--gold-2)}
 .foilpv .cap b.warn{color:#B4483C}
@@ -153,14 +193,20 @@ footer .gl{color:var(--gold-2)}
 .stycard img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;background:linear-gradient(135deg,#E8D8B8,#D2B98C)}
 .stycard .nm{padding:9px 10px;font-size:14px;font-weight:700;display:flex;justify-content:space-between;align-items:center;gap:6px}
 .stycard.sel{border-color:var(--gold-2);box-shadow:0 0 0 2px var(--gold-1)}
-.stycard.sel::after{content:"✓ 已選";position:absolute;top:8px;left:8px;background:var(--gold-2);color:#fff;font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px}
+.stycard.sel::after{content:"✓ " attr(data-qty) " 本";position:absolute;top:8px;left:8px;background:var(--gold-2);color:#fff;font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px}
+
+/* 每款照片下面的單價與數量欄（可同時訂多款） */
+.stycard .pr{padding:0 10px 7px;font-size:12.5px;color:var(--ink-soft);margin-top:-3px}
+.stycard .pr b{color:var(--gold-2);font-size:15px}
+.stycard .qty{display:flex;align-items:center;gap:7px;padding:0 10px 11px;cursor:auto}
+.stycard .qty em{font-style:normal;font-size:12.5px;color:var(--ink-soft);flex:none}
+.stycard .qty input{padding:7px 6px;font-size:15px;text-align:center;border-radius:8px;min-width:0}
+.stycard.sel .qty input{border-color:var(--gold-2);background:#FFF9EC;font-weight:700}
 /* 授權審核中：可看內頁，不可下單 */
 .stycard.pending{cursor:default}
 .stycard.pending img{filter:saturate(.55) brightness(.94)}
 .stycard.pending::after{content:"授權審核中 · 敬請期待";position:absolute;top:8px;left:8px;right:8px;background:rgba(58,48,32,.9);color:#F2E6C8;font-size:11.5px;font-weight:700;padding:4px 8px;border-radius:999px;text-align:center}
 .stycard.pending .nm>span:first-child{color:var(--ink-soft)}
-.opts label.pending{opacity:.5;cursor:default;border-style:dashed}
-.opts label.pending:has(input:checked){border-color:#DECBA4;background:var(--card);font-weight:400}
 
 /* gallery lightbox */
 .stycard .nm .view{font-size:12px;color:var(--gold-2);font-weight:700;border:1px solid var(--gold-line);border-radius:999px;padding:2px 10px;white-space:nowrap}
@@ -183,8 +229,8 @@ footer .gl{color:var(--gold-2)}
 <header class="hero wrap">
   <div class="brand"><img src="img/logo.png" alt="喜成燙金印刷 C CHENG ENTERPRISE"></div>
   <div class="year">2027</div>
-  <h1>客製桌曆 · 日曆 · 年曆</h1>
-  <p>你的照片、你的品牌，陪客戶過完 2027 一整年。</p>
+  <h1>客製桌曆</h1>
+  <p>你的品牌，陪客戶過完 2027 一整年。</p>
   <div class="calmodel" aria-hidden="true">
     <div class="face">
       <div class="rings"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
@@ -192,7 +238,7 @@ footer .gl{color:var(--gold-2)}
     </div>
     <div class="side"></div>
   </div>
-  <span class="badge">早鳥預訂中 · 留資料享優先報價</span>
+  <span class="badge">開放預訂 · 選款填數量，總價立即算給你</span>
 </header>
 
 <section class="wrap">
@@ -206,9 +252,9 @@ footer .gl{color:var(--gold-2)}
 </section>
 
 <section class="wrap" id="styles">
-  <div class="eyebrow">2027 STYLES</div>
+  <div class="eyebrow">2027 STYLES · 25K</div>
   <h2>現成款式，直接挑</h2>
-  <p style="color:var(--ink-soft);font-size:14px;margin:-10px 0 18px">十二款設計現貨開訂。點「看內頁」翻整本，點卡片選款式。</p>
+  <p style="color:var(--ink-soft);font-size:14px;margin:-10px 0 18px">十二款設計現貨開訂，皆為 <b>25K 三角桌曆</b>。點「看內頁」翻整本；<b>在照片下方填數量即可下訂，可同時訂多款</b>。</p>
   <div class="cat" id="catGrid"></div>
 </section>
 
@@ -217,29 +263,20 @@ footer .gl{color:var(--gold-2)}
   <h2>預訂登記</h2>
 
   <div class="notebar">
-    燙金、塑膠袋費用<b>另計</b>，由專人核算後回覆報價。<br>
-    運費：每 <b>100 本</b>裝一箱，每箱 <b>150 元</b>，未滿一箱以一箱計。
+    一律<b>附贈透明 OPP 袋</b>（不包裝）；需要代客包裝每本 <b>+1 元</b>。<br>
+    底板燙金：單面每本 <b>+2.5 元</b>、雙面每本 <b>+4.5 元</b>（同一塊版）。
+    版費一塊 <b>200 元</b>（<b>一次性</b>，日後再版免收）；各款要燙<b>不同內容</b>就是各一塊版。
+    每塊版<b>不足 100 本</b>另收上機費（單面 300 元／雙面 500 元）。<br>
+    運費：每 <b>100 本</b>裝一箱，每箱 <b>150 元</b>，未滿一箱以一箱計。<br>
+    以上單價均為<b>未稅價</b>；下方費用明細會自動加計 <b>5% 營業稅</b>，總計即為<b>實付金額</b>。
   </div>
 
-  <!-- 款式 -->
+  <!-- 訂購明細（數量在上方款式牆各款照片下方填） -->
   <div class="field">
-    <label class="t">想預訂的款式</label>
-    <div class="opts" id="prod"></div>
-    <div class="pv" id="stylePv">
-      <img id="pvImg" alt="款式示意圖">
-      <div class="pvb">
-        <b class="pv-n"></b>
-        <span class="pv-c"></span><br>
-        <button type="button" id="pvView">看內頁 ▸</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 數量 -->
-  <div class="field">
-    <label class="t" for="qty">數量<small>（本）</small></label>
-    <input type="number" id="qty" min="1" inputmode="numeric" placeholder="例如：50">
+    <label class="t">訂購明細<small>（可同時訂多款）</small></label>
+    <div class="cart" id="cart"></div>
     <div class="shipbox" id="shipBox"></div>
+    <a class="backlink" href="#styles">↑ 回款式牆挑款／改數量</a>
   </div>
 
   <!-- 加購 -->
@@ -247,46 +284,23 @@ footer .gl{color:var(--gold-2)}
     <label class="t">加購項目</label>
     <div class="opts">
       <label><input type="checkbox" id="foil" checked>底板燙金 LOGO</label>
-      <label><input type="checkbox" id="bag">包塑膠袋（費用另計）</label>
+      <label><input type="checkbox" id="bag">代客包裝（每本 +1 元）</label>
     </div>
+    <p class="hint">所有款式皆<b>附贈透明 OPP 袋</b>，但不代為裝入。需要我們裝好再出貨請勾「代客包裝」。</p>
   </div>
 
-  <!-- 燙金顏色（勾選燙金才出現） -->
-  <div class="field" id="fColor">
-    <label class="t">燙金顏色<small>（點選看示意圖）</small></label>
-    <div class="opts swatches" id="foilColor"></div>
-    <p class="hint">螢幕顏色僅供參考，實際以燙金箔樣品為準。</p>
+  <!-- 燙金內容模式：訂 2 款以上才出現 -->
+  <div class="field" id="fMode">
+    <label class="t">燙金內容<small>（各款要燙的內容一樣嗎）</small></label>
+    <div class="opts" id="fmode">
+      <label><input type="radio" name="fmode" value="同一組" checked>各款燙同一組內容</label>
+      <label><input type="radio" name="fmode" value="分款">各款分開設定</label>
+    </div>
+    <p class="hint" id="modeHint"></p>
   </div>
 
-  <!-- 燙金排版（勾選燙金才出現） -->
-  <div class="field" id="fAlign">
-    <label class="t">燙金排版<small>（點選看示意圖）</small></label>
-    <div class="opts" id="align">
-      <label><input type="radio" name="align" value="底板置中" checked>底板置中</label>
-      <label><input type="radio" name="align" value="底板靠左">底板靠左</label>
-      <label><input type="radio" name="align" value="底板靠右">底板靠右</label>
-    </div>
-    <div class="foilpv">
-      <div class="fp-dim" id="fpDim">← 18 cm →</div>
-      <div class="fp-stage" id="fpStage">
-        <img id="fpMockImg" alt="款式底板示意" style="display:none">
-        <div class="fp-zone generic c" id="fpZone"><span id="fpText">您的 LOGO／文字</span></div>
-      </div>
-      <div class="cap">
-        <span id="fpMode">選擇款式後，會顯示該款桌曆的底板示意。</span><br>
-        底板燙金範圍 <b>18 × 2.3 cm</b><br>
-        位置：<b id="fpCap">置中</b>　字高：<b id="fpSize">—</b>
-      </div>
-    </div>
-  </div>
-
-  <!-- 燙金內容 -->
-  <div class="field" id="fFoilText">
-    <label class="t" for="foilText">欲燙金的資訊</label>
-    <textarea id="foilText" placeholder="例如：喜成印刷有限公司　敬賀 2027"></textarea>
-    <p class="hint">打上想燙的文字，上方示意圖會同步顯示。<br>
-      若有 <b>LOGO 圖檔</b>，請加官方 LINE（@623bfkyg）再把圖檔傳給我們。</p>
-  </div>
+  <!-- 燙金設定：同一組模式產生 1 組，分款模式每款各一組 -->
+  <div id="foilWrap"></div>
 
   <!-- 收件資訊 -->
   <div class="field">
@@ -309,6 +323,12 @@ footer .gl{color:var(--gold-2)}
     <label class="t" for="tax">統一編號<small>（8 碼，不需要可留空）</small></label>
     <input type="text" id="tax" inputmode="numeric" maxlength="8" placeholder="12345678">
     <p class="hint" id="taxHint" style="display:none;color:#B4483C">統一編號應為 8 碼數字</p>
+  </div>
+
+  <!-- 費用明細 -->
+  <div class="field">
+    <label class="t">費用明細</label>
+    <div class="cost" id="costBox"></div>
   </div>
 
   <button class="gen" id="genBtn" type="button">產生預訂訊息</button>
@@ -338,7 +358,7 @@ footer .gl{color:var(--gold-2)}
 </footer>
 
 <div class="sticky">
-  <span>2027 桌曆・日曆・年曆 預訂中</span>
+  <span>2027 客製桌曆 預訂中</span>
   <a href="https://line.me/R/ti/p/@623bfkyg" target="_blank" rel="noopener">LINE 詢問</a>
 </div>
 
@@ -358,9 +378,32 @@ footer .gl{color:var(--gold-2)}
 var STYLES = window.STYLES || [];
 var selStyle = null;
 
-/* 授權審核中：可瀏覽內頁，但不可下單。授權通過後把該品號從這裡移除即可開賣。 */
-var PENDING = {'25009':1, '25011':1};
+/* 授權審核中：可瀏覽內頁，但不可下單。授權通過後把該品號從這裡移除即可開賣。
+   2026-07-17 白爛貓(25009)、超人力霸王(25011) 授權下來，已全數開賣 → 目前無審核中款式。 */
+var PENDING = {};
 function isPending(st){ return !!(st && PENDING[st.c]); }
+
+/* 桌曆單價（元／本，2026-07-17 老闆提供）。放這裡不放 data.js，因為 data.js 由
+   build_site.ps1 自動產生，重跑會被蓋掉。改價直接改這張表。 */
+var PRICE = {
+  '25001':65, '25002':65, '25003':65, '25004':65,          // 米奇、動物方程式、小熊維尼、航海王
+  '25005':40, '25006':40, '25007':40,                      // 北境晨光(風景)、世界名畫、豐時四季(水果)
+  '25008':50, '25009':50, '25010':50, '25011':50, '25012':50 // 水豚寶、白爛貓、柴語錄、超人力霸王、比得兔
+};
+function priceOf(c){ return PRICE[c]||0; }
+
+/* 燙金：同一塊版。單面 2.5／本、雙面 4.5／本；不足 100 本（看整張單總本數）另收上機費。 */
+var FOIL_UNIT  = {'單面':2.5, '雙面':4.5};
+var FOIL_SETUP = {'單面':300, '雙面':500};
+var SETUP_MIN  = 100;
+var PACK_FEE   = 1;      // 代客包裝，每本 1 元（OPP 袋一律附贈，不包裝）
+/* 燙金版費：一塊版 200 元，一次性。之後再版不收版費（沿用舊版者另行以官方 LINE 通知）。
+   單面／雙面都是同一塊版 → 一律只收一塊。 */
+var PLATE_FEE  = 200;
+/* 老闆給的單價全為未稅價 → 網站直接算含稅價給客人看（2026-07-17 確認）。稅額四捨五入到整數。 */
+var TAX_RATE   = 0.05;
+
+function fmt(n){ return n.toLocaleString('en-US',{maximumFractionDigits:1}); }
 
 function pageLabel(p){
   if(p.kind==='start') return '2026/12 內頁';
@@ -368,8 +411,10 @@ function pageLabel(p){
   return '內頁 '+p.val;
 }
 
-/* ---------- 款式卡片牆 ---------- */
+/* ---------- 款式卡片牆（每款照片下方各自填數量，可同時訂多款） ---------- */
 var grid=document.getElementById('catGrid');
+var cards={}, qtyIn={};          // 品號 → 卡片元素／數量輸入框
+
 STYLES.forEach(function(st){
   var el=document.createElement('div'); el.className='stycard'+(isPending(st)?' pending':'');
   var im=document.createElement('img'); im.alt=st.n+' 2027桌曆'; im.loading='lazy';
@@ -377,7 +422,27 @@ STYLES.forEach(function(st){
   im.src=st.cover;
   var nm=document.createElement('div'); nm.className='nm';
   nm.innerHTML='<span>'+st.n+'</span><span class="view">看內頁 ▸</span>';
-  el.appendChild(im); el.appendChild(nm); grid.appendChild(el);
+  el.appendChild(im); el.appendChild(nm);
+
+  if(!isPending(st)){
+    var pr=document.createElement('div'); pr.className='pr';
+    pr.innerHTML='NT$ <b>'+priceOf(st.c)+'</b> / 本<span style="opacity:.7"> 未稅</span>';
+    el.appendChild(pr);
+    var q=document.createElement('div'); q.className='qty';
+    var l1=document.createElement('em'); l1.textContent='數量';
+    var ip=document.createElement('input');
+    ip.type='number'; ip.min='0'; ip.inputMode='numeric'; ip.placeholder='0';
+    ip.setAttribute('aria-label',st.n+' 訂購數量（本）');
+    ip.addEventListener('input',function(){ onQty(st); });
+    ip.addEventListener('click',function(e){ e.stopPropagation(); });   // 點輸入框不觸發選款
+    var l2=document.createElement('em'); l2.textContent='本';
+    q.appendChild(l1); q.appendChild(ip); q.appendChild(l2);
+    el.appendChild(q);
+    qtyIn[st.c]=ip;
+  }
+  grid.appendChild(el);
+  cards[st.c]=el;
+
   el.addEventListener('click',function(e){
     if(e.target.classList.contains('view')){ openLb(st); return; }
     if(isPending(st)) return;
@@ -385,42 +450,61 @@ STYLES.forEach(function(st){
   });
 });
 
-/* ---------- 款式選項（品項＝款式名稱） ---------- */
-var prodBox=document.getElementById('prod');
-STYLES.forEach(function(st){
-  var lb=document.createElement('label');
-  var ip=document.createElement('input');
-  ip.type='radio'; ip.name='prod'; ip.value=st.c;
-  ip.addEventListener('change',function(){ if(ip.checked) selectStyle(st); });
-  lb.appendChild(ip);
-  if(isPending(st)){
-    ip.disabled=true;
-    lb.className='pending';
-    lb.title='此款授權審核中，尚未開放預訂';
-    lb.appendChild(document.createTextNode(st.n+'（審核中）'));
-  } else {
-    lb.appendChild(document.createTextNode(st.n));
-  }
-  prodBox.appendChild(lb);
-});
+function getQty(c){ var v=qtyIn[c]?parseInt(qtyIn[c].value,10):0; return (v>0)?v:0; }
+function orders(){ return STYLES.filter(function(st){ return !isPending(st) && getQty(st.c)>0; }); }
+function totalQty(){ return orders().reduce(function(s,st){ return s+getQty(st.c); },0); }
 
-var stylePv=document.getElementById('stylePv');
+/* 數量改變：卡片標記、示意款式、明細與運費同步 */
+function onQty(st){
+  var ip=qtyIn[st.c];
+  var v=ip.value.replace(/\D/g,'').replace(/^0+(?=\d)/,'');    // 只收數字、去前導零
+  if(v!==ip.value) ip.value=v;
+  var n=getQty(st.c);
+  cards[st.c].classList.toggle('sel', n>0);
+  cards[st.c].setAttribute('data-qty', n);
+  if(n>0 && !selStyle) selStyle=st;                             // 第一款下訂的當示意款
+  recalc(); updateFoilMock();
+}
+
+/* 點卡片＝選這款：沒填數量就先帶 1 本，並設為燙金示意款 */
 function selectStyle(st){
   if(isPending(st)) return;
   selStyle=st;
-  document.querySelectorAll('.stycard').forEach(function(x,i){
-    x.classList.toggle('sel', STYLES[i]===st);
-  });
-  var r=document.querySelector('input[name=prod][value="'+st.c+'"]');
-  if(r) r.checked=true;
-  document.getElementById('pvImg').src=st.cover;
-  document.getElementById('pvImg').alt=st.n+' 款式示意圖';
-  stylePv.querySelector('.pv-n').textContent=st.n;
-  stylePv.querySelector('.pv-c').textContent='品號 '+st.c+'　內頁 '+st.pages.length+' 頁';
-  stylePv.classList.add('show');
-  if(typeof updateFoilMock==='function') updateFoilMock();
+  var ip=qtyIn[st.c];
+  if(ip){
+    if(!getQty(st.c)) ip.value='1';
+    onQty(st);
+    ip.focus(); ip.select();
+  } else { updateFoilMock(); }
 }
-document.getElementById('pvView').addEventListener('click',function(){ if(selStyle) openLb(selStyle); });
+
+/* ---------- 訂購明細 ---------- */
+var cartBox=document.getElementById('cart');
+function renderCart(){
+  var list=orders();
+  cartBox.innerHTML='';
+  if(!list.length){
+    cartBox.innerHTML='<div class="empty">尚未選款 — 請在上方款式照片下方填數量</div>';
+    return;
+  }
+  list.forEach(function(st){
+    var li=document.createElement('div'); li.className='li';
+    var im=document.createElement('img'); im.src=st.cover; im.alt=''; im.loading='lazy';
+    var n=document.createElement('div'); n.className='n';
+    n.innerHTML='<b>'+st.n+'</b><br><span style="font-size:12px;color:var(--ink-soft)">'+
+                getQty(st.c)+' 本 × '+priceOf(st.c)+' 元</span>';
+    var q=document.createElement('div'); q.className='q'; q.textContent=fmt(getQty(st.c)*priceOf(st.c));
+    var rm=document.createElement('button'); rm.className='rm'; rm.type='button';
+    rm.textContent='✕'; rm.title='移除 '+st.n; rm.setAttribute('aria-label','移除 '+st.n);
+    rm.addEventListener('click',function(){ qtyIn[st.c].value=''; onQty(st); });
+    li.appendChild(im); li.appendChild(n); li.appendChild(q); li.appendChild(rm);
+    cartBox.appendChild(li);
+  });
+  var t=document.createElement('div'); t.className='tot';
+  t.innerHTML='<span>合計 '+list.length+' 款　'+totalQty()+' 本</span><b>NT$ '+fmt(calSub())+'</b>';
+  cartBox.appendChild(t);
+}
+function calSub(){ return orders().reduce(function(s,st){ return s+getQty(st.c)*priceOf(st.c); },0); }
 
 /* ---------- 內頁 lightbox ---------- */
 var lb=document.getElementById('lb'),lbStage=document.getElementById('lbStage'),
@@ -453,8 +537,10 @@ document.getElementById('lbNext').onclick=function(){ lbIdx=(lbIdx+1)%lbSlides.l
 document.getElementById('lbClose').onclick=closeLb;
 document.getElementById('lbPick').onclick=function(){
   if(isPending(lbStyle)) return;
-  selectStyle(lbStyle); closeLb();
-  document.getElementById('order').scrollIntoView({behavior:'smooth'});
+  var st=lbStyle;
+  closeLb();
+  selectStyle(st);                                   // 帶 1 本並聚焦該卡的數量欄
+  cards[st.c].scrollIntoView({behavior:'smooth',block:'center'});
 };
 lb.addEventListener('click',function(e){ if(e.target===lb) closeLb(); });
 document.addEventListener('keydown',function(e){
@@ -464,39 +550,17 @@ document.addEventListener('keydown',function(e){
   if(e.key==='ArrowRight'){ lbIdx=(lbIdx+1)%lbSlides.length; showSlide(); }
 });
 
-/* ---------- 燙金排版示意圖（18 × 2.3 cm，文字自動縮放） ---------- */
+/* ---------- 燙金設定（可複製元件） ----------
+   一組燙金設定 ＝ 一塊版 ＝ 一次上機。兩種模式（2026-07-17 老闆確認）：
+   ・「各款燙同一組內容」＝ 全單共用一組（1 塊版；上機門檻看整張單總本數）
+   ・「各款分開設定」    ＝ 每款各一組（各自一塊版、各自算 100 本上機門檻）
+   版費一律每塊 200。 */
 var FOIL_H_MM = 23;   // 燙金範圍高度 2.3cm = 23mm
-var fpZone=document.getElementById('fpZone'),fpText=document.getElementById('fpText'),
-    fpCap=document.getElementById('fpCap'),fpSize=document.getElementById('fpSize'),
-    foilChk=document.getElementById('foil'),foilTextEl=document.getElementById('foilText'),
-    fpMockImg=document.getElementById('fpMockImg'),fpDim=document.getElementById('fpDim'),
-    fpMode=document.getElementById('fpMode');
-var ALIGN={'底板置中':['c','置中'],'底板靠左':['l','靠左'],'底板靠右':['r','靠右']};
-var zoneMock=false;
-
-/* 依所選款式切換：真實桌曆底板示意 或 通用示意條 */
-function updateFoilMock(){
-  var m=(selStyle && window.MOCKS) ? window.MOCKS[selStyle.c] : null;
-  zoneMock=!!m;
-  if(m){
-    fpMockImg.style.display='block';
-    if(fpMockImg.getAttribute('src')!==m.src){ fpMockImg.onload=fitFoil; fpMockImg.src=m.src; }
-    // 燙金區疊在底板上：左右各內縮底板寬的3%，高度依 18:2.3 實際比例
-    var span=m.x1-m.x0, inset=span*0.03;
-    fpZone.style.left=(m.x0+inset)+'%';
-    fpZone.style.width=(span-inset*2)+'%';
-    fpZone.style.top=(m.top+m.h/2)+'%';
-    fpDim.style.display='none';
-    fpMode.textContent='底板示意：'+selStyle.n;
-  }else{
-    fpMockImg.style.display='none';
-    fpZone.style.left='';fpZone.style.width='';fpZone.style.top='';
-    fpDim.style.display='';
-    fpMode.textContent='選擇款式後，會顯示該款桌曆的底板示意。';
-  }
-  applyZoneAlign();
-  fitFoil();
-}
+var foilChk=document.getElementById('foil'), foilWrap=document.getElementById('foilWrap'),
+    fModeField=document.getElementById('fMode'), modeHint=document.getElementById('modeHint');
+/* 排版＝整塊文字在底板上的位置；對齊＝多行文字彼此之間的對齊。兩者獨立。 */
+var ALIGN={'底板置中':['pos-c','置中'],'底板靠左':['pos-l','靠左'],'底板靠右':['pos-r','靠右']};
+var TALIGN={'文字置中':['txt-c','置中'],'文字左齊':['txt-l','左齊'],'文字右齊':['txt-r','右齊']};
 
 /* 燙金顏色：金屬色用漸層模擬反光，平光色用單色 */
 var FOILS=[
@@ -512,82 +576,359 @@ var FOILS=[
   {n:'白',    css:'linear-gradient(115deg,#FFFFFF,#FFFFFF)'},
   {n:'雷射',  css:'linear-gradient(100deg,#EE9CC4,#F7E79C 20%,#93E9C4 40%,#8AD2F5 60%,#C2A4F2 80%,#EE9CC4)'}
 ];
-var colorBox=document.getElementById('foilColor');
-FOILS.forEach(function(f,i){
+function foilByName(n){ return FOILS.filter(function(f){return f.n===n;})[0]; }
+
+/* ---------- 燙金字體 ---------- */
+/* 沒有任何一款標楷體是 Windows 與 iOS 都內建的（Windows＝DFKai-SB、iOS 的 Kaiti TC 屬
+   「可下載字型」網頁抓不到）→ 楷書一律用網路字型 LXGW WenKai TC（霞鶩文楷，開源可商用），
+   各平台長相一致。Google 已把它切成 115 片 woff2（每片約 50KB），瀏覽器只下載實際用到
+   的字所在的切片，選了才載。實際燙金字體以完稿檔為準。 */
+var FONTS=[
+  {n:'黑體',   css:"'Noto Sans TC',sans-serif"},
+  {n:'標楷體', css:"'LXGW WenKai TC','標楷體','DFKai-SB','BiauKai',serif", kai:true}
+];
+var kaiAsked=false;
+function ensureKaiFont(){
+  if(kaiAsked) return;
+  kaiAsked=true;
+  var l=document.createElement('link');
+  l.rel='stylesheet';
+  l.href='https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC&display=swap';
+  l.onload=function(){ if(document.fonts&&document.fonts.ready) document.fonts.ready.then(fitFoil); };
+  document.head.appendChild(l);
+}
+function fontByName(n){ return FONTS.filter(function(f){return f.n===n;})[0]; }
+
+/* ---------- 每組燙金設定的狀態 ----------
+   存在 JS 物件裡（不是 DOM）→ 切換模式、改數量、重建區塊都不會弄丟客戶填好的內容。 */
+var foilCfgs={};
+function defaultCfg(){
+  return {on:true, side:'單面', plate:'新製版', color:FOILS[0].n, font:FONTS[0].n,
+          align:'底板置中', talign:'文字置中', text:''};
+}
+function cfgOf(k){ if(!foilCfgs[k]) foilCfgs[k]=defaultCfg(); return foilCfgs[k]; }
+
+function foilMode(){
+  if(orders().length<2) return '同一組';                  // 只訂一款就沒有分不分的問題
+  var r=document.querySelector('input[name=fmode]:checked');
+  return r ? r.value : '同一組';
+}
+/* 一個 group ＝ 一塊版 ＝ 一次上機 */
+function foilGroups(){
+  if(!foilChk.checked) return [];
+  var list=orders();
+  if(!list.length) return [];
+  if(foilMode()==='同一組'){
+    var c=cfgOf('ALL'); c.on=true;
+    return [{key:'ALL', styles:list, cfg:c, qty:totalQty()}];
+  }
+  return list.map(function(st){
+    return {key:st.c, style:st, styles:[st], cfg:cfgOf(st.c), qty:getQty(st.c)};
+  });
+}
+function activeGroups(){ return foilGroups().filter(function(g){ return g.cfg.on; }); }
+
+/* ---------- 區塊產生器 ---------- */
+var blocks={};
+function optsRow(cls){ var d=document.createElement('div'); d.className='opts'+(cls?' '+cls:''); return d; }
+function fieldLabel(t,small){ var l=document.createElement('label'); l.className='t';
+  l.innerHTML=t+(small?'<small>'+small+'</small>':''); return l; }
+function hintP(html){ var p=document.createElement('p'); p.className='hint'; if(html) p.innerHTML=html; return p; }
+function optRadio(name,val,label,checked,onchange,swatchCss,fontCss){
   var lb=document.createElement('label');
   var ip=document.createElement('input');
-  ip.type='radio'; ip.name='fcolor'; ip.value=f.n; if(i===0) ip.checked=true;
-  ip.addEventListener('change',syncColor);
-  var sw=document.createElement('i'); sw.style.background=f.css;
-  lb.appendChild(ip); lb.appendChild(sw);
-  lb.appendChild(document.createTextNode(f.n));
-  colorBox.appendChild(lb);
-});
-function curColor(){
-  var v=document.querySelector('input[name=fcolor]:checked').value;
-  return FOILS.filter(function(f){return f.n===v;})[0];
-}
-function syncColor(){
-  fpText.style.backgroundImage=curColor().css;   // 示意圖文字直接變成該燙金色
+  ip.type='radio'; ip.name=name; ip.value=val; ip.checked=checked;
+  ip.addEventListener('change',function(){ if(ip.checked) onchange(val); });
+  lb.appendChild(ip);
+  if(swatchCss){ var i=document.createElement('i'); i.style.background=swatchCss; lb.appendChild(i); }
+  lb.appendChild(document.createTextNode(label));
+  if(fontCss) lb.style.fontFamily=fontCss;
+  return lb;
 }
 
-function applyZoneAlign(){
-  var a=ALIGN[document.querySelector('input[name=align]:checked').value];
-  fpZone.className='fp-zone '+(zoneMock?'onmock':'generic')+' '+a[0];
-  fpCap.textContent=a[1];
+function buildBlock(g){
+  var b={key:g.key, style:g.style||null, cfg:g.cfg};
+  var cfg=g.cfg, uid=g.key;
+  var el=document.createElement('div'); el.className='foilblk'; b.el=el;
+
+  if(g.style){                                   // 分款模式才有標頭（縮圖＋款名＋這款要不要燙）
+    var hd=document.createElement('div'); hd.className='fb-hd';
+    var im=document.createElement('img'); im.src=g.style.cover; im.alt=''; im.loading='lazy';
+    var nm=document.createElement('div'); nm.className='fb-nm';
+    nm.innerHTML='<b>'+g.style.n+'</b><span class="fb-q"></span>';
+    var sw=document.createElement('label'); sw.className='fb-sw';
+    var ck=document.createElement('input'); ck.type='checkbox'; ck.checked=cfg.on;
+    ck.addEventListener('change',function(){ cfg.on=ck.checked; el.classList.toggle('off',!cfg.on); recalc(); });
+    sw.appendChild(ck); sw.appendChild(document.createTextNode('這款要燙金'));
+    hd.appendChild(im); hd.appendChild(nm); hd.appendChild(sw);
+    el.appendChild(hd);
+    b.qtyEl=nm.querySelector('.fb-q');
+    el.classList.toggle('off',!cfg.on);
+  }
+
+  var body=document.createElement('div'); body.className='fb-body'; el.appendChild(body);
+
+  body.appendChild(fieldLabel('燙金面數','（同一塊版，雙面內容相同）'));
+  var sideRow=optsRow();
+  ['單面','雙面'].forEach(function(s){
+    sideRow.appendChild(optRadio('side-'+uid,s,s+'（每本 +'+FOIL_UNIT[s]+' 元）',cfg.side===s,
+      function(v){ cfg.side=v; recalc(); }));
+  });
+  body.appendChild(sideRow);
+  b.setupHint=hintP(); body.appendChild(b.setupHint);
+
+  body.appendChild(fieldLabel('燙金版','（一塊版 '+PLATE_FEE+' 元，一次性費用）'));
+  var plateRow=optsRow();
+  ['新製版','沿用舊版'].forEach(function(p){
+    plateRow.appendChild(optRadio('plate-'+uid,p,p==='新製版'?('新製版（+'+PLATE_FEE+' 元）'):'沿用舊版（免版費）',
+      cfg.plate===p, function(v){ cfg.plate=v; recalc(); }));
+  });
+  body.appendChild(plateRow);
+  b.plateHint=hintP(); body.appendChild(b.plateHint);
+  body.appendChild(hintP('沿用舊版請另行以官方 LINE（<b>@623bfkyg</b>）通知我們，由專人確認版是否可續用。'));
+
+  body.appendChild(fieldLabel('燙金顏色','（點選看示意圖）'));
+  var colorRow=optsRow('swatches');
+  FOILS.forEach(function(f){
+    colorRow.appendChild(optRadio('fcolor-'+uid,f.n,f.n,cfg.color===f.n,
+      function(v){ cfg.color=v; paint(b); }, f.css));
+  });
+  body.appendChild(colorRow);
+  body.appendChild(hintP('螢幕顏色僅供參考，實際以燙金箔樣品為準。'));
+
+  body.appendChild(fieldLabel('燙金字體','（點選看示意圖）'));
+  var fontRow=optsRow();
+  FONTS.forEach(function(f){
+    if(f.kai) ensureKaiFont();                   // 選項本身要長得像楷書，字型得先載
+    fontRow.appendChild(optRadio('ffont-'+uid,f.n,f.n,cfg.font===f.n,
+      function(v){ cfg.font=v; paint(b); }, null, f.css));
+  });
+  body.appendChild(fontRow);
+
+  body.appendChild(fieldLabel('燙金排版','（整塊文字擺在底板的哪個位置）'));
+  var alignRow=optsRow();
+  Object.keys(ALIGN).forEach(function(k){
+    alignRow.appendChild(optRadio('align-'+uid,k,k,cfg.align===k,function(v){ cfg.align=v; paint(b); }));
+  });
+  body.appendChild(alignRow);
+
+  var tl=fieldLabel('文字對齊','（打兩行以上時，行與行之間怎麼對齊）'); tl.style.marginTop='16px';
+  body.appendChild(tl);
+  var talignRow=optsRow();
+  Object.keys(TALIGN).forEach(function(k){
+    talignRow.appendChild(optRadio('talign-'+uid,k,k,cfg.talign===k,function(v){ cfg.talign=v; paint(b); }));
+  });
+  body.appendChild(talignRow);
+
+  var pv=document.createElement('div'); pv.className='foilpv';
+  pv.innerHTML='<div class="fp-dim">← 18 cm →</div>'+
+    '<div class="fp-stage"><img alt="款式底板示意" style="display:none">'+
+    '<div class="fp-zone generic pos-c txt-c"><span>您的 LOGO／文字</span></div></div>'+
+    '<div class="cap"><span class="fp-mode"></span><br>底板燙金範圍 <b>18 × 2.3 cm</b><br>'+
+    '位置：<b class="fp-cap"></b>　對齊：<b class="fp-tcap"></b><br>'+
+    '字體：<b class="fp-fcap"></b>　字高：<b class="fp-size">—</b></div>';
+  body.appendChild(pv);
+  b.dim=pv.querySelector('.fp-dim');   b.img=pv.querySelector('img');
+  b.zone=pv.querySelector('.fp-zone'); b.text=pv.querySelector('.fp-zone span');
+  b.mode=pv.querySelector('.fp-mode'); b.cap=pv.querySelector('.fp-cap');
+  b.tcap=pv.querySelector('.fp-tcap'); b.fcap=pv.querySelector('.fp-fcap');
+  b.size=pv.querySelector('.fp-size');
+
+  body.appendChild(fieldLabel('欲燙金的資訊',''));
+  var ta=document.createElement('textarea');
+  ta.placeholder='例如：喜成印刷有限公司　敬賀 2027';
+  ta.value=cfg.text;
+  ta.addEventListener('input',function(){ cfg.text=ta.value; fitBlock(b); });
+  body.appendChild(ta); b.ta=ta;
+  body.appendChild(hintP('打上想燙的文字，上方示意圖會同步顯示。<br>'+
+    '若有 <b>LOGO 圖檔</b>，請加官方 LINE（@623bfkyg）再把圖檔傳給我們。'));
+  return b;
 }
-function syncAlign(){ applyZoneAlign(); fitFoil(); }
-document.querySelectorAll('input[name=align]').forEach(function(r){ r.addEventListener('change',syncAlign); });
+
+/* 這塊示意圖用哪一款的底板：分款＝就是該款；同一組＝以點選的款為主，該款不在單內就退回第一款 */
+function blockStyle(b){
+  if(b.style) return b.style;
+  var list=orders();
+  if(selStyle && list.indexOf(selStyle)>=0) return selStyle;
+  return list.length ? list[0] : null;
+}
+
+function paint(b){
+  var cfg=b.cfg;
+  var f=fontByName(cfg.font), c=foilByName(cfg.color);
+  if(f.kai) ensureKaiFont();
+  b.text.style.fontFamily=f.css;
+  b.text.style.backgroundImage=c.css;            // 示意圖文字直接變成該燙金色
+  b.fcap.textContent=f.n;
+
+  var st=blockStyle(b);
+  var m=(st && window.MOCKS) ? window.MOCKS[st.c] : null;
+  if(m){
+    b.img.style.display='block';
+    if(b.img.getAttribute('src')!==m.src){ b.img.onload=function(){ fitBlock(b); }; b.img.src=m.src; }
+    // 燙金區疊在底板上：左右各內縮底板寬的3%，高度依 18:2.3 實際比例
+    var span=m.x1-m.x0, inset=span*0.03;
+    b.zone.style.left=(m.x0+inset)+'%';
+    b.zone.style.width=(span-inset*2)+'%';
+    b.zone.style.top=(m.top+m.h/2)+'%';
+    b.dim.style.display='none';
+    b.mode.textContent='底板示意：'+st.n+((!b.style && orders().length>1)?'（各款皆燙同一組內容）':'');
+  }else{
+    b.img.style.display='none';
+    b.zone.style.left=''; b.zone.style.width=''; b.zone.style.top='';
+    b.dim.style.display='';
+    b.mode.textContent='選擇款式後，會顯示該款桌曆的底板示意。';
+  }
+  var a=ALIGN[cfg.align], t=TALIGN[cfg.talign];
+  b.zone.className='fp-zone '+(m?'onmock':'generic')+' '+a[0]+' '+t[0];
+  b.cap.textContent=a[1]; b.tcap.textContent=t[1];
+  fitBlock(b);
+}
 
 /* 二分搜尋出「塞得進燙金範圍」的最大字級：行數越多字越小 */
-function fitFoil(){
-  var t=foilTextEl.value.trim();
-  fpText.textContent = t ? t : '您的 LOGO／文字';
-  fpText.style.opacity = t ? 1 : .5;
-  var availH=fpZone.clientHeight;
-  if(!availH) return;                       // 欄位隱藏時不量測
+function fitBlock(b){
+  var t=(b.cfg.text||'').trim();
+  b.text.textContent = t ? t : '您的 LOGO／文字';
+  b.text.style.opacity = t ? 1 : .5;
+  var availH=b.zone.clientHeight;
+  if(!availH) return;                            // 區塊隱藏時不量測
+  // 文字區塊寬度隨內容縮放，量測基準是燙金範圍框的內寬（clientWidth 含左右內距，要扣掉）
+  var cs=getComputedStyle(b.zone);
+  var availW=b.zone.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight);
   var lo=1.5, hi=24, best=1.5;
   for(var i=0;i<24 && hi-lo>0.05;i++){
     var mid=(lo+hi)/2;
-    fpText.style.fontSize=mid+'px';
-    var fits = fpText.scrollHeight<=availH+0.5 && fpText.scrollWidth<=fpText.clientWidth+0.5;
+    b.text.style.fontSize=mid+'px';
+    var fits = b.text.scrollHeight<=availH+0.5 && b.text.scrollWidth<=availW+0.5;
     if(fits){ best=mid; lo=mid; } else { hi=mid; }
   }
-  fpText.style.fontSize=best+'px';
-  var mm = best*(FOIL_H_MM/fpZone.offsetHeight);   // 2.3cm 對應整個範圍框（含框線）
-  fpSize.textContent='約 '+mm.toFixed(1)+' mm';
-  fpSize.className = mm<2 ? 'warn' : '';
+  b.text.style.fontSize=best+'px';
+  var mm = best*(FOIL_H_MM/b.zone.offsetHeight); // 2.3cm 對應整個範圍框（含框線）
+  b.size.textContent='約 '+mm.toFixed(1)+' mm';
+  b.size.className='fp-size'+(mm<2 ? ' warn' : '');
 }
-foilTextEl.addEventListener('input',fitFoil);
-window.addEventListener('resize',fitFoil);
-if(document.fonts && document.fonts.ready) document.fonts.ready.then(fitFoil);
+function fitAll(){ Object.keys(blocks).forEach(function(k){ fitBlock(blocks[k]); }); }
+function updateFoilMock(){ Object.keys(blocks).forEach(function(k){ paint(blocks[k]); }); }
 
-function syncFoil(){
-  var on=foilChk.checked;
-  document.getElementById('fColor').style.display=on?'':'none';
-  document.getElementById('fAlign').style.display=on?'':'none';
-  document.getElementById('fFoilText').style.display=on?'':'none';
-  if(on) fitFoil();                          // 顯示後才量得到尺寸
+/* 只有「組別集合變了」才重建 DOM，否則只更新會動的文字 —— 免得客戶打字打到一半區塊被重畫 */
+var foilSig=null;
+function renderFoil(){
+  var on=foilChk.checked, multi=orders().length>1;
+  fModeField.style.display=(on && multi) ? '' : 'none';
+  foilWrap.style.display=on ? '' : 'none';
+
+  var groups=foilGroups();
+  var sig=on+'|'+foilMode()+'|'+groups.map(function(g){return g.key;}).join(',');
+  if(sig!==foilSig){
+    foilSig=sig;
+    foilWrap.innerHTML=''; blocks={};
+    groups.forEach(function(g){ var b=buildBlock(g); blocks[g.key]=b; foilWrap.appendChild(b.el); });
+    groups.forEach(function(g){ paint(blocks[g.key]); });
+  }
+  groups.forEach(function(g){
+    var b=blocks[g.key]; if(!b) return;
+    b.cfg=g.cfg;
+    if(b.qtyEl) b.qtyEl.textContent=g.qty+' 本';
+    if(g.qty>0 && g.qty<SETUP_MIN){
+      b.setupHint.innerHTML='這塊版 '+g.qty+' 本，未達 '+SETUP_MIN+' 本 → 另收上機費 '+
+        '<b style="color:#B4483C">NT$ '+FOIL_SETUP[g.cfg.side]+'</b>（'+g.cfg.side+'）。'+
+        (g.style?'這款':'整張單')+'訂滿 '+SETUP_MIN+' 本即免收。';
+    } else if(g.qty>=SETUP_MIN){
+      b.setupHint.innerHTML='這塊版已達 '+SETUP_MIN+' 本，<b style="color:var(--ok)">免上機費</b>。';
+    } else b.setupHint.innerHTML='';
+    b.plateHint.innerHTML = (g.cfg.plate==='沿用舊版')
+      ? '沿用先前製作的燙金版，<b style="color:var(--ok)">免收版費</b>。'
+      : '第一次燙金需製版，<b>NT$ '+PLATE_FEE+'</b>（一塊版）。這是<b>一次性費用</b>，日後同一組內容再版就不再收。';
+  });
+  modeHint.innerHTML = (foilMode()==='分款')
+    ? '每款各自一塊版、各自算上機費（版費 '+PLATE_FEE+' 元／塊）。某款不燙金，在該區塊右上角取消勾選即可。'
+    : '所有款式共用一塊版、燙同一組內容，上機費看整張單總本數。';
 }
-foilChk.addEventListener('change',syncFoil);
-syncColor(); updateFoilMock(); syncFoil();
 
-/* ---------- 運費：100 本/箱，每箱 150 元，未滿一箱以一箱計 ---------- */
+foilChk.addEventListener('change',function(){ renderFoil(); if(costBox) recalc(); });
+document.querySelectorAll('input[name=fmode]').forEach(function(r){
+  r.addEventListener('change',function(){ renderFoil(); if(costBox) recalc(); });
+});
+window.addEventListener('resize',fitAll);
+if(document.fonts && document.fonts.ready) document.fonts.ready.then(fitAll);
+renderFoil();
+
+/* ---------- 運費：全部款式合併算，100 本/箱，每箱 150 元，未滿一箱以一箱計 ---------- */
 var PER_BOX=100, BOX_FEE=150;
-var qtyEl=document.getElementById('qty'), shipBox=document.getElementById('shipBox');
+var shipBox=document.getElementById('shipBox');
 function shipCalc(){
-  var q=parseInt(qtyEl.value,10);
-  if(!q || q<1){
-    shipBox.innerHTML='運費：每 <b>100 本</b>裝一箱，每箱 <b>150 元</b><span class="mut">（未滿一箱以一箱計）</span>';
+  var q=totalQty();
+  if(!q){
+    shipBox.innerHTML='運費：每 <b>100 本</b>裝一箱，每箱 <b>150 元</b><span class="mut">（各款合併計算，未滿一箱以一箱計）</span>';
     return null;
   }
   var boxes=Math.ceil(q/PER_BOX), fee=boxes*BOX_FEE;
-  shipBox.innerHTML=q+' 本 → <b>'+boxes+' 箱</b>　運費 <b>NT$ '+fee+'</b> '+
-    '<span class="mut">（'+boxes+' × 150，100 本/箱，未滿一箱以一箱計）</span>';
+  shipBox.innerHTML='合計 '+q+' 本 → <b>'+boxes+' 箱</b>　運費 <b>NT$ '+fee+'</b> '+
+    '<span class="mut">（'+boxes+' × 150，各款合併，100 本/箱，未滿一箱以一箱計）</span>';
   return {q:q, boxes:boxes, fee:fee};
 }
-qtyEl.addEventListener('input',shipCalc);
-shipCalc();
+
+/* ---------- 費用試算 ---------- */
+var costBox=document.getElementById('costBox'), packChk=document.getElementById('bag');
+
+function calcCost(){
+  var q=totalQty(), cal=calSub();
+  var gs=activeGroups();                     // 一組 ＝ 一塊版 ＝ 一次上機
+  var foil=0, plate=0, setup=0, newPlates=0;
+  gs.forEach(function(g){
+    // 燙金 2.5／4.5 元 × 奇數本會出現 0.5 元尾數 → 每組小計四捨五入（2026-07-17 老闆指定）
+    foil += Math.round(g.qty*FOIL_UNIT[g.cfg.side]);
+    if(g.cfg.plate==='新製版'){ plate += PLATE_FEE; newPlates++; }
+    if(g.qty>0 && g.qty<SETUP_MIN) setup += FOIL_SETUP[g.cfg.side];   // 每塊版各自算門檻
+  });
+  var pack = packChk.checked ? q*PACK_FEE : 0;
+  var sh=shipCalc(), ship=sh?sh.fee:0;
+  var net=cal+foil+setup+plate+pack+ship;    // 未稅小計
+  var tax=Math.round(net*TAX_RATE);
+  return {q:q, groups:gs, newPlates:newPlates, cal:cal, foil:foil, setup:setup, plate:plate,
+          pack:pack, sh:sh, ship:ship, net:net, tax:tax, total:net+tax};
+}
+
+function renderCost(){
+  var c=calcCost();
+  if(!c.q){ costBox.innerHTML='<div class="empty">選好款式與數量後，這裡會自動算出總價</div>'; return; }
+  var rows=[];
+  orders().forEach(function(st){
+    rows.push(['桌曆　'+st.n, '<em>'+getQty(st.c)+' 本 × '+priceOf(st.c)+' 元</em>',
+               'NT$ '+fmt(getQty(st.c)*priceOf(st.c)), '']);
+  });
+  c.groups.forEach(function(g){
+    var suffix = g.style ? '　'+g.style.n : '';
+    var raw=g.qty*FOIL_UNIT[g.cfg.side], val=Math.round(raw);
+    rows.push(['底板燙金'+suffix,
+               '<em>'+g.cfg.side+'　'+g.qty+' 本 × '+FOIL_UNIT[g.cfg.side]+' 元'+
+               (raw!==val?'＝'+raw+'，四捨五入':'')+'</em>',
+               'NT$ '+fmt(val), '']);
+    if(g.qty<SETUP_MIN)
+      rows.push(['燙金上機費'+suffix, '<em>這塊版不足 '+SETUP_MIN+' 本（'+g.cfg.side+'）</em>',
+                 'NT$ '+fmt(FOIL_SETUP[g.cfg.side]), 'setup']);
+  });
+  if(c.groups.length){
+    rows.push(['燙金版費',
+               '<em>'+(c.newPlates ? '新製版 '+c.newPlates+' 塊 × '+PLATE_FEE+' 元（一次性，日後再版免收）'
+                                   : '全部沿用舊版，免收')+'</em>',
+               c.newPlates ? 'NT$ '+fmt(c.plate) : '免費', '']);
+  }
+  if(c.pack) rows.push(['代客包裝', '<em>'+c.q+' 本 × '+PACK_FEE+' 元</em>', 'NT$ '+fmt(c.pack), '']);
+  rows.push(['運費', '<em>'+c.sh.boxes+' 箱 × '+BOX_FEE+' 元（各款合併，100 本/箱）</em>', 'NT$ '+fmt(c.ship), '']);
+
+  costBox.innerHTML = rows.map(function(r){
+    return '<div class="r '+r[3]+'"><span class="k">'+r[0]+r[1]+'</span><span class="v">'+r[2]+'</span></div>';
+  }).join('') +
+  '<div class="r"><span class="k">未稅小計</span><span class="v">NT$ '+fmt(c.net)+'</span></div>' +
+  '<div class="r"><span class="k">營業稅<em>5%</em></span><span class="v">NT$ '+fmt(c.tax)+'</span></div>' +
+  '<div class="r sum"><span class="k">總計<em>含稅・實付金額</em></span><span class="v">NT$ '+fmt(c.total)+'</span></div>';
+}
+
+function recalc(){ renderCart(); shipCalc(); renderFoil(); renderCost(); }
+packChk.addEventListener('change',recalc);
+
+recalc();
 
 /* ---------- 統一編號：只收數字，提示需 8 碼 ---------- */
 var taxEl=document.getElementById('tax'), taxHint=document.getElementById('taxHint');
@@ -599,11 +940,9 @@ taxEl.addEventListener('input',function(){
 
 /* ---------- 產生預訂訊息 ---------- */
 document.getElementById('genBtn').addEventListener('click',function(){
-  var qty=document.getElementById('qty').value.trim();
+  var list=orders();
   var bag=document.getElementById('bag').checked;
   var foilOn=foilChk.checked;
-  var align=document.querySelector('input[name=align]:checked').value;
-  var ftxt=foilTextEl.value.trim();
   var nm=document.getElementById('rcName').value.trim();
   var ph=document.getElementById('rcPhone').value.trim();
   var ad=document.getElementById('rcAddr').value.trim();
@@ -611,26 +950,52 @@ document.getElementById('genBtn').addEventListener('click',function(){
   var tax=document.getElementById('tax').value.trim();
   var U='（未填）';
 
+  var c=calcCost();
   var msg='【2027 曆製品預訂】\n';
-  msg+='款式：'+(selStyle?('#'+selStyle.c+' '+selStyle.n):'（尚未選款式）')+'\n';
-  msg+='數量：'+(qty?qty+' 本':U)+'\n';
-  msg+='包塑膠袋：'+(bag?'需要（費用另計）':'不需要')+'\n';
-  msg+='底板燙金：'+(foilOn?'要':'不用')+'\n';
-  if(foilOn){
-    msg+='　燙金顏色：'+curColor().n+'\n';
-    msg+='　燙金排版：'+align+'\n';
-    // 多行燙金內容：續行對齊「燙金內容：」後方
-    msg+='　燙金內容：'+(ftxt?ftxt.replace(/\n/g,'\n　　　　　　'):'（未填，稍後提供）')+'\n';
+  msg+='規格：25K 三角桌曆\n';
+  if(list.length){
+    msg+='款式與數量：\n';
+    list.forEach(function(st){
+      msg+='　#'+st.c+' '+st.n+' × '+getQty(st.c)+' 本 × '+priceOf(st.c)+' 元 = NT$ '+
+           fmt(getQty(st.c)*priceOf(st.c))+'\n';
+    });
+    msg+='　小計：'+list.length+' 款 　'+totalQty()+' 本 　NT$ '+fmt(c.cal)+'\n';
+  } else {
+    msg+='款式與數量：'+U+'（尚未選款式）\n';
   }
-  var sh=shipCalc();
-  msg+='運費：'+(sh ? sh.boxes+' 箱 × 150 = NT$ '+sh.fee+'（100 本/箱，未滿一箱以一箱計）'
-                   : '（未填數量，無法計算）')+'\n';
+  msg+='代客包裝：'+(bag?'需要（'+c.q+' 本 × 1 元 = NT$ '+fmt(c.pack)+'）':'不需要（附贈 OPP 袋、不代裝）')+'\n';
+  msg+='底板燙金：'+(foilOn?'要':'不用')+(c.groups.length>1?'（各款分開設定，共 '+c.groups.length+' 塊版）':'')+'\n';
+  c.groups.forEach(function(g){
+    var ind='　';
+    if(g.style){ msg+='　▍'+g.style.n+'（'+g.qty+' 本）\n'; ind='　　'; }
+    var raw=g.qty*FOIL_UNIT[g.cfg.side], val=Math.round(raw);
+    msg+=ind+'燙金工資：'+g.cfg.side+'　'+g.qty+' 本 × '+FOIL_UNIT[g.cfg.side]+' 元 = NT$ '+fmt(val)+
+         (raw!==val?'（'+raw+' 四捨五入）':'')+'\n';
+    if(g.qty<SETUP_MIN)
+      msg+=ind+'上機費：NT$ '+fmt(FOIL_SETUP[g.cfg.side])+'（這塊版不足 '+SETUP_MIN+' 本）\n';
+    msg+=ind+'燙金版：'+(g.cfg.plate==='沿用舊版' ? '沿用舊版，免版費（將另以 LINE 通知）'
+                                               : '新製版 NT$ '+fmt(PLATE_FEE)+'（一塊版，一次性）')+'\n';
+    msg+=ind+'顏色：'+g.cfg.color+'　字體：'+g.cfg.font+'\n';
+    msg+=ind+'排版：'+g.cfg.align+'　對齊：'+g.cfg.talign+'\n';
+    // 多行燙金內容：續行對齊「內容：」後方
+    msg+=ind+'內容：'+(g.cfg.text.trim() ? g.cfg.text.trim().replace(/\n/g,'\n'+ind+'　　　') : '（未填，稍後提供）')+'\n';
+  });
+  var offList=foilGroups().filter(function(g){ return !g.cfg.on; });
+  if(offList.length)
+    msg+='　（不燙金：'+offList.map(function(g){ return g.style?g.style.n:''; }).join('、')+'）\n';
+  msg+='運費：'+(c.sh ? c.sh.boxes+' 箱 × 150 = NT$ '+fmt(c.ship)+'（各款合併，100 本/箱，未滿一箱以一箱計）'
+                     : '（未填數量，無法計算）')+'\n';
+  msg+='─────────────\n';
+  msg+='未稅小計：NT$ '+fmt(c.net)+'\n';
+  msg+='營業稅 5%：NT$ '+fmt(c.tax)+'\n';
+  msg+='總計（含稅）：NT$ '+fmt(c.total)+'\n';
+  msg+='─────────────\n';
   msg+='收件人：'+(nm||U)+'\n';
   msg+='電話：'+(ph||U)+'\n';
   msg+='地址：'+(ad||U)+'\n';
   msg+='發票抬頭：'+(iv||'（不需要）')+'\n';
   msg+='統一編號：'+(tax||'（不需要）')+'\n';
-  msg+='※ 燙金／塑膠袋費用另計，待報價';
+  msg+='※ 以上為網站試算金額，實際以專人確認為準';
   if(foilOn) msg+='\n※ 如有 LOGO 圖檔，將另以 LINE 傳送';
 
   document.getElementById('msg').textContent=msg;
