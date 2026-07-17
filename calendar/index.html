@@ -89,6 +89,20 @@ textarea{min-height:88px;resize:vertical}
 .cart .tot b{color:var(--gold-2);font-size:17px}
 .backlink{display:inline-block;margin-top:9px;color:var(--gold-2);font-weight:700;font-size:13px;text-decoration:none}
 
+/* 費用明細 */
+.cost{background:var(--card);border:1.5px solid var(--gold-line);border-radius:12px;padding:6px 14px}
+.cost .r{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:9px 0;
+  border-bottom:1px dashed #E9DCBE;font-size:14.5px}
+.cost .r:last-child{border-bottom:none}
+.cost .r .k{color:var(--ink-soft)}
+.cost .r .k em{font-style:normal;font-size:12px;display:block;opacity:.85}
+.cost .r .v{font-weight:700;white-space:nowrap}
+.cost .r.sum{border-top:2px solid var(--gold-line);border-bottom:none;margin-top:2px;padding:13px 0}
+.cost .r.sum .k{color:var(--ink);font-weight:700;font-size:16px}
+.cost .r.sum .v{color:var(--gold-2);font-size:22px}
+.cost .r.setup .v{color:#B4483C}
+.cost .empty{padding:14px 0;color:var(--ink-soft);font-size:14px;text-align:center}
+
 /* 燙金顏色色票 */
 .swatches label{display:inline-flex;align-items:center;gap:7px;padding:7px 14px 7px 9px}
 .swatches i{width:16px;height:16px;border-radius:50%;flex:none;display:block;
@@ -164,7 +178,9 @@ footer .gl{color:var(--gold-2)}
 .stycard.sel{border-color:var(--gold-2);box-shadow:0 0 0 2px var(--gold-1)}
 .stycard.sel::after{content:"✓ " attr(data-qty) " 本";position:absolute;top:8px;left:8px;background:var(--gold-2);color:#fff;font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px}
 
-/* 每款照片下面的數量欄（可同時訂多款） */
+/* 每款照片下面的單價與數量欄（可同時訂多款） */
+.stycard .pr{padding:0 10px 7px;font-size:12.5px;color:var(--ink-soft);margin-top:-3px}
+.stycard .pr b{color:var(--gold-2);font-size:15px}
 .stycard .qty{display:flex;align-items:center;gap:7px;padding:0 10px 11px;cursor:auto}
 .stycard .qty em{font-style:normal;font-size:12.5px;color:var(--ink-soft);flex:none}
 .stycard .qty input{padding:7px 6px;font-size:15px;text-align:center;border-radius:8px;min-width:0}
@@ -230,7 +246,9 @@ footer .gl{color:var(--gold-2)}
   <h2>預訂登記</h2>
 
   <div class="notebar">
-    燙金、塑膠袋費用<b>另計</b>，由專人核算後回覆報價。<br>
+    一律<b>附贈透明 OPP 袋</b>（不包裝）；需要代客包裝每本 <b>+1 元</b>。<br>
+    底板燙金：單面每本 <b>+2.5 元</b>、雙面每本 <b>+4.5 元</b>（同一塊版）。
+    整張單<b>不足 100 本</b>另收上機費（單面 300 元／雙面 500 元）。<br>
     運費：每 <b>100 本</b>裝一箱，每箱 <b>150 元</b>，未滿一箱以一箱計。
   </div>
 
@@ -247,8 +265,19 @@ footer .gl{color:var(--gold-2)}
     <label class="t">加購項目</label>
     <div class="opts">
       <label><input type="checkbox" id="foil" checked>底板燙金 LOGO</label>
-      <label><input type="checkbox" id="bag">包塑膠袋（費用另計）</label>
+      <label><input type="checkbox" id="bag">代客包裝（每本 +1 元）</label>
     </div>
+    <p class="hint">所有款式皆<b>附贈透明 OPP 袋</b>，但不代為裝入。需要我們裝好再出貨請勾「代客包裝」。</p>
+  </div>
+
+  <!-- 燙金面數（勾選燙金才出現） -->
+  <div class="field" id="fSide">
+    <label class="t">燙金面數<small>（同一塊版，雙面內容相同）</small></label>
+    <div class="opts" id="side">
+      <label><input type="radio" name="side" value="單面" checked>單面（每本 +2.5 元）</label>
+      <label><input type="radio" name="side" value="雙面">雙面（每本 +4.5 元）</label>
+    </div>
+    <p class="hint" id="setupHint"></p>
   </div>
 
   <!-- 燙金顏色（勾選燙金才出現） -->
@@ -326,6 +355,12 @@ footer .gl{color:var(--gold-2)}
     <p class="hint" id="taxHint" style="display:none;color:#B4483C">統一編號應為 8 碼數字</p>
   </div>
 
+  <!-- 費用明細 -->
+  <div class="field">
+    <label class="t">費用明細</label>
+    <div class="cost" id="costBox"></div>
+  </div>
+
   <button class="gen" id="genBtn" type="button">產生預訂訊息</button>
 
   <div class="result" id="result">
@@ -373,9 +408,27 @@ footer .gl{color:var(--gold-2)}
 var STYLES = window.STYLES || [];
 var selStyle = null;
 
-/* 授權審核中：可瀏覽內頁，但不可下單。授權通過後把該品號從這裡移除即可開賣。 */
-var PENDING = {'25009':1, '25011':1};
+/* 授權審核中：可瀏覽內頁，但不可下單。授權通過後把該品號從這裡移除即可開賣。
+   2026-07-17 白爛貓(25009)、超人力霸王(25011) 授權下來，已全數開賣 → 目前無審核中款式。 */
+var PENDING = {};
 function isPending(st){ return !!(st && PENDING[st.c]); }
+
+/* 桌曆單價（元／本，2026-07-17 老闆提供）。放這裡不放 data.js，因為 data.js 由
+   build_site.ps1 自動產生，重跑會被蓋掉。改價直接改這張表。 */
+var PRICE = {
+  '25001':65, '25002':65, '25003':65, '25004':65,          // 米奇、動物方程式、小熊維尼、航海王
+  '25005':40, '25006':40, '25007':40,                      // 北境晨光(風景)、世界名畫、豐時四季(水果)
+  '25008':50, '25009':50, '25010':50, '25011':50, '25012':50 // 水豚寶、白爛貓、柴語錄、超人力霸王、比得兔
+};
+function priceOf(c){ return PRICE[c]||0; }
+
+/* 燙金：同一塊版。單面 2.5／本、雙面 4.5／本；不足 100 本（看整張單總本數）另收上機費。 */
+var FOIL_UNIT  = {'單面':2.5, '雙面':4.5};
+var FOIL_SETUP = {'單面':300, '雙面':500};
+var SETUP_MIN  = 100;
+var PACK_FEE   = 1;      // 代客包裝，每本 1 元（OPP 袋一律附贈，不包裝）
+
+function fmt(n){ return n.toLocaleString('en-US',{maximumFractionDigits:1}); }
 
 function pageLabel(p){
   if(p.kind==='start') return '2026/12 內頁';
@@ -397,6 +450,9 @@ STYLES.forEach(function(st){
   el.appendChild(im); el.appendChild(nm);
 
   if(!isPending(st)){
+    var pr=document.createElement('div'); pr.className='pr';
+    pr.innerHTML='NT$ <b>'+priceOf(st.c)+'</b> / 本';
+    el.appendChild(pr);
     var q=document.createElement('div'); q.className='qty';
     var l1=document.createElement('em'); l1.textContent='數量';
     var ip=document.createElement('input');
@@ -432,7 +488,7 @@ function onQty(st){
   cards[st.c].classList.toggle('sel', n>0);
   cards[st.c].setAttribute('data-qty', n);
   if(n>0 && !selStyle) selStyle=st;                             // 第一款下訂的當示意款
-  renderCart(); shipCalc(); updateFoilMock();
+  recalc(); updateFoilMock();
 }
 
 /* 點卡片＝選這款：沒填數量就先帶 1 本，並設為燙金示意款 */
@@ -460,8 +516,9 @@ function renderCart(){
     var li=document.createElement('div'); li.className='li';
     var im=document.createElement('img'); im.src=st.cover; im.alt=''; im.loading='lazy';
     var n=document.createElement('div'); n.className='n';
-    n.innerHTML='<b>'+st.n+'</b><br><span style="font-size:12px;color:var(--ink-soft)">#'+st.c+'</span>';
-    var q=document.createElement('div'); q.className='q'; q.textContent=getQty(st.c)+' 本';
+    n.innerHTML='<b>'+st.n+'</b><br><span style="font-size:12px;color:var(--ink-soft)">'+
+                getQty(st.c)+' 本 × '+priceOf(st.c)+' 元</span>';
+    var q=document.createElement('div'); q.className='q'; q.textContent=fmt(getQty(st.c)*priceOf(st.c));
     var rm=document.createElement('button'); rm.className='rm'; rm.type='button';
     rm.textContent='✕'; rm.title='移除 '+st.n; rm.setAttribute('aria-label','移除 '+st.n);
     rm.addEventListener('click',function(){ qtyIn[st.c].value=''; onQty(st); });
@@ -469,9 +526,10 @@ function renderCart(){
     cartBox.appendChild(li);
   });
   var t=document.createElement('div'); t.className='tot';
-  t.innerHTML='<span>合計 '+list.length+' 款</span><b>'+totalQty()+' 本</b>';
+  t.innerHTML='<span>合計 '+list.length+' 款　'+totalQty()+' 本</span><b>NT$ '+fmt(calSub())+'</b>';
   cartBox.appendChild(t);
 }
+function calSub(){ return orders().reduce(function(s,st){ return s+getQty(st.c)*priceOf(st.c); },0); }
 
 /* ---------- 內頁 lightbox ---------- */
 var lb=document.getElementById('lb'),lbStage=document.getElementById('lbStage'),
@@ -677,10 +735,11 @@ if(document.fonts && document.fonts.ready) document.fonts.ready.then(fitFoil);
 
 function syncFoil(){
   var on=foilChk.checked;
-  ['fColor','fFont','fAlign','fFoilText'].forEach(function(id){
+  ['fSide','fColor','fFont','fAlign','fFoilText'].forEach(function(id){
     document.getElementById(id).style.display=on?'':'none';
   });
   if(on) fitFoil();                          // 顯示後才量得到尺寸
+  if(costBox) recalc();                      // 燙金開關會動到金額（首次載入時計價區還沒建好，跳過）
 }
 foilChk.addEventListener('change',syncFoil);
 syncColor(); syncFont(); updateFoilMock(); syncFoil();
@@ -699,7 +758,62 @@ function shipCalc(){
     '<span class="mut">（'+boxes+' × 150，各款合併，100 本/箱，未滿一箱以一箱計）</span>';
   return {q:q, boxes:boxes, fee:fee};
 }
-renderCart(); shipCalc();
+
+/* ---------- 費用試算 ---------- */
+var costBox=document.getElementById('costBox'), packChk=document.getElementById('bag'),
+    setupHint=document.getElementById('setupHint');
+function curSide(){ return document.querySelector('input[name=side]:checked').value; }
+
+function calcCost(){
+  var q=totalQty(), foilOn=foilChk.checked, side=curSide();
+  var cal=calSub();
+  var foil  = foilOn ? q*FOIL_UNIT[side] : 0;
+  var setup = (foilOn && q>0 && q<SETUP_MIN) ? FOIL_SETUP[side] : 0;   // 不足 100 本看整張單總數
+  var pack  = packChk.checked ? q*PACK_FEE : 0;
+  var sh=shipCalc(), ship=sh?sh.fee:0;
+  return {q:q, foilOn:foilOn, side:side, cal:cal, foil:foil, setup:setup, pack:pack,
+          sh:sh, ship:ship, total:cal+foil+setup+pack+ship};
+}
+
+function renderCost(){
+  var c=calcCost();
+  if(!c.q){ costBox.innerHTML='<div class="empty">選好款式與數量後，這裡會自動算出總價</div>'; return; }
+  var rows=[];
+  orders().forEach(function(st){
+    rows.push(['桌曆　'+st.n, '<em>'+getQty(st.c)+' 本 × '+priceOf(st.c)+' 元</em>',
+               'NT$ '+fmt(getQty(st.c)*priceOf(st.c)), '']);
+  });
+  if(c.foilOn){
+    rows.push(['底板燙金（'+c.side+'）', '<em>'+c.q+' 本 × '+FOIL_UNIT[c.side]+' 元</em>', 'NT$ '+fmt(c.foil), '']);
+    if(c.setup) rows.push(['燙金上機費', '<em>整張單不足 '+SETUP_MIN+' 本（'+c.side+'）</em>', 'NT$ '+fmt(c.setup), 'setup']);
+  }
+  if(c.pack) rows.push(['代客包裝', '<em>'+c.q+' 本 × '+PACK_FEE+' 元</em>', 'NT$ '+fmt(c.pack), '']);
+  rows.push(['運費', '<em>'+c.sh.boxes+' 箱 × '+BOX_FEE+' 元（各款合併，100 本/箱）</em>', 'NT$ '+fmt(c.ship), '']);
+
+  costBox.innerHTML = rows.map(function(r){
+    return '<div class="r '+r[3]+'"><span class="k">'+r[0]+r[1]+'</span><span class="v">'+r[2]+'</span></div>';
+  }).join('') +
+  '<div class="r sum"><span class="k">總計</span><span class="v">NT$ '+fmt(c.total)+'</span></div>';
+}
+
+/* 上機費提示：講清楚現在會不會被收、差多少免收 */
+function renderSetupHint(){
+  var q=totalQty(), side=curSide();
+  if(q>0 && q<SETUP_MIN){
+    setupHint.innerHTML='目前整張單 '+q+' 本，未達 '+SETUP_MIN+' 本 → 另收上機費 '+
+      '<b style="color:#B4483C">NT$ '+FOIL_SETUP[side]+'</b>（'+side+'）。訂滿 '+SETUP_MIN+' 本即免收。';
+  } else if(q>=SETUP_MIN){
+    setupHint.innerHTML='整張單已達 '+SETUP_MIN+' 本，<b style="color:var(--ok)">免上機費</b>。';
+  } else {
+    setupHint.innerHTML='整張單不足 '+SETUP_MIN+' 本另收上機費：單面 300 元／雙面 500 元。';
+  }
+}
+
+function recalc(){ renderCart(); shipCalc(); renderCost(); renderSetupHint(); }
+document.querySelectorAll('input[name=side]').forEach(function(r){ r.addEventListener('change',recalc); });
+packChk.addEventListener('change',recalc);
+
+recalc();
 
 /* ---------- 統一編號：只收數字，提示需 8 碼 ---------- */
 var taxEl=document.getElementById('tax'), taxHint=document.getElementById('taxHint');
@@ -722,17 +836,23 @@ document.getElementById('genBtn').addEventListener('click',function(){
   var tax=document.getElementById('tax').value.trim();
   var U='（未填）';
 
+  var c=calcCost();
   var msg='【2027 曆製品預訂】\n';
   if(list.length){
     msg+='款式與數量：\n';
-    list.forEach(function(st){ msg+='　#'+st.c+' '+st.n+' × '+getQty(st.c)+' 本\n'; });
-    msg+='合計：'+list.length+' 款 　'+totalQty()+' 本\n';
+    list.forEach(function(st){
+      msg+='　#'+st.c+' '+st.n+' × '+getQty(st.c)+' 本 × '+priceOf(st.c)+' 元 = NT$ '+
+           fmt(getQty(st.c)*priceOf(st.c))+'\n';
+    });
+    msg+='　小計：'+list.length+' 款 　'+totalQty()+' 本 　NT$ '+fmt(c.cal)+'\n';
   } else {
     msg+='款式與數量：'+U+'（尚未選款式）\n';
   }
-  msg+='包塑膠袋：'+(bag?'需要（費用另計）':'不需要')+'\n';
-  msg+='底板燙金：'+(foilOn?'要':'不用')+'\n';
+  msg+='代客包裝：'+(bag?'需要（'+c.q+' 本 × 1 元 = NT$ '+fmt(c.pack)+'）':'不需要（附贈 OPP 袋、不代裝）')+'\n';
+  msg+='底板燙金：'+(foilOn?'要（'+c.side+'，同一塊版）':'不用')+'\n';
   if(foilOn){
+    msg+='　燙金工資：'+c.q+' 本 × '+FOIL_UNIT[c.side]+' 元 = NT$ '+fmt(c.foil)+'\n';
+    if(c.setup) msg+='　燙金上機費：NT$ '+fmt(c.setup)+'（整張單不足 '+SETUP_MIN+' 本）\n';
     msg+='　燙金顏色：'+curColor().n+'\n';
     msg+='　燙金字體：'+curFont().n+'\n';
     msg+='　燙金排版：'+curAlign()+'\n';
@@ -740,15 +860,17 @@ document.getElementById('genBtn').addEventListener('click',function(){
     // 多行燙金內容：續行對齊「燙金內容：」後方
     msg+='　燙金內容：'+(ftxt?ftxt.replace(/\n/g,'\n　　　　　　'):'（未填，稍後提供）')+'\n';
   }
-  var sh=shipCalc();
-  msg+='運費：'+(sh ? sh.boxes+' 箱 × 150 = NT$ '+sh.fee+'（各款合併，100 本/箱，未滿一箱以一箱計）'
-                   : '（未填數量，無法計算）')+'\n';
+  msg+='運費：'+(c.sh ? c.sh.boxes+' 箱 × 150 = NT$ '+fmt(c.ship)+'（各款合併，100 本/箱，未滿一箱以一箱計）'
+                     : '（未填數量，無法計算）')+'\n';
+  msg+='─────────────\n';
+  msg+='總計：NT$ '+fmt(c.total)+'\n';
+  msg+='─────────────\n';
   msg+='收件人：'+(nm||U)+'\n';
   msg+='電話：'+(ph||U)+'\n';
   msg+='地址：'+(ad||U)+'\n';
   msg+='發票抬頭：'+(iv||'（不需要）')+'\n';
   msg+='統一編號：'+(tax||'（不需要）')+'\n';
-  msg+='※ 燙金／塑膠袋費用另計，待報價';
+  msg+='※ 以上為網站試算金額，實際以專人確認為準';
   if(foilOn) msg+='\n※ 如有 LOGO 圖檔，將另以 LINE 傳送';
 
   document.getElementById('msg').textContent=msg;
