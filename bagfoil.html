@@ -163,6 +163,11 @@
     background:var(--paper-2);
   }
   .swatches label.on span{font-weight:700;color:var(--ink)}
+  .swatches .up{
+    margin-left:auto;font-style:normal;font-size:.68rem;letter-spacing:0;
+    color:var(--gold-dk);font-weight:500;
+  }
+  .swatches label.on .up{color:var(--red)}
   .note{font-size:.74rem;color:var(--text-mut);margin-top:9px;line-height:1.7}
 
   .btn{
@@ -315,7 +320,7 @@
     <div class="field">
       <label>燙金顏色</label>
       <div class="swatches" id="foilColor"></div>
-      <div class="note">色票為螢幕示意，金屬光澤無法完整呈現，實際效果以樣品為準。一次一色；需要兩色以上請洽業務另行報價。</div>
+      <div class="note"><b>亮金・亮銀</b>為標準箔，不加價；其餘特殊箔<b>每個 +$1</b>。<br>色票為螢幕示意，金屬光澤無法完整呈現，實際效果以樣品為準。一次一色；需要兩色以上請洽業務另行報價。</div>
     </div>
 
     <div class="field">
@@ -387,19 +392,21 @@
   const EDGE_H    = 4;        // 高度方向的安全邊
   const TOP_CLEAR = 5;        // 袋口提繩區，不可燙
 
-  // 箔色（與三角月曆訂購網站同一組，勿各站各一套）
+  // 箔色（色票與三角月曆訂購網站同一組，勿各站各一套）
+  // sur = 每個加價：亮金／亮銀為標準箔不加價，其餘特殊箔每個 +1 元
+  const COLOR_SURCHARGE = 1;
   const FOILS = [
-    {n:'亮金',  css:'linear-gradient(115deg,#A8752E,#F4E0A8 42%,#E0BC69 58%,#A8752E)'},
-    {n:'霧金',  css:'linear-gradient(115deg,#C3A667,#C3A667)'},
-    {n:'古銅金',css:'linear-gradient(115deg,#5F3F1E,#B98A50 48%,#7A5228)'},
-    {n:'亮銀',  css:'linear-gradient(115deg,#8A8F92,#F4F6F7 42%,#C6CACD 58%,#8A8F92)'},
-    {n:'霧銀',  css:'linear-gradient(115deg,#B4B9BC,#B4B9BC)'},
-    {n:'紅',    css:'linear-gradient(115deg,#A50F26,#D6273F 50%,#A50F26)'},
-    {n:'藍',    css:'linear-gradient(115deg,#093A7D,#1B62B8 50%,#093A7D)'},
-    {n:'綠',    css:'linear-gradient(115deg,#0E6039,#1E8A56 50%,#0E6039)'},
-    {n:'黑',    css:'linear-gradient(115deg,#141414,#3A3A3A 50%,#141414)'},
-    {n:'白',    css:'linear-gradient(115deg,#FFFFFF,#FFFFFF)'},
-    {n:'雷射',  css:'linear-gradient(100deg,#EE9CC4,#F7E79C 20%,#93E9C4 40%,#8AD2F5 60%,#C2A4F2 80%,#EE9CC4)'}
+    {n:'亮金',  sur:0, css:'linear-gradient(115deg,#A8752E,#F4E0A8 42%,#E0BC69 58%,#A8752E)'},
+    {n:'亮銀',  sur:0, css:'linear-gradient(115deg,#8A8F92,#F4F6F7 42%,#C6CACD 58%,#8A8F92)'},
+    {n:'霧金',  sur:COLOR_SURCHARGE, css:'linear-gradient(115deg,#C3A667,#C3A667)'},
+    {n:'古銅金',sur:COLOR_SURCHARGE, css:'linear-gradient(115deg,#5F3F1E,#B98A50 48%,#7A5228)'},
+    {n:'霧銀',  sur:COLOR_SURCHARGE, css:'linear-gradient(115deg,#B4B9BC,#B4B9BC)'},
+    {n:'紅',    sur:COLOR_SURCHARGE, css:'linear-gradient(115deg,#A50F26,#D6273F 50%,#A50F26)'},
+    {n:'藍',    sur:COLOR_SURCHARGE, css:'linear-gradient(115deg,#093A7D,#1B62B8 50%,#093A7D)'},
+    {n:'綠',    sur:COLOR_SURCHARGE, css:'linear-gradient(115deg,#0E6039,#1E8A56 50%,#0E6039)'},
+    {n:'黑',    sur:COLOR_SURCHARGE, css:'linear-gradient(115deg,#141414,#3A3A3A 50%,#141414)'},
+    {n:'白',    sur:COLOR_SURCHARGE, css:'linear-gradient(115deg,#FFFFFF,#FFFFFF)'},
+    {n:'雷射',  sur:COLOR_SURCHARGE, css:'linear-gradient(100deg,#EE9CC4,#F7E79C 20%,#93E9C4 40%,#8AD2F5 60%,#C2A4F2 80%,#EE9CC4)'}
   ];
 
   const num = id => parseFloat(document.getElementById(id).value) || 0;
@@ -419,6 +426,12 @@
       const tx = document.createElement('span');
       tx.textContent = f.n;
       lb.append(ip, sw, tx);
+      if (f.sur > 0) {
+        const up = document.createElement('em');
+        up.className = 'up';
+        up.textContent = `+$${f.sur}`;
+        lb.appendChild(up);
+      }
       box.appendChild(lb);
     });
   })();
@@ -427,9 +440,21 @@
     document.querySelectorAll('#foilColor label').forEach(lb => {
       lb.classList.toggle('on', lb.querySelector('input').checked);
     });
+    syncSideLabels();
   }
 
-  const curFoil = () => document.querySelector('input[name=foil]:checked').value;
+  // 加工面數的選項單價要跟著箔色走，不然客人看到的 $5 跟實際算的不一樣
+  function syncSideLabels() {
+    const sur = curFoil().sur;
+    const opts = document.getElementById('sideType').options;
+    opts[0].text = `單面　一個 $${5 + sur}`;
+    opts[1].text = `雙面　一個 $${7 + sur}`;
+  }
+
+  const curFoil = () => {
+    const v = document.querySelector('input[name=foil]:checked').value;
+    return FOILS.find(f => f.n === v);
+  };
 
   // --- 最大可燙範圍 ---
   //   寬 = 面寬 − 側寬 − 2
@@ -475,8 +500,10 @@
     const artW = num('artWidth');
     const artH = num('artHeight');
     const sideSelect = document.getElementById('sideType');
-    const sidePrice = parseInt(sideSelect.value);
+    const basePrice = parseInt(sideSelect.value);
     const sideName = sideSelect.value === '5' ? '單面' : '雙面';
+    const foil = curFoil();
+    const sidePrice = basePrice + foil.sur;   // 特殊箔每個 +1
     const quantity = parseInt(document.getElementById('quantity').value) || 0;
     const needInvoice = document.getElementById('needInvoice').checked;
 
@@ -537,10 +564,12 @@
     const total = subtotal + tax;
 
     // 4. 顯示
-    document.getElementById('resColor').innerText = curFoil();
+    document.getElementById('resColor').innerText =
+      foil.n + (foil.sur > 0 ? `（特殊箔 每個 +$${foil.sur}）` : '（標準箔 不加價）');
     document.getElementById('resPlate').innerText = `$${plateFee}` + (isReprint === 'yes' ? '（享 3 年免版費）' : '');
     document.getElementById('resBase').innerText = baseFee > 0 ? `$${baseFee}（數量未達標）` : `$0（已達標免基本費）`;
-    document.getElementById('resProcess').innerText = baseFee > 0 ? `$0（已併入基本費）` : `$${finalProcessFee}（${quantity} 個 × $${sidePrice}）`;
+    const rateNote = foil.sur > 0 ? `$${basePrice}＋$${foil.sur}箔色` : `$${sidePrice}`;
+    document.getElementById('resProcess').innerText = baseFee > 0 ? `$0（已併入基本費）` : `$${finalProcessFee}（${quantity} 個 × ${rateNote}）`;
 
     if (needInvoice) {
       document.getElementById('taxRow').style.display = 'flex';
@@ -564,7 +593,8 @@
     resultBox.style.display = 'block';
   }
 
-  updateLimit();   // 開頁先算一次可燙範圍
+  updateLimit();      // 開頁先算一次可燙範圍
+  syncSideLabels();   // 面數選項單價對齊預設箔色
 </script>
 
 </body>
