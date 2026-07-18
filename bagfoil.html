@@ -7,11 +7,12 @@
 <meta name="robots" content="noindex" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;500;600;700;900&family=Noto+Sans+TC:wght@300;400;500;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet" />
 <style>
-  /* 配色與官網 xicheng-print.com 一致 */
+  /* 設計語彙沿用官網 xicheng-print.com：印章 × 燙金 */
   :root{
     --ink:#14110d;
+    --ink-2:#1e1a14;
     --paper:#f6f2e9;
     --paper-2:#efe8da;
     --cream:#faf7f0;
@@ -19,73 +20,155 @@
     --gold-lt:#e6cd8f;
     --gold-dk:#a9843f;
     --red:#7c1f1a;
+    --text:#efe8da;
     --text-dk:#4a4234;
     --text-mut:#8a7f6b;
     --line:rgba(198,161,91,.28);
     --gold-grad:linear-gradient(135deg,#a9843f 0%,#e6cd8f 34%,#c6a15b 52%,#8f6d31 78%,#e2c684 100%);
     --serif:"Noto Serif TC",serif;
     --sans:"Noto Sans TC",-apple-system,"PingFang TC","Microsoft JhengHei",sans-serif;
+    --latin:"Cormorant Garamond",serif;
   }
   *{box-sizing:border-box}
   body{
-    margin:0;padding:32px 20px 56px;
-    font-family:var(--sans);
-    color:var(--text-dk);
-    background:var(--paper);
-    line-height:1.75;
-    -webkit-font-smoothing:antialiased;
+    margin:0;font-family:var(--sans);color:var(--text-dk);
+    background:var(--paper);line-height:1.75;
+    -webkit-font-smoothing:antialiased;overflow-x:hidden;
   }
-  .sheet{
-    max-width:520px;margin:0 auto;
-    background:var(--cream);
-    border:1px solid var(--line);
-    border-radius:2px;
-    padding:34px 30px 30px;
-    box-shadow:0 18px 46px -30px rgba(20,17,13,.45);
-  }
-  .eyebrow{
-    font-size:.72rem;font-weight:500;letter-spacing:.4em;
-    color:var(--text-mut);text-align:center;margin-bottom:10px;
-  }
-  h1{
-    font-family:var(--serif);
-    font-size:1.55rem;font-weight:600;letter-spacing:.06em;
-    text-align:center;margin:0 0 6px;color:var(--ink);
-  }
+  .wrap{max-width:600px;margin:0 auto;padding:0 24px}
+
   .gold-text{
     background:var(--gold-grad);
     -webkit-background-clip:text;background-clip:text;
     -webkit-text-fill-color:transparent;color:transparent;
   }
-  .lede{text-align:center;font-size:.84rem;color:var(--text-mut);margin:0 0 26px}
-  .rule{height:1px;background:var(--gold-grad);opacity:.5;margin:0 0 26px}
+  .eyebrow{
+    font-family:var(--sans);
+    font-size:.7rem;font-weight:500;letter-spacing:.42em;
+    text-transform:uppercase;color:var(--gold-dk);
+    display:inline-flex;align-items:center;gap:.85em;
+  }
+  .eyebrow::before{content:"";width:34px;height:1px;background:var(--gold)}
 
-  .field{margin-bottom:17px}
+  /* ============ HERO ============ */
+  .hero{
+    position:relative;overflow:hidden;color:var(--text);
+    background:radial-gradient(120% 90% at 78% 12%,#2a241a 0%,#14110d 55%,#0d0b08 100%);
+    padding:64px 0 96px;text-align:center;
+  }
+  .hero .grain{
+    position:absolute;inset:0;opacity:.5;pointer-events:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.045'/%3E%3C/svg%3E");
+  }
+  .hero::after{
+    content:"";position:absolute;left:0;right:0;bottom:0;height:110px;
+    background:linear-gradient(to top,var(--paper),transparent);z-index:3;pointer-events:none;
+  }
+  .hero .inner{position:relative;z-index:2}
+  .hero .eyebrow{justify-content:center;color:var(--gold);margin-bottom:22px}
+  .hero h1{
+    font-family:var(--serif);font-weight:900;color:var(--cream);
+    font-size:clamp(1.9rem,7vw,2.7rem);line-height:1.3;letter-spacing:.04em;margin:0;
+  }
+  .hero .latin-sub{
+    font-family:var(--latin);font-style:italic;font-size:clamp(1rem,3.4vw,1.25rem);
+    letter-spacing:.14em;color:var(--gold);margin:14px 0 20px;opacity:.9;
+  }
+  .hero p.lead{
+    font-size:.94rem;color:#d8cfbb;font-weight:300;line-height:2;
+    margin:0 auto;max-width:30ch;
+  }
+  /* 旋轉印章圈 */
+  .seal{
+    position:relative;width:96px;height:96px;margin:0 auto 26px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .seal .ring{
+    position:absolute;inset:0;border:1px solid var(--line);border-radius:50%;
+    animation:spin 60s linear infinite;
+  }
+  .seal .ring.r2{
+    inset:-11px;border-style:dashed;opacity:.5;
+    animation-duration:90s;animation-direction:reverse;
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .seal .mark{
+    font-family:var(--serif);font-weight:700;font-size:1.5rem;letter-spacing:.06em;
+    background:var(--gold-grad);-webkit-background-clip:text;background-clip:text;
+    -webkit-text-fill-color:transparent;color:transparent;
+  }
+  @media(prefers-reduced-motion:reduce){
+    .seal .ring{animation:none}
+  }
+
+  /* ============ FORM ============ */
+  .form{padding:8px 0 70px;position:relative;z-index:5;margin-top:-46px}
+  .sheet{
+    background:var(--cream);border:1px solid var(--line);border-radius:2px;
+    padding:34px 30px 30px;
+    box-shadow:0 26px 60px -40px rgba(20,17,13,.6);
+  }
+  .sec-head{display:flex;align-items:baseline;gap:12px;margin:34px 0 16px}
+  .sec-head:first-child{margin-top:0}
+  .sec-head .idx{
+    font-family:var(--latin);font-style:italic;font-size:1.05rem;
+    color:var(--gold);opacity:.85;
+  }
+  .sec-head h2{
+    font-family:var(--serif);font-size:1rem;font-weight:700;letter-spacing:.14em;
+    color:var(--ink);margin:0;
+  }
+  .sec-head .bar{flex:1;height:1px;background:var(--line)}
+
+  .field{margin-bottom:16px}
   label{
     display:block;margin-bottom:7px;
-    font-size:.82rem;font-weight:500;letter-spacing:.08em;color:var(--text-dk);
+    font-size:.8rem;font-weight:500;letter-spacing:.08em;color:var(--text-dk);
   }
-  input,select{
+  input[type=number],select{
     width:100%;padding:11px 12px;
-    font-family:var(--sans);font-size:1rem;color:var(--ink);
-    background:#fff;
+    font-family:var(--sans);font-size:1rem;color:var(--ink);background:#fff;
     border:1px solid var(--line);border-radius:2px;
     transition:border-color .25s,box-shadow .25s;
   }
-  input:focus,select:focus{
+  input[type=number]:focus,select:focus{
     outline:none;border-color:var(--gold);
     box-shadow:0 0 0 3px rgba(198,161,91,.14);
   }
   .row{display:flex;gap:12px}
   .row .field{flex:1}
-  .check{display:flex;align-items:center;gap:9px;margin:4px 0 6px}
-  .check input{width:auto;margin:0}
+  .check{display:flex;align-items:center;gap:9px;margin:6px 0 4px}
+  .check input{width:auto;margin:0;accent-color:var(--gold-dk)}
   .check label{margin:0;font-weight:400;letter-spacing:.04em}
 
+  /* 箔色選擇（色票沿用桌曆訂購站同一組 11 色） */
+  .swatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px}
+  .swatches label{
+    display:flex;align-items:center;gap:8px;margin:0;cursor:pointer;
+    padding:8px 9px;background:#fff;
+    border:1px solid var(--line);border-radius:2px;
+    font-size:.8rem;font-weight:400;letter-spacing:.04em;color:var(--text-dk);
+    transition:border-color .2s,box-shadow .2s;
+  }
+  .swatches label:hover{border-color:var(--gold)}
+  .swatches input{position:absolute;opacity:0;width:0;height:0}
+  .swatches i{
+    width:20px;height:20px;flex:none;border-radius:50%;
+    border:1px solid rgba(20,17,13,.22);
+    box-shadow:inset 0 1px 2px rgba(255,255,255,.5);
+  }
+  .swatches label.on{
+    border-color:var(--gold-dk);
+    box-shadow:0 0 0 2px rgba(198,161,91,.22);
+    background:var(--paper-2);
+  }
+  .swatches label.on span{font-weight:700;color:var(--ink)}
+  .note{font-size:.74rem;color:var(--text-mut);margin-top:9px;line-height:1.7}
+
   .btn{
-    width:100%;margin-top:14px;
-    padding:.85em 1.5em;
-    font-family:var(--sans);font-size:.98rem;font-weight:500;letter-spacing:.1em;
+    width:100%;margin-top:22px;
+    padding:.95em 1.5em;
+    font-family:var(--sans);font-size:.98rem;font-weight:500;letter-spacing:.14em;
     color:var(--ink);cursor:pointer;
     border:1px solid var(--gold);border-radius:2px;
     background:var(--gold-grad);background-size:180% 180%;
@@ -97,58 +180,51 @@
     transform:translateY(-1px);
   }
 
-  .result{
-    margin-top:28px;padding:22px 20px 20px;
-    background:var(--paper-2);
-    border:1px solid var(--line);border-radius:2px;
-  }
-  .result h2{
-    font-family:var(--serif);font-size:1rem;font-weight:600;letter-spacing:.16em;
-    margin:0 0 14px;color:var(--ink);
-  }
-  .line{
-    display:flex;justify-content:space-between;gap:14px;
-    font-size:.9rem;margin-bottom:9px;
-  }
-  .line span:last-child{color:var(--ink);white-space:nowrap}
-  .total{
-    display:flex;justify-content:space-between;align-items:baseline;gap:14px;
-    border-top:1px solid var(--line);margin-top:14px;padding-top:14px;
-  }
-  .total .lbl{font-family:var(--serif);font-size:.95rem;letter-spacing:.1em;color:var(--ink)}
-  .total .amt{font-family:var(--serif);font-size:1.5rem;font-weight:700;color:var(--red)}
-  .tip{
-    margin-top:16px;padding:12px 14px;
-    background:var(--cream);
-    border:1px solid var(--line);border-left:2px solid var(--gold);border-radius:2px;
-    font-size:.8rem;line-height:1.7;color:var(--text-dk);
-  }
-  .tip b{color:var(--red)}
-  .foot{
-    text-align:center;font-size:.74rem;letter-spacing:.14em;
-    color:var(--text-mut);margin-top:26px;
-  }
-  .foot a{color:var(--text-mut)}
-
-  /* 燙金範圍：可燙區間提示與超標警告 */
-  .subhead{
-    font-family:var(--serif);font-size:.86rem;font-weight:600;letter-spacing:.16em;
-    color:var(--ink);margin:24px 0 12px;padding-bottom:7px;
-    border-bottom:1px solid var(--line);
-  }
-  .subhead:first-of-type{margin-top:0}
+  /* 可燙範圍提示 */
   .limit{
-    margin:2px 0 18px;padding:11px 14px;
+    margin:2px 0 4px;padding:11px 14px;
     background:var(--paper-2);
     border:1px solid var(--line);border-left:2px solid var(--gold);border-radius:2px;
-    font-size:.82rem;line-height:1.7;
+    font-size:.8rem;line-height:1.7;
   }
   .limit .k{color:var(--text-mut);letter-spacing:.06em}
   .limit .v{font-family:var(--serif);font-weight:600;color:var(--ink)}
   .limit.bad{border-left-color:var(--red)}
   .limit.bad .v{color:var(--red)}
+  input.bad{border-color:var(--red);background:#fdf8f7}
+
+  /* ============ 結果 ============ */
+  .result{
+    margin-top:26px;padding:24px 22px 22px;
+    background:var(--ink);color:var(--text);
+    border:1px solid var(--gold-dk);border-radius:2px;
+  }
+  .result h2{
+    font-family:var(--serif);font-size:.95rem;font-weight:600;letter-spacing:.24em;
+    margin:0 0 4px;color:var(--gold-lt);text-align:center;
+  }
+  .result .hr{height:1px;background:var(--gold-grad);opacity:.55;margin:14px 0 18px}
+  .line{
+    display:flex;justify-content:space-between;gap:14px;
+    font-size:.87rem;margin-bottom:10px;color:#cfc6b3;font-weight:300;
+  }
+  .line span:last-child{color:var(--cream);white-space:nowrap;font-weight:400}
+  .total{
+    display:flex;justify-content:space-between;align-items:baseline;gap:14px;
+    border-top:1px solid rgba(198,161,91,.35);margin-top:16px;padding-top:16px;
+  }
+  .total .lbl{font-family:var(--serif);font-size:.9rem;letter-spacing:.1em;color:var(--gold-lt)}
+  .total .amt{font-family:var(--serif);font-size:1.6rem;font-weight:700}
+  .tip{
+    margin-top:16px;padding:12px 14px;
+    background:rgba(198,161,91,.09);
+    border-left:2px solid var(--gold);border-radius:2px;
+    font-size:.78rem;line-height:1.8;color:#d3cab7;
+  }
+  .tip b{color:var(--gold-lt)}
+
   .warn{
-    margin-top:28px;padding:20px;
+    margin-top:26px;padding:22px;
     background:#fbf3f1;
     border:1px solid rgba(124,31,26,.3);border-left:3px solid var(--red);border-radius:2px;
   }
@@ -158,110 +234,151 @@
   }
   .warn p{margin:0;font-size:.86rem;line-height:1.8;color:var(--text-dk)}
   .warn b{color:var(--red)}
-  input.bad{border-color:var(--red);background:#fdf8f7}
 
-  @media(max-width:420px){
+  /* ============ FOOTER ============ */
+  footer{
+    background:var(--ink);color:var(--text-mut);
+    border-top:1px solid var(--line);
+    padding:30px 0;text-align:center;
+  }
+  footer .mk{
+    font-family:var(--serif);font-size:.9rem;letter-spacing:.28em;
+    color:var(--gold-lt);margin-bottom:6px;
+  }
+  footer .sm{font-size:.72rem;letter-spacing:.12em}
+  footer a{color:var(--gold);text-decoration:none}
+  footer a:hover{color:var(--gold-lt)}
+
+  @media(max-width:430px){
     .row{flex-direction:column;gap:0}
     .sheet{padding:28px 20px 24px}
+    .hero{padding:52px 0 88px}
   }
 </style>
 </head>
 <body>
 
-<div class="sheet">
-  <div class="eyebrow">喜　成　印　刷</div>
-  <h1>現成紙袋<span class="gold-text">燙金</span>報價</h1>
-  <p class="lede">客戶自備現成紙袋・單純燙金加工試算</p>
-  <div class="rule"></div>
-
-  <div class="subhead">紙 袋 規 格</div>
-
-  <div class="row">
-    <div class="field">
-      <label for="bagFace">面寬（公分）</label>
-      <input type="number" id="bagFace" value="25" min="0" step="0.1" oninput="updateLimit()">
+<section class="hero">
+  <div class="grain"></div>
+  <div class="inner wrap">
+    <div class="seal">
+      <div class="ring"></div>
+      <div class="ring r2"></div>
+      <div class="mark">喜成</div>
     </div>
-    <div class="field">
-      <label for="bagHeight">袋高（公分）</label>
-      <input type="number" id="bagHeight" value="33" min="0" step="0.1" oninput="updateLimit()">
+    <div class="eyebrow">Foil Stamping</div>
+    <h1>現成紙袋<span class="gold-text">燙金</span>報價</h1>
+    <div class="latin-sub">Ready-made Bag · Foil Quote</div>
+    <p class="lead">客戶自備現成紙袋，喜成單純承接燙金加工。填幾個尺寸，馬上知道燙不燙得下、要多少錢。</p>
+  </div>
+</section>
+
+<section class="form">
+  <div class="wrap">
+  <div class="sheet">
+
+    <div class="sec-head"><span class="idx">I</span><h2>紙 袋 規 格</h2><span class="bar"></span></div>
+
+    <div class="row">
+      <div class="field">
+        <label for="bagFace">面寬（公分）</label>
+        <input type="number" id="bagFace" value="25" min="0" step="0.1" oninput="updateLimit()">
+      </div>
+      <div class="field">
+        <label for="bagHeight">袋高（公分）</label>
+        <input type="number" id="bagHeight" value="33" min="0" step="0.1" oninput="updateLimit()">
+      </div>
     </div>
-  </div>
 
-  <div class="field">
-    <label for="bagSide">側寬（公分）</label>
-    <input type="number" id="bagSide" value="8" min="0" step="0.1" oninput="updateLimit()">
-  </div>
-
-  <div class="limit" id="limitBox">
-    <span class="k">最大可燙範圍</span>　<span class="v" id="limitText">—</span>
-  </div>
-
-  <div class="subhead">燙 金 圖 案</div>
-
-  <div class="row">
     <div class="field">
-      <label for="artWidth">圖案寬度・橫（公分）</label>
-      <input type="number" id="artWidth" value="5" min="0" step="0.1" oninput="updateLimit()">
+      <label for="bagSide">側寬（公分）</label>
+      <input type="number" id="bagSide" value="8" min="0" step="0.1" oninput="updateLimit()">
     </div>
-    <div class="field">
-      <label for="artHeight">圖案高度・直（公分）</label>
-      <input type="number" id="artHeight" value="5" min="0" step="0.1" oninput="updateLimit()">
+
+    <div class="limit" id="limitBox">
+      <span class="k">最大可燙範圍</span>　<span class="v" id="limitText">—</span>
     </div>
-  </div>
 
-  <div class="field">
-    <label for="isReprint">是否為 3 年內再版（免版費）</label>
-    <select id="isReprint">
-      <option value="no">否 — 新圖案，需算版費</option>
-      <option value="yes">是 — 舊圖案，版費 $0</option>
-    </select>
-  </div>
+    <div class="sec-head"><span class="idx">II</span><h2>燙 金 圖 案</h2><span class="bar"></span></div>
 
-  <div class="subhead">數 量 與 加 工</div>
+    <div class="row">
+      <div class="field">
+        <label for="artWidth">圖案寬度・橫（公分）</label>
+        <input type="number" id="artWidth" value="5" min="0" step="0.1" oninput="updateLimit()">
+      </div>
+      <div class="field">
+        <label for="artHeight">圖案高度・直（公分）</label>
+        <input type="number" id="artHeight" value="5" min="0" step="0.1" oninput="updateLimit()">
+      </div>
+    </div>
 
-  <div class="row">
     <div class="field">
-      <label for="sideType">加工面數</label>
-      <select id="sideType">
-        <option value="5">單面　一個 $5</option>
-        <option value="7">雙面　一個 $7</option>
+      <label>燙金顏色</label>
+      <div class="swatches" id="foilColor"></div>
+      <div class="note">色票為螢幕示意，金屬光澤無法完整呈現，實際效果以樣品為準。一次一色；需要兩色以上請洽業務另行報價。</div>
+    </div>
+
+    <div class="field">
+      <label for="isReprint">是否為 3 年內再版（免版費）</label>
+      <select id="isReprint">
+        <option value="no">否 — 新圖案，需算版費</option>
+        <option value="yes">是 — 舊圖案，版費 $0</option>
       </select>
     </div>
-    <div class="field">
-      <label for="quantity">預計製作數量（個）</label>
-      <input type="number" id="quantity" value="50" min="1">
+
+    <div class="sec-head"><span class="idx">III</span><h2>數 量 與 加 工</h2><span class="bar"></span></div>
+
+    <div class="row">
+      <div class="field">
+        <label for="sideType">加工面數</label>
+        <select id="sideType">
+          <option value="5">單面　一個 $5</option>
+          <option value="7">雙面　一個 $7</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="quantity">預計製作數量（個）</label>
+        <input type="number" id="quantity" value="50" min="1">
+      </div>
     </div>
+
+    <div class="check">
+      <input type="checkbox" id="needInvoice">
+      <label for="needInvoice">需要開立發票（稅金 5% 另計）</label>
+    </div>
+
+    <button class="btn" onclick="calculatePrice()">立 即 計 算 總 價</button>
+
+    <div class="result" id="resultBox" style="display:none;">
+      <h2>報 價 明 細</h2>
+      <div class="hr"></div>
+      <div class="line"><span>燙金顏色</span><span id="resColor">—</span></div>
+      <div class="line"><span>燙金版費</span><span id="resPlate">$-</span></div>
+      <div class="line"><span>開機基本費</span><span id="resBase">$-</span></div>
+      <div class="line"><span>實際加工費</span><span id="resProcess">$-</span></div>
+      <div class="line" id="taxRow"><span>營業稅 5%</span><span id="resTax">$-</span></div>
+      <div class="total"><span class="lbl">預估總計（未含運）</span><span class="amt gold-text" id="resTotal">$-</span></div>
+      <div class="tip" id="suggestTip"></div>
+    </div>
+
+    <div class="warn" id="warnBox" style="display:none;">
+      <h2>⚠ 無法製作</h2>
+      <p id="warnText"></p>
+    </div>
+
   </div>
-
-  <div class="check">
-    <input type="checkbox" id="needInvoice">
-    <label for="needInvoice">需要開立發票（稅金 5% 另計）</label>
   </div>
+</section>
 
-  <button class="btn" onclick="calculatePrice()">立即計算總價</button>
-
-  <div class="result" id="resultBox" style="display:none;">
-    <h2>報 價 明 細</h2>
-    <div class="line"><span>燙金版費</span><span id="resPlate">$-</span></div>
-    <div class="line"><span>開機基本費</span><span id="resBase">$-</span></div>
-    <div class="line"><span>實際加工費</span><span id="resProcess">$-</span></div>
-    <div class="line" id="taxRow"><span>營業稅 5%</span><span id="resTax">$-</span></div>
-    <div class="total"><span class="lbl">預估總計（未含運）</span><span class="amt" id="resTotal">$-</span></div>
-    <div class="tip" id="suggestTip"></div>
-  </div>
-
-  <div class="warn" id="warnBox" style="display:none;">
-    <h2>⚠ 無法製作</h2>
-    <p id="warnText"></p>
-  </div>
-
-  <div class="foot">燙金・模切・代工　｜　高雄　｜　<a href="https://xicheng-print.com">xicheng-print.com</a></div>
-</div>
+<footer>
+  <div class="mk">喜 成 燙 金 印 刷</div>
+  <div class="sm">燙金 · 模切 · 代工　｜　高雄阿蓮　｜　<a href="https://xicheng-print.com">xicheng-print.com</a></div>
+</footer>
 
 <script>
   // 報價常數（現成紙袋燙金，與同行代工那套完全獨立）
   const BASE_FEE = 1200;      // 開機基本費
-  const PLATE_RATE = 4;       // 版費：長 × 寬 × 4 元/平方公分
+  const PLATE_RATE = 4;       // 版費：寬 × 高 × 4 元/平方公分
   const PLATE_MIN = 200;      // 版費最低收費
   const TAX_RATE = 0.05;
 
@@ -269,9 +386,51 @@
   const EDGE_MARGIN = 2;      // 左右／上下各留的安全邊
   const TOP_CLEAR   = 5;      // 袋口提繩區，不可燙
 
-  const num = id => parseFloat(document.getElementById(id).value) || 0;
+  // 箔色（與三角月曆訂購網站同一組，勿各站各一套）
+  const FOILS = [
+    {n:'亮金',  css:'linear-gradient(115deg,#A8752E,#F4E0A8 42%,#E0BC69 58%,#A8752E)'},
+    {n:'霧金',  css:'linear-gradient(115deg,#C3A667,#C3A667)'},
+    {n:'古銅金',css:'linear-gradient(115deg,#5F3F1E,#B98A50 48%,#7A5228)'},
+    {n:'亮銀',  css:'linear-gradient(115deg,#8A8F92,#F4F6F7 42%,#C6CACD 58%,#8A8F92)'},
+    {n:'霧銀',  css:'linear-gradient(115deg,#B4B9BC,#B4B9BC)'},
+    {n:'紅',    css:'linear-gradient(115deg,#A50F26,#D6273F 50%,#A50F26)'},
+    {n:'藍',    css:'linear-gradient(115deg,#093A7D,#1B62B8 50%,#093A7D)'},
+    {n:'綠',    css:'linear-gradient(115deg,#0E6039,#1E8A56 50%,#0E6039)'},
+    {n:'黑',    css:'linear-gradient(115deg,#141414,#3A3A3A 50%,#141414)'},
+    {n:'白',    css:'linear-gradient(115deg,#FFFFFF,#FFFFFF)'},
+    {n:'雷射',  css:'linear-gradient(100deg,#EE9CC4,#F7E79C 20%,#93E9C4 40%,#8AD2F5 60%,#C2A4F2 80%,#EE9CC4)'}
+  ];
 
-  // 最大可燙範圍
+  const num = id => parseFloat(document.getElementById(id).value) || 0;
+  const r1 = n => Math.round(n * 10) / 10;   // 顯示到小數第 1 位
+
+  // --- 箔色色票 ---
+  (function buildSwatches() {
+    const box = document.getElementById('foilColor');
+    FOILS.forEach((f, i) => {
+      const lb = document.createElement('label');
+      const ip = document.createElement('input');
+      ip.type = 'radio'; ip.name = 'foil'; ip.value = f.n;
+      if (i === 0) { ip.checked = true; lb.classList.add('on'); }
+      ip.addEventListener('change', syncSwatch);
+      const sw = document.createElement('i');
+      sw.style.background = f.css;
+      const tx = document.createElement('span');
+      tx.textContent = f.n;
+      lb.append(ip, sw, tx);
+      box.appendChild(lb);
+    });
+  })();
+
+  function syncSwatch() {
+    document.querySelectorAll('#foilColor label').forEach(lb => {
+      lb.classList.toggle('on', lb.querySelector('input').checked);
+    });
+  }
+
+  const curFoil = () => document.querySelector('input[name=foil]:checked').value;
+
+  // --- 最大可燙範圍 ---
   //   寬 = 面寬 − 側寬 − 2
   //   高 = 袋高 − 5 − (側寬 ÷ 2) − 2
   function maxFoilArea() {
@@ -283,14 +442,11 @@
     };
   }
 
-  const r1 = n => Math.round(n * 10) / 10;   // 顯示到小數第 1 位
-
   // 即時更新「最大可燙範圍」提示，並標紅超標的欄位
   function updateLimit() {
     const m = maxFoilArea();
     const box = document.getElementById('limitBox');
     const txt = document.getElementById('limitText');
-    const aw = num('artWidth'), ah = num('artHeight');
     const wIn = document.getElementById('artWidth');
     const hIn = document.getElementById('artHeight');
 
@@ -306,7 +462,7 @@
       return;
     }
 
-    const overW = aw > m.w, overH = ah > m.h;
+    const overW = num('artWidth') > m.w, overH = num('artHeight') > m.h;
     box.className = 'limit' + ((overW || overH) ? ' bad' : '');
     txt.innerText = `寬 ${r1(m.w)} × 高 ${r1(m.h)} 公分`;
     wIn.classList.toggle('bad', overW);
@@ -315,8 +471,8 @@
 
   function calculatePrice() {
     const isReprint = document.getElementById('isReprint').value;
-    const length = num('artWidth');
-    const width = num('artHeight');
+    const artW = num('artWidth');
+    const artH = num('artHeight');
     const sideSelect = document.getElementById('sideType');
     const sidePrice = parseInt(sideSelect.value);
     const sideName = sideSelect.value === '5' ? '單面' : '雙面';
@@ -345,14 +501,14 @@
       block('依這組紙袋尺寸算出來的可燙範圍是負的，<b>尺寸可能填錯了</b>，請重新確認面寬／袋高／側寬。');
       return;
     }
-    if (length <= 0 || width <= 0) {
+    if (artW <= 0 || artH <= 0) {
       block('請填寫<b>圖案的寬度與高度</b>。');
       return;
     }
-    if (length > m.w || width > m.h) {
+    if (artW > m.w || artH > m.h) {
       const over = [];
-      if (length > m.w) over.push(`寬 ${r1(length)} 公分超出上限 ${r1(m.w)} 公分`);
-      if (width > m.h) over.push(`高 ${r1(width)} 公分超出上限 ${r1(m.h)} 公分`);
+      if (artW > m.w) over.push(`寬 ${r1(artW)} 公分超出上限 ${r1(m.w)} 公分`);
+      if (artH > m.h) over.push(`高 ${r1(artH)} 公分超出上限 ${r1(m.h)} 公分`);
       block(
         `<b>燙金面積太大，無法製作，請調整尺寸。</b><br>` +
         `這款紙袋（面寬 ${r1(m.face)}・袋高 ${r1(m.height)}・側寬 ${r1(m.side)}）的最大可燙範圍是 ` +
@@ -366,7 +522,7 @@
     // 1. 版費
     let plateFee = 0;
     if (isReprint === 'no') {
-      plateFee = Math.round(Math.max(length * width * PLATE_RATE, PLATE_MIN));
+      plateFee = Math.round(Math.max(artW * artH * PLATE_RATE, PLATE_MIN));
     }
 
     // 2. 加工費與基本費（未達基本費者，以基本費取代）
@@ -380,6 +536,7 @@
     const total = subtotal + tax;
 
     // 4. 顯示
+    document.getElementById('resColor').innerText = curFoil();
     document.getElementById('resPlate').innerText = `$${plateFee}` + (isReprint === 'yes' ? '（享 3 年免版費）' : '');
     document.getElementById('resBase').innerText = baseFee > 0 ? `$${baseFee}（數量未達標）` : `$0（已達標免基本費）`;
     document.getElementById('resProcess').innerText = baseFee > 0 ? `$0（已併入基本費）` : `$${finalProcessFee}（${quantity} 個 × $${sidePrice}）`;
@@ -403,7 +560,7 @@
       suggestTip.style.display = 'none';
     }
 
-    document.getElementById('resultBox').style.display = 'block';
+    resultBox.style.display = 'block';
   }
 
   updateLimit();   // 開頁先算一次可燙範圍
