@@ -210,16 +210,11 @@
     </div>
 
     <div class="field" style="border-top:1px dashed rgba(160,124,54,.35);padding-top:18px">
-      <span class="label"><span class="n">7</span>其他後加工（選配 · 燙金／打凸／軋型）</span>
-      <select id="heHf">
-        <option value="">不加</option>
-        <option value="gold">燙金</option>
-        <option value="emboss">打凸／壓凸</option>
-        <option value="diecut">軋型（模切）</option>
-      </select>
+      <span class="label"><span class="n">7</span>其他後加工（可複選 · 勾選展開）</span>
       <div class="hint">面積依上方印刷尺寸成品、張數依上方數量；上光請用第 6 項</div>
     </div>
-    <div id="heHfBox" style="display:none;padding-top:4px">
+    <div id="heHfBox" style="padding-top:4px">
+      <label class="chk"><input type="checkbox" id="heGoldOn"> 燙金</label>
       <div class="field hfch hfch-gold" style="display:none">
         <span class="sublabel">燙金色數</span>
         <div class="seg mini" id="heGoldC"></div>
@@ -227,6 +222,7 @@
         <div id="heGoldRows"></div>
         <div class="hint">每「處」各開一塊版（無共版）。版費＝max(色階 200+(版數-1)×100, Σ各版面積×4)；<b>工資＝同業代工（工繳＋金箔）×2</b>，用箔面積＝(寬+2)×長，不含季節係數／低消；<b>組版費</b>：第1處免、每多1處+200</div>
       </div>
+      <label class="chk"><input type="checkbox" id="heEmbOn"> 打凸／壓凸</label>
       <div class="field hfch hfch-emboss" style="display:none">
         <span class="sublabel">打凸／壓凸道數</span>
         <div class="seg mini" id="heEmbC"></div>
@@ -235,6 +231,7 @@
         <div class="hint">凹版費＝逐版 Σmax(400, 面積×8)（每「處」各開一塊版）；工資＝<b>道數法</b>：道數×張數階梯（各道獨立不合併，不看處數／面積）；<b>組版費</b>：第1處免、每多1處+200</div>
         <div class="hint" style="color:#a0742e">⚠ 打凸牌價未定：仍為暫估，實際待老闆定價</div>
       </div>
+      <label class="chk" id="heDieChk"><input type="checkbox" id="heDieOn"> 軋型（模切）</label>
       <div class="field hfch hfch-diecut" style="display:none">
         <span class="sublabel">軋型模數（塑膠刀用）</span>
         <div class="seg mini" id="heDieM"></div>
@@ -253,10 +250,10 @@
   <div class="card" id="cardDu" style="display:none">
     <div class="field">
       <span class="label"><span class="n">1</span>產品類型</span>
-      <select id="duProd">
-        <option value="gen">一般印刷品</option>
-        <option value="bag">紙袋</option>
-      </select>
+      <div class="seg" id="duProd">
+        <button data-v="gen" aria-pressed="true">一般印刷品</button>
+        <button data-v="bag">紙袋</button>
+      </div>
     </div>
     <div class="field">
       <span class="label"><span class="n">2</span>紙張</span>
@@ -397,6 +394,52 @@
 
 <script>
 const $ = id => document.getElementById(id);
+/* ── 對客模式（老闆 2026-07-19）──────────────────────────────
+   網址加 ?public=1 → 只顯示「印刷條件＋未稅／稅金／含稅」，不列任何計算明細與公式。
+   不加參數＝原本的內部完整版（明細照舊），現有 print.html 用法不受影響。
+   ⚠ 這只是「畫面不顯示」；引擎仍在前端 JS 裡，檢視原始碼仍看得到公式（老闆已知悉）。
+   老闆要看明細時：把畫面上的「印刷條件」整段貼給 Jesper，即可用同一引擎還原完整計算。 */
+const PUBLIC_MODE = new URLSearchParams(location.search).get('public')==='1';
+const TAX_RATE = 0.05;
+function taxBlock(grand, perUnitTxt){
+  var tax=Math.round(grand*TAX_RATE), inc=grand+tax;
+  return '<div class="meta" style="text-align:left">'+
+    '<div style="display:flex;justify-content:space-between"><span>報價（未稅）</span><span>$'+grand.toLocaleString()+'</span></div>'+
+    '<div style="display:flex;justify-content:space-between"><span>營業稅 5%</span><span>$'+tax.toLocaleString()+'</span></div>'+
+    '<div style="display:flex;justify-content:space-between;color:var(--gold-1);border-top:1px solid rgba(154,143,125,.3);margin-top:6px;padding-top:6px;font-weight:700"><span>含稅總計</span><span>$'+inc.toLocaleString()+'</span></div>'+
+    (perUnitTxt?'<div style="margin-top:6px;font-size:11px">'+perUnitTxt+'</div>':'')+
+    '</div>';
+}
+/* 產生可貼回給 Jesper 還原計算的規格碼（同時就是給客戶看的報價單） */
+function specCode(title, specLines, grand){
+  var d=new Date(), p=function(n){return String(n).padStart(2,'0');};
+  var ts=d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes());
+  var tax=Math.round(grand*TAX_RATE);
+  return ['【喜成印刷估價單】'+title]
+    .concat(specLines)
+    .concat(['────────────',
+      '未稅 NT$'+grand.toLocaleString()+'　營業稅 NT$'+tax.toLocaleString()+'　含稅 NT$'+(grand+tax).toLocaleString(),
+      '時間：'+ts,
+      '※ 線上估價，實際以正式報價單為準'])
+    .join('\n');
+}
+function copyBtnHtml(){
+  return '<button type="button" id="copySpecBtn" style="width:100%;margin-top:10px;padding:11px;border-radius:10px;'+
+    'border:1px solid var(--gold-2);background:rgba(160,124,54,.14);color:var(--gold-1);font-size:14px;font-weight:600;cursor:pointer">'+
+    '複製印刷條件與報價</button>';
+}
+function bindCopy(text){
+  var b=document.getElementById('copySpecBtn'); if(!b) return;
+  b.onclick=function(){
+    navigator.clipboard.writeText(text).then(function(){
+      b.textContent='已複製 ✓'; setTimeout(function(){b.textContent='複製印刷條件與報價';},1600);
+    },function(){
+      var ta=document.createElement('textarea'); ta.value=text; document.body.appendChild(ta); ta.select();
+      try{document.execCommand('copy'); b.textContent='已複製 ✓';}catch(e){b.textContent='複製失敗，請手動選取';}
+      document.body.removeChild(ta); setTimeout(function(){b.textContent='複製印刷條件與報價';},1600);
+    });
+  };
+}
 
 /* ============================================================
    後加工共用引擎（燙金／打凸／軋型／獨立版上光）
@@ -409,9 +452,9 @@ function stairCard(q){return q<=300?600:q<=500?800:q<=1000?1200:q<=1500?1500:q<=
 function dieSeg(a){return !a?'—':a<=310.8?'塑膠刀':a<=5645?'木刀':'超菊全委外';}
 function pickSeg(id,vals,cur){var e=document.getElementById(id); if(e) e.innerHTML=vals.map(function(v){return '<button data-v="'+v+'" aria-pressed="'+(v===cur)+'">'+v+'</button>';}).join('');}
 /* ── 燙金／打凸：逐版計價（老闆 2026-07-11 定「沒有共版」，2026-07-17 改為填長寬處）──
-   rows=[{w,h,n}]：w×h＝單版面積(cm²)、n＝幾處＝幾塊版（各處各開一塊版、各印一次）
+   rows=[{w,h,n,c}]：w×h＝單版面積(cm²)、n＝幾處＝幾塊版（各處各開一塊版、各印一次）、c＝箔色
    版數＝Σn；燙金版費＝max(色階地板 200+(版數-1)×100, Σ(各版面積×4))
-   工資＝逐版 Σ max(1500, 單版面積×0.01×張數)                                    */
+   工資見 calcGold／calcEmboss（燙金走同業×2、打凸走道數法）                      */
 function plateRows(rows){
   var out=[];
   (rows||[]).forEach(function(r){
@@ -463,10 +506,34 @@ function peerFoilPrice(c){ return PEER_FOIL_PRICE[c]||PEER_FOIL_DEFAULT; }
    N＝總處數（＝總版數，各色／各道的處數加總） */
 const SETUP_PER=200;
 function setupFee(N){ return Math.max(0,(N-1))*SETUP_PER; }
+/* ── 燙金工資地板價（老闆 2026-07-18 定）──────────────────────────────
+   燙金工資 = max( 地板價 , (同業工繳＋金箔)×2 )　←「沿用地板價，超過才用公式」
+   分兩張表，依【落版尺寸】與【磅數】判定（尺寸看落版＝上機的那張，老闆指定）：
+     低表：落版 < A3 **且** 磅數 > 200g（小又厚）
+     高表：其餘全部（落版≥A3／磅數≤200g／又小又薄，任一成立）
+   ⚠ 磅數判不出來時（如海洋白卡走「條」、雪柔走 ss 級）→ 一律走高表，保守不報低。
+   ⚠ 落版大小以「面積 ≥ A3 面積(1247.4cm²)」判定；合版那幾個固定開數兩種判法一致。  */
+const A3_CM2=1247.4;
+function goldFloor(qty,area,grams){
+  var big  = (+area||0) >= A3_CM2;
+  var thin = (grams==null) || (grams<=200);
+  var high = big || thin;
+  /* >2000 張：兩表共用 1 元/張（老闆 2026-07-18 改，原薄1.5／厚1.2 作廢）。
+     與 2000 張＝2000 元（＝1 元/張）接得上，級距連續不跳動。 */
+  if(qty>2000) return qty*1;
+  if(high) return qty<=300?800 : qty<=500?1000 : qty<=1000?1800 : 2000;
+  return   qty<=300?600 : qty<=500?800  : qty<=1000?1200 : qty<=1500?1500 : 2000;
+}
+function goldFloorTxt(qty,area,grams){
+  var big=(+area||0)>=A3_CM2, thin=(grams==null)||(grams<=200);
+  return (big||thin ? '高表' : '低表')+'（落版'+(big?'≥':'<')+'A3·'
+       + (grams==null?'磅數未知':grams+'g') +'）';
+}
 function peerBaseFee(qty){ if(qty<=0)return 0; var b=2.85-1.384*(Math.log10(qty)-Math.log10(500)); return Math.min(6.0,Math.max(1.0,b)); }
 /* 每列（＝一色）的用箔面積：Σ各處 (寬+2)×長 */
 function foilAreaOf(r){ var w=+r.w||0, h=+r.h||0, n=Math.max(0,Math.floor(+r.n||0)); return (h+2)*w*n; }
-function calcGold(rows,qty){
+/* ctx={area:落版面積cm², grams:磅數}　→ 用來判地板價那張表 */
+function calcGold(rows,qty,ctx){
   var areas=plateRows(rows), N=areas.length;
   if(!N) return {cost:0, lines:[], need:'請填燙金版面長寬與處數'};
   /* 版費：維持原規則（圖面積，非用箔面積） */
@@ -479,11 +546,17 @@ function calcGold(rows,qty){
     perSheet += peerBaseFee(qty)*Math.max(1, fa/PEER_AREA_REF);
     foilMat  += (fa*qty/PEER_FOIL_YIELD/PEER_FOIL_UNIT)*peerFoilPrice(r.c||'金');
   });
-  var peerFee=perSheet*qty, labor=(peerFee+foilMat)*PEER_MARKUP;
+  var peerFee=perSheet*qty, byFormula=(peerFee+foilMat)*PEER_MARKUP;
+  /* 地板價：算出來低於地板就收地板（老闆 2026-07-18） */
+  var cx=ctx||{}, floor=goldFloor(qty,cx.area,cx.grams), atFloor=byFormula<floor;
+  var labor=Math.max(floor,byFormula);
   var setup=setupFee(N);
-  return {cost:Math.round(plate+labor+setup), plates:N, peer:{fee:Math.round(peerFee),foil:Math.round(foilMat),perSheet:perSheet}, lines:[
+  return {cost:Math.round(plate+labor+setup), plates:N, atFloor:atFloor,
+    peer:{fee:Math.round(peerFee),foil:Math.round(foilMat),perSheet:perSheet,floor:Math.round(floor)}, lines:[
     ['燙金版費（'+N+'版·max 色階'+stair+'／面積×4加總'+Math.round(areaFee)+'）',Math.round(plate)],
-    ['燙金工資（同業工繳'+Math.round(peerFee).toLocaleString()+'＋金箔'+Math.round(foilMat).toLocaleString()+'）×'+PEER_MARKUP,Math.round(labor)],
+    ['燙金工資（'+(atFloor
+        ? '地板價 '+goldFloorTxt(qty,cx.area,cx.grams)+'·'+qty+'張｜公式試算'+Math.round(byFormula).toLocaleString()
+        : '同業工繳'+Math.round(peerFee).toLocaleString()+'＋金箔'+Math.round(foilMat).toLocaleString()+'）×'+PEER_MARKUP)+'',Math.round(labor)],
     ['燙金組版費（'+N+'處·第1處免，每多1處+'+SETUP_PER+'）',setup]]};
 }
 /* oversize＝落版「形狀」放不進菊全（長邊超過88.9）→ 一律走超菊全委外。
@@ -591,12 +664,14 @@ function duHfCtx(){
   if(!g||!g.ok) return {qty:0,area:0,bag:false};
   var qty=g.bag?g.bagQty:Math.max(1,Math.floor(+DUP.finQty||0));
   var area=g.bag?(g.dual?g.aArea*2:g.pArea):(g.pc?g.pc[0]*g.pc[1]:0);
-  return {qty:qty,area:area,bag:g.bag};
+  /* 燙金地板價用：落版面積取單張上機尺寸（雙接取 A/B 單片）＋磅數（條／ss 級解不出→null→走高表） */
+  var lay=g.bag?(g.dual?g.aArea:g.pArea):(g.pc?g.pc[0]*g.pc[1]:0);
+  return {qty:qty,area:area,bag:g.bag,layArea:lay,grams:gradeGrams(DUP.thick)};
 }
 function duHouList(){
   var x=duHfCtx(), items=[], total=0, warns=[];
   if(DUH.coat.on){ if(x.area>0){ var r=calcCoat(DUH.coat.craft,x.area,DUH.coat.side,x.qty); items.push(Object.assign({name:'上光·'+DUH.coat.craft},r)); total+=r.cost; if(r.est)warns.push('上光含暫估（刮刮銀）'); if(r.warn)warns.push(r.warn); } else warns.push('上光需落版面積（請先選紙張／尺寸或填紙袋）'); }
-  if(DUH.gold.on){ var r2=calcGold(DUH.gold.rows,x.qty);
+  if(DUH.gold.on){ var r2=calcGold(DUH.gold.rows,x.qty,{area:x.layArea,grams:x.grams});
     if(r2.need){ warns.push(r2.need); } else { items.push(Object.assign({name:'燙金 '+DUH.gold.colors+'色·'+r2.plates+'版',spec:rowsTxt(DUH.gold.rows)},r2)); total+=r2.cost; } }
   if(DUH.emboss.on){ var r3=calcEmboss(DUH.emboss.rows,x.qty,DUH.emboss.passes);
     if(r3.need){ warns.push(r3.need); } else { items.push(Object.assign({name:'打凸 '+DUH.emboss.passes+'道·'+r3.plates+'版',spec:rowsTxt(DUH.emboss.rows)},r3)); total+=r3.cost; warns.push('打凸為暫估／待老闆定價'); } }
@@ -619,26 +694,43 @@ function duHfBuild(){
   document.getElementById('duDieM').onchange=function(){DUH.diecut.molds=+this.value; duRender();};
 }
 /* 合版其他後加工狀態 */
-const HEH={craft:'',goldC:1,goldRows:blankRows(1),embC:1,embRows:blankRows(1),dieM:1};
+/* 2026-07-18 老闆：合版後加工改可複選（原本是單選下拉，燙金／打凸／軋型只能三選一） */
+const HEH={gold:{on:false},emboss:{on:false},diecut:{on:false},
+           goldC:1,goldRows:blankRows(1),embC:1,embRows:blankRows(1),dieM:1};
 function heHfArea(){return SIZE_CM2[S.sizeKey]||0;}
 function heHfShow(){
-  var c=HEH.craft;
-  document.getElementById('heHfBox').style.display=c?'block':'none';
-  document.querySelectorAll('#heHfBox .hfch').forEach(function(e){e.style.display='none';});
-  if(c){var el=document.querySelector('.hfch-'+c); if(el) el.style.display='block';}
+  [['gold',HEH.gold.on],['emboss',HEH.emboss.on],['diecut',HEH.diecut.on]].forEach(function(p){
+    var el=document.querySelector('.hfch-'+p[0]); if(el) el.style.display=p[1]?'block':'none';
+  });
+  /* 紙袋模式軋型已自動計 → 隱藏勾選欄，與獨立版一致 */
+  var dc=document.getElementById('heDieChk');
+  if(dc) dc.style.display=(HEB&&HEB.on)?'none':'flex';
 }
-function heHouResult(){
-  var c=HEH.craft; if(!c) return null;
-  var qty=printQty(), a=heHfArea();
-  if(c==='gold'){ var g=calcGold(HEH.goldRows,qty);
-    return Object.assign({name:'燙金 '+HEH.goldC+'色'+(g.plates?'·'+g.plates+'版':''),spec:rowsTxt(HEH.goldRows)},g); }
-  if(c==='emboss'){ var e=calcEmboss(HEH.embRows,qty,HEH.embC);
-    return Object.assign({name:'打凸 '+HEH.embC+'道'+(e.plates?'·'+e.plates+'版':''),spec:rowsTxt(HEH.embRows)},e); }
-  if(c==='diecut'){ if(!a) return {name:'軋型',cost:0,lines:[],need:'此尺寸無面積對應'}; return Object.assign({name:'軋型'},calcDiecut(a,qty,HEH.dieM)); }
-  return null;
+/* 合版後加工（可複選，2026-07-18）。qtyIn／areaIn：紙袋模式用（張數＝袋數、面積＝落版），
+   省略則取上方選的成品尺寸／數量。skipDie＝紙袋模式（軋型已自動算，不重複計）。
+   回傳 {items,total,warns}，與獨立版 duHouList() 同形狀。 */
+/* gLabelIn：紙袋模式由 heBagResult 傳入套版尺寸那組的磅數（避免回頭呼叫 heBagResult 造成遞迴） */
+function heHouList(qtyIn,areaIn,skipDie,gLabelIn){
+  var qty=(qtyIn!=null?qtyIn:printQty()), a=(areaIn!=null?areaIn:heHfArea());
+  var gr=(gLabelIn!=null?gLabelIn:(function(){var c=heCurGrade(); return c?c.g:null;})());
+  var gctx={area:a, grams:gradeGrams(gr)};
+  var items=[], total=0, warns=[];
+  if(HEH.gold.on){ var g=calcGold(HEH.goldRows,qty,gctx);
+    if(g.need) warns.push(g.need);
+    else { items.push(Object.assign({name:'燙金 '+HEH.goldC+'色'+(g.plates?'·'+g.plates+'版':''),spec:rowsTxt(HEH.goldRows)},g)); total+=g.cost; } }
+  if(HEH.emboss.on){ var e=calcEmboss(HEH.embRows,qty,HEH.embC);
+    if(e.need) warns.push(e.need);
+    else { items.push(Object.assign({name:'打凸 '+HEH.embC+'道'+(e.plates?'·'+e.plates+'版':''),spec:rowsTxt(HEH.embRows)},e)); total+=e.cost; warns.push('打凸為暫估／待老闆定價'); } }
+  if(HEH.diecut.on){
+    if(skipDie) warns.push('紙袋已自動計軋型，後加工的「軋型」不重複計入');
+    else if(!a) warns.push('軋型：此尺寸無面積對應');
+    else { var d=calcDiecut(a,qty,HEH.dieM); items.push(Object.assign({name:'軋型'},d)); total+=d.cost; } }
+  return {items:items,total:Math.round(total),warns:warns};
 }
 function heHfBuild(){
-  document.getElementById('heHf').onchange=function(){HEH.craft=this.value; heHfShow(); renderAll();};
+  function tog(chk,st){ var c=document.getElementById(chk); if(!c)return;
+    c.onchange=function(){ st.on=c.checked; heHfShow(); renderAll(); }; }
+  tog('heGoldOn',HEH.gold); tog('heEmbOn',HEH.emboss); tog('heDieOn',HEH.diecut);
   function heGoldRows(){ renderPlateRows('heGoldRows',HEH.goldRows,HEH.goldC,renderAll,'色',true); }
   function heEmbRows(){ renderPlateRows('heEmbRows',HEH.embRows,HEH.embC,renderAll,'道'); }
   pickSeg('heGoldC',[1,2,3,4,5,6],HEH.goldC); seg('heGoldC',function(v){HEH.goldC=+v; heGoldRows(); renderAll();});
@@ -694,6 +786,14 @@ function heBagResult(){
     } else if(cr && cr.duNoCraft){ lines.push(['上光 '+cr.m.n,'獨立版無對應工藝','—']); warns.push('『'+cr.m.n+'』在 <150g 無獨立版對應算法 → 需人工報價');
     } else if(cr && cr.noSize){ warns.push('此開數無對應上光牌價 → 上光不計入'); }
   }
+  /* 燙金／打凸（2026-07-18 補，老闆：打凸跟獨立版計算方式一樣）：
+     與獨立版共用 calcGold／calcEmboss，張數＝袋數、面積由各版面長寬處自帶。
+     軋型不併入（紙袋已自動算 die），避免重複計。 */
+  var hl=heHouList(Q,pArea,true,grade.g);   /* true＝紙袋，軋型已自動算不重複計；grade.g＝套版尺寸的磅數 */
+  hl.items.forEach(function(it){
+    it.lines.forEach(function(l,li){ lines.push([it.name+'·'+l[0],(li===0&&it.spec)?it.spec:'',Math.round(l[1])]); });
+  });
+  total+=hl.total; hl.warns.forEach(function(w){warns.push(w);});
   var hc=heHandleCost(Q);
   if(hc){ if(hc.pend){ lines.push(['提把',hc.label,'—']); warns.push('提把其他需補單價'); } else { lines.push(['提把',hc.label,Math.round(hc.cost)]); total+=hc.cost; } }
   return {uW:uW,uH:uH,pW:pW,pH:pH,sz:sz,grade:grade,lines:lines,total:Math.round(total),warns:warns,Q:Q};
@@ -704,6 +804,23 @@ function renderHeBag(){
   if(!b || b.need){ res.className='result empty';
     res.innerHTML='<div class="rlabel">對客報價</div><div class="price" style="-webkit-text-fill-color:var(--muted);color:var(--muted)">— —</div><div class="spec">'+((b&&b.need)||'請填紙袋尺寸')+'</div>'; return; }
   res.className='result';
+  if(PUBLIC_MODE){
+    var f=['產品：合版印刷 · 紙袋',
+      '紙袋尺寸：'+(+HEB.bw||0)+'×'+(+HEB.bh||0)+'×'+(+HEB.bd||0)+'cm（面寬×高×側寬）',
+      '數量：'+b.Q.toLocaleString()+' 個',
+      '紙張：'+DATA[S.mat].id+' '+b.grade.g,
+      '印刷：'+(S.side?'雙面彩色':'單面彩色')];
+    if(S.coat===1) f.push('上光：'+COAT[CS.mat].n+'（'+(CS.side?'雙面':'單面')+'）');
+    if(HEH.gold.on) f.push('燙金：'+HEH.goldC+'色 '+rowsTxt(HEH.goldRows)+'（箔色 '+HEH.goldRows.map(function(x){return x.c||'金';}).join('／')+'）');
+    if(HEH.emboss.on) f.push('打凸：'+HEH.embC+'道 '+rowsTxt(HEH.embRows));
+    if(HEB.handle!=='無') f.push('提把：'+HEB.handle+(HEB.handle==='紙提把'?'':' '+HEB.hlen+'cm'));
+    var code=specCode('', f, b.total);
+    var ph='<div class="rlabel">報價</div><div class="price">$'+(b.total+Math.round(b.total*TAX_RATE)).toLocaleString()+'<small> 元（含稅）</small></div>'+
+      '<div class="spec">紙袋 '+(+HEB.bw||0)+'×'+(+HEB.bh||0)+'×'+(+HEB.bd||0)+'cm · '+b.Q.toLocaleString()+'個</div>'+
+      '<div class="meta" style="text-align:left">'+f.map(function(s){return '<div>'+s+'</div>';}).join('')+'</div>'+
+      taxBlock(b.total,'平均每個（未稅）$'+(Math.round(b.total/b.Q*100)/100).toLocaleString())+copyBtnHtml();
+    res.innerHTML=ph; bindCopy(code); return;
+  }
   var h='<div class="rlabel">對客報價（未稅）</div><div class="price">$'+b.total.toLocaleString()+'<small> 元</small></div>'+
     '<div class="spec">紙袋 '+(+HEB.bw||0)+'×'+(+HEB.bh||0)+'×'+(+HEB.bd||0)+'cm · '+b.Q.toLocaleString()+'個 · 套合版 '+b.sz.key+'</div>'+
     '<div class="meta" style="text-align:left">';
@@ -715,14 +832,16 @@ function renderHeBag(){
   res.innerHTML=h;
 }
 function heBagBuild(){
+  /* 切換紙袋／改紙袋尺寸都會換「套到的合版尺寸」→ 磅數清單要跟著重畫（renderGrades 內含 renderQty→calc→renderAll） */
   seg('heProd',function(v){ HEB.on=(v==='bag');
     $('heBagBox').style.display=HEB.on?'block':'none';
     $('heSizeField').style.display=HEB.on?'none':'block';
     $('heQtyField').style.display=HEB.on?'none':'block';
-    renderAll(); });
-  $('heBW').oninput=function(){HEB.bw=this.value; renderAll();};
-  $('heBH').oninput=function(){HEB.bh=this.value; renderAll();};
-  $('heBD').oninput=function(){HEB.bd=this.value; renderAll();};
+    heHfShow();                      /* 紙袋模式隱藏軋型勾選欄（已自動計） */
+    S.gradeIdx=0; renderGrades(); });
+  $('heBW').oninput=function(){HEB.bw=this.value; renderGrades();};
+  $('heBH').oninput=function(){HEB.bh=this.value; renderGrades();};
+  $('heBD').oninput=function(){HEB.bd=this.value; renderGrades();};
   $('heBagQty').oninput=function(){HEB.qty=this.value; renderAll();};
   $('heHandle').onchange=function(){HEB.handle=this.value; renderAll();};
   $('heHlen').onchange=function(){HEB.hlen=this.value; renderAll();};
@@ -993,10 +1112,20 @@ function renderSizes(){
   $('size').querySelectorAll('button').forEach(b=>b.onclick=()=>{ S.sizeKey=b.dataset.k; S.gradeIdx=0; S.qtyIdx=0; renderSizes(); });
   renderGrades();
 }
+/* 紙袋模式：磅數必須照「紙袋落版套到的合版尺寸」那組畫（2026-07-18 修）。
+   原本照上方 S.sizeKey 畫（如 A5 只有 100g/150g），計算卻用套版尺寸那組（對開2K 有 5 種）＋同一個 index，
+   → 畫面顯示 100g、實際卻拿 80g 去算，選不到想要的磅數；磅數還決定上光走合版牌價或獨立版規則，影響更大。 */
+function gradeCtxSize(){
+  const mat=DATA[S.mat];
+  if(HEB&&HEB.on){ const b=heBagResult(); if(b&&b.sz) return {sz:b.sz, bag:true}; }
+  return {sz:sizeObj(mat,S.sizeKey), bag:false};
+}
 function renderGrades(){
-  const mat=DATA[S.mat], sz=sizeObj(mat,S.sizeKey);
-  $('sizeNote').textContent = sz.conv ? `換算尺寸：價格＝${mat.base}基準 ×${sz.mult}（放損同步×${sz.mult}）` : (sz.label||'');
-  const grades = gradesOf(mat,sz);
+  const mat=DATA[S.mat], ctx=gradeCtxSize(), sz=ctx.sz;
+  if(!sz){ $('grade').innerHTML=''; renderQty(); return; }
+  $('sizeNote').textContent = ctx.bag ? `紙袋落版套「${sz.key}」，磅數依此尺寸`
+    : (sz.conv ? `換算尺寸：價格＝${mat.base}基準 ×${sz.mult}（放損同步×${sz.mult}）` : (sz.label||''));
+  const grades = ctx.bag ? sz.grades : gradesOf(mat,sz);
   if(S.gradeIdx>=grades.length) S.gradeIdx=0;
   $('grade').innerHTML = grades.map((g,i)=>
     `<button data-i="${i}" aria-pressed="${i===S.gradeIdx}">${g.g}</button>`).join('');
@@ -1004,7 +1133,10 @@ function renderGrades(){
   renderQty();
 }
 function renderQty(){
-  const mat=DATA[S.mat], sz=sizeObj(mat,S.sizeKey), grade=gradesOf(mat,sz)[S.gradeIdx];
+  /* 紙袋模式：尺寸／數量欄位已隱藏、數量由紙袋區控制；且 S.gradeIdx 依套版尺寸那組（可能超出本尺寸範圍）→ 直接跳過 */
+  if(HEB&&HEB.on){ calc(); return; }
+  const mat=DATA[S.mat], sz=sizeObj(mat,S.sizeKey), grades0=gradesOf(mat,sz);
+  const grade=grades0[Math.min(S.gradeIdx,grades0.length-1)];
   const rows=finalRows(mat,sz,grade);
   if(S.qtyIdx>=rows.length) S.qtyIdx=0;
   $('qty').innerHTML = rows.map((r,i)=>
@@ -1018,7 +1150,8 @@ function setSide(){
   });
 }
 function printResult(){
-  const mat=DATA[S.mat], sz=sizeObj(mat,S.sizeKey), grade=gradesOf(mat,sz)[S.gradeIdx];
+  const mat=DATA[S.mat], sz=sizeObj(mat,S.sizeKey), grades0=gradesOf(mat,sz);
+  const grade=grades0[Math.min(S.gradeIdx,grades0.length-1)];   /* 紙袋模式 gradeIdx 可能超出本尺寸範圍 → 夾住 */
   const rows=finalRows(mat,sz,grade), row=rows[S.qtyIdx];
   if(!row) return null;
   return {mat,grade,sz,qty:row[0],cust:Math.round(row[S.side+1]*1.2),fang:finalFang(sz,grade),sideTxt:S.side?'雙面彩色':'單面彩色'};
@@ -1031,9 +1164,24 @@ function renderAll(){
   if(!p){ res.className='result empty';
     res.innerHTML='<div class="rlabel">對客報價</div><div class="price" style="-webkit-text-fill-color:var(--muted);color:var(--muted)">— —</div><div class="spec">請依序選擇上方條件</div>'; return; }
   const on=S.coat===1, c=on?coatResult():null, ok=c&&!c.noSize&&!c.noArea&&!c.duNoCraft;
-  const hou=heHouResult(), houCost=hou?hou.cost:0;
+  const hou=heHouList(), houCost=hou.total;
   const total=p.cust+(ok?c.cust:0)+houCost;
   res.className='result';
+  if(PUBLIC_MODE){
+    const f=['產品：合版印刷 · 一般印刷品',
+      '紙張：'+p.mat.id+' '+p.grade.g,
+      '尺寸：'+p.sz.key, '數量：'+p.qty.toLocaleString()+' 張', '印刷：'+p.sideTxt];
+    if(on&&ok) f.push('上光：'+c.m.n+'（'+(CS.side?'雙面':'單面')+'）');
+    if(HEH.gold.on) f.push('燙金：'+HEH.goldC+'色 '+rowsTxt(HEH.goldRows)+'（箔色 '+HEH.goldRows.map(x=>x.c||'金').join('／')+'）');
+    if(HEH.emboss.on) f.push('打凸：'+HEH.embC+'道 '+rowsTxt(HEH.embRows));
+    if(HEH.diecut.on) f.push('軋型：模數 '+HEH.dieM);
+    const code=specCode('', f, total);
+    let ph=`<div class="rlabel">報價</div><div class="price">$${(total+Math.round(total*TAX_RATE)).toLocaleString()}<small> 元（含稅）</small></div>`+
+      `<div class="spec">${p.mat.id}　${p.grade.g}　${p.sz.key}　${p.qty.toLocaleString()} 張</div>`+
+      `<div class="meta" style="text-align:left">${f.map(s=>`<div>${s}</div>`).join('')}</div>`+
+      taxBlock(total,'')+copyBtnHtml();
+    res.innerHTML=ph; bindCopy(code); return;
+  }
   let h=`<div class="rlabel">對客報價（未稅）</div>`+
     `<div class="price">$${total.toLocaleString()}<small> 元</small></div>`+
     `<div class="spec">${p.mat.id}　${p.grade.g}　${p.sz.key}　${p.sideTxt}　${p.qty.toLocaleString()} 張</div>`;
@@ -1057,13 +1205,13 @@ function renderAll(){
   } else {
     h+=`<div class="meta"><span class="badge">放損底價 ${p.fang} 元/張</span><span class="badge">放數 30/50/80（上限100）</span><br>後加工、運費另計　·　追加放損依底價 ×1.2 對客</div>`;
   }
-  if(hou){
+  if(hou.items.length||hou.warns.length){
     h+=`<div class="meta" style="text-align:left">`+
-      hou.lines.map(l=>`<div style="display:flex;justify-content:space-between"><span>${l[0]}</span><span>$${Math.round(l[1]).toLocaleString()}</span></div>`).join('')+
-      `<div style="display:flex;justify-content:space-between;color:var(--gold-1);border-top:1px solid rgba(154,143,125,.3);margin-top:6px;padding-top:6px;font-weight:600"><span>後加工小計（${hou.name}）</span><span>$${hou.cost.toLocaleString()}</span></div>`+
-      (hou.need?`<div style="margin-top:6px;color:#e0b060">⚠ ${hou.need}</div>`:``)+
-      (hou.est?`<div style="margin-top:6px"><span class="badge">後加工暫估／待老闆定價</span></div>`:``)+
-      (hou.warn?`<div style="margin-top:6px;color:#e0b060">⚠ ${hou.warn}</div>`:``)+
+      hou.items.map(it=>
+        it.lines.map((l,li)=>`<div style="display:flex;justify-content:space-between;gap:12px"><span>${it.name}·${l[0]}${(li===0&&it.spec)?` <small style="color:var(--muted)">${it.spec}</small>`:``}</span><span style="white-space:nowrap">$${Math.round(l[1]).toLocaleString()}</span></div>`).join('')
+      ).join('')+
+      (hou.items.length?`<div style="display:flex;justify-content:space-between;color:var(--gold-1);border-top:1px solid rgba(154,143,125,.3);margin-top:6px;padding-top:6px;font-weight:600"><span>後加工小計（${hou.items.map(i=>i.name.split('·')[0]).join('＋')}）</span><span>$${houCost.toLocaleString()}</span></div>`:``)+
+      hou.warns.map(w=>`<div style="margin-top:6px;color:#e0b060">⚠ ${w}</div>`).join('')+
     `</div>`;
   }
   res.innerHTML=h;
@@ -1348,6 +1496,25 @@ function duRender(){
   if(g.bag) spec.push('紙袋 '+(+DUP.bw||0)+'×'+(+DUP.bh||0)+'×'+(+DUP.bd||0)+'cm · '+g.bagQty.toLocaleString()+'個'+(g.best?(' · '+(g.dual?'雙接':'單接')):''));
   else spec.push('完成 '+Math.max(1,Math.floor(+DUP.finQty||0)).toLocaleString()+'片 · '+sn[g.k]);
   spec.push((r.two?'雙面':'單面')+' '+colTxt2());
+  /* ── 對客模式：只給條件＋未稅／稅金／含稅，不列任何明細 ── */
+  if(PUBLIC_MODE){
+    var full=['產品：獨立版印刷 · '+(g.bag?'紙袋':'一般印刷品')];
+    if(g.bag) full.push('紙袋尺寸：'+(+DUP.bw||0)+'×'+(+DUP.bh||0)+'×'+(+DUP.bd||0)+'cm（面寬×高×側寬）','數量：'+g.bagQty.toLocaleString()+' 個');
+    else full.push('大紙／開數：'+DUP.stock+' · '+sn[g.k],'數量：'+Math.max(1,Math.floor(+DUP.finQty||0)).toLocaleString()+' 片');
+    full.push('紙張：'+DUP.paper+' '+DUP.thick, '印刷：'+(r.two?'雙面':'單面')+' '+colTxt2());
+    if(DUH.coat.on) full.push('上光：'+DUH.coat.craft+'（'+(DUH.coat.side===2?'雙面':'單面')+'）');
+    if(DUH.gold.on) full.push('燙金：'+DUH.gold.colors+'色 '+rowsTxt(DUH.gold.rows)+'（箔色 '+DUH.gold.rows.map(function(x){return x.c||'金';}).join('／')+'）');
+    if(DUH.emboss.on) full.push('打凸：'+DUH.emboss.passes+'道 '+rowsTxt(DUH.emboss.rows));
+    if(g.bag&&DUP.handle!=='無') full.push('提把：'+DUP.handle+(DUP.handle==='紙提把'?'':' '+DUP.hlen+'cm'));
+    var per=(g.bag&&g.bagQty)?('平均每個（未稅）$'+(Math.round(total/g.bagQty*100)/100).toLocaleString()):'';
+    var code=specCode('', full, grand);
+    var ph='<div class="rlabel">報價</div><div class="price">$'+(grand+Math.round(grand*TAX_RATE)).toLocaleString()+'<small> 元（含稅）</small></div>'+
+      '<div class="spec">'+spec.join('　·　')+'</div>'+
+      '<div class="meta" style="text-align:left">'+full.map(function(s){return '<div>'+s+'</div>';}).join('')+'</div>'+
+      taxBlock(grand, per)+copyBtnHtml();
+    if(warns.length) ph+='<div style="margin-top:8px;color:#e0b060;font-size:12px">⚠ '+warns.filter(function(w){return !/暫估|人工核|獨立版規則|共版|折/.test(w);}).join('<br>⚠ ')+'</div>';
+    res.innerHTML=ph; bindCopy(code); return;
+  }
   var h='<div class="rlabel">報價（未稅）</div><div class="price">$'+grand.toLocaleString()+'<small> 元</small></div>'+
     '<div class="spec">'+spec.join('　·　')+'</div><div class="meta" style="text-align:left">';
   lines.forEach(function(l){
@@ -1382,7 +1549,12 @@ function duBuild(){
   $('duStock').onchange=function(){DUP.stock=$('duStock').value; duRender();};
   $('duK').onchange=function(){DUP.k=+$('duK').value; duRender();};
   $('duFinQty').oninput=function(){DUP.finQty=this.value; duRender();};
-  $('duProd').onchange=function(){DUP.prod=$('duProd').value; $('duGenBox').style.display=DUP.prod==='gen'?'block':'none'; $('duBagBox').style.display=DUP.prod==='bag'?'block':'none'; var dc=$('duDieChk'); if(dc)dc.style.display=DUP.prod==='bag'?'none':'flex'; duRender();};
+  /* 產品類型改按鈕式（老闆 2026-07-18），與合版頁一致 */
+  seg('duProd',function(v){ DUP.prod=v;
+    $('duGenBox').style.display=v==='gen'?'block':'none';
+    $('duBagBox').style.display=v==='bag'?'block':'none';
+    var dc=$('duDieChk'); if(dc)dc.style.display=v==='bag'?'none':'flex';
+    duRender(); });
   $('duBW').oninput=function(){DUP.bw=this.value; duRender();};
   $('duBH').oninput=function(){DUP.bh=this.value; duRender();};
   $('duBD').oninput=function(){DUP.bd=this.value; duRender();};
