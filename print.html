@@ -427,16 +427,25 @@ function specCode(title, specLines, grand){
     .join('\n');
 }
 const LINE_ID='@623bfkyg';
-function copyBtnHtml(){
-  return '<button type="button" id="copySpecBtn" style="width:100%;margin-top:10px;padding:11px;border-radius:10px;'+
-    'border:1px solid var(--gold-2);background:rgba(160,124,54,.14);color:var(--gold-1);font-size:14px;font-weight:600;cursor:pointer">'+
-    '複製印刷條件與報價</button>'+
-    '<a id="lineSendBtn" href="#" target="_blank" rel="noopener" style="display:block;width:100%;margin-top:8px;padding:12px;'+
+/* 版面順序（老闆 2026-07-19 指定）：
+   含稅大字 → 未稅/營業稅/含稅合計 → LINE 鈕 → 印刷條件 → 複製鈕（最下方） */
+function lineBtnHtml(){
+  return '<a id="lineSendBtn" href="#" target="_blank" rel="noopener" style="display:block;width:100%;margin-top:10px;padding:13px;'+
     'border-radius:10px;border:1px solid #06C755;background:linear-gradient(95deg,#06C755,#04a445);color:#fff;'+
     'font-size:15px;font-weight:700;text-align:center;text-decoration:none;cursor:pointer">'+
     '確認報價，傳送到 LINE</a>'+
     '<div style="margin-top:6px;font-size:11px;color:var(--muted);text-align:center">'+
-    '按下後會開啟 LINE 並帶入上方條件與報價，直接送出給喜成（'+LINE_ID+'）</div>';
+    '按下後會開啟 LINE 並帶入條件與報價，直接送出給喜成（'+LINE_ID+'）</div>';
+}
+function specListHtml(lines){
+  return '<div class="meta" style="text-align:left;margin-top:14px">'+
+    '<div style="font-size:11px;letter-spacing:.18em;color:var(--gold-2);font-weight:700;margin-bottom:6px">印刷條件</div>'+
+    lines.map(function(s){return '<div>'+s+'</div>';}).join('')+'</div>';
+}
+function copyBtnHtml(){
+  return '<button type="button" id="copySpecBtn" style="width:100%;margin-top:10px;padding:11px;border-radius:10px;'+
+    'border:1px solid var(--gold-2);background:rgba(160,124,54,.14);color:var(--gold-1);font-size:14px;font-weight:600;cursor:pointer">'+
+    '複製印刷條件與報價</button>';
 }
 function bindCopy(text){
   var b=document.getElementById('copySpecBtn');
@@ -840,8 +849,8 @@ function renderHeBag(){
     var code=specCode('', f, b.total);
     var ph='<div class="rlabel">報價</div><div class="price">$'+(b.total+Math.round(b.total*TAX_RATE)).toLocaleString()+'<small> 元（含稅）</small></div>'+
       '<div class="spec">紙袋 '+(+HEB.bw||0)+'×'+(+HEB.bh||0)+'×'+(+HEB.bd||0)+'cm · '+b.Q.toLocaleString()+'個</div>'+
-      '<div class="meta" style="text-align:left">'+f.map(function(s){return '<div>'+s+'</div>';}).join('')+'</div>'+
-      taxBlock(b.total,'平均每個（未稅）$'+(Math.round(b.total/b.Q*100)/100).toLocaleString())+copyBtnHtml();
+      taxBlock(b.total,'平均每個（未稅）$'+(Math.round(b.total/b.Q*100)/100).toLocaleString())+
+      lineBtnHtml()+specListHtml(f)+copyBtnHtml();
     res.innerHTML=ph; bindCopy(code); return;
   }
   var h='<div class="rlabel">對客報價（未稅）</div><div class="price">$'+b.total.toLocaleString()+'<small> 元</small></div>'+
@@ -1201,8 +1210,7 @@ function renderAll(){
     const code=specCode('', f, total);
     let ph=`<div class="rlabel">報價</div><div class="price">$${(total+Math.round(total*TAX_RATE)).toLocaleString()}<small> 元（含稅）</small></div>`+
       `<div class="spec">${p.mat.id}　${p.grade.g}　${p.sz.key}　${p.qty.toLocaleString()} 張</div>`+
-      `<div class="meta" style="text-align:left">${f.map(s=>`<div>${s}</div>`).join('')}</div>`+
-      taxBlock(total,'')+copyBtnHtml();
+      taxBlock(total,'')+lineBtnHtml()+specListHtml(f)+copyBtnHtml();
     res.innerHTML=ph; bindCopy(code); return;
   }
   let h=`<div class="rlabel">對客報價（未稅）</div>`+
@@ -1533,8 +1541,7 @@ function duRender(){
     var code=specCode('', full, grand);
     var ph='<div class="rlabel">報價</div><div class="price">$'+(grand+Math.round(grand*TAX_RATE)).toLocaleString()+'<small> 元（含稅）</small></div>'+
       '<div class="spec">'+spec.join('　·　')+'</div>'+
-      '<div class="meta" style="text-align:left">'+full.map(function(s){return '<div>'+s+'</div>';}).join('')+'</div>'+
-      taxBlock(grand, per)+copyBtnHtml();
+      taxBlock(grand, per)+lineBtnHtml()+specListHtml(full)+copyBtnHtml();
     if(warns.length) ph+='<div style="margin-top:8px;color:#e0b060;font-size:12px">⚠ '+warns.filter(function(w){return !/暫估|人工核|獨立版規則|共版|折/.test(w);}).join('<br>⚠ ')+'</div>';
     res.innerHTML=ph; bindCopy(code); return;
   }
