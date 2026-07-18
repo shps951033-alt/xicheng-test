@@ -95,6 +95,9 @@
   .badge{display:inline-block;background:rgba(216,185,112,.16);color:var(--gold-1);font-size:11px;
     padding:2px 9px;border-radius:20px;margin:2px 3px;font-weight:600}
   .foot{text-align:center;color:var(--muted);font-size:11px;margin-top:26px;line-height:1.8}
+  /* 對客模式（?public=1）：藏掉所有含計價內規的說明——頁尾規則、含加成/牌價字樣的 hint */
+  body.public-mode .foot{display:none!important}
+  body.public-mode .leak{display:none!important}
   .foot b{color:var(--gold-3)}
 </style>
 </head>
@@ -423,14 +426,21 @@ function specCode(title, specLines, grand){
       '※ 線上估價，實際以正式報價單為準'])
     .join('\n');
 }
+const LINE_ID='@623bfkyg';
 function copyBtnHtml(){
   return '<button type="button" id="copySpecBtn" style="width:100%;margin-top:10px;padding:11px;border-radius:10px;'+
     'border:1px solid var(--gold-2);background:rgba(160,124,54,.14);color:var(--gold-1);font-size:14px;font-weight:600;cursor:pointer">'+
-    '複製印刷條件與報價</button>';
+    '複製印刷條件與報價</button>'+
+    '<a id="lineSendBtn" href="#" target="_blank" rel="noopener" style="display:block;width:100%;margin-top:8px;padding:12px;'+
+    'border-radius:10px;border:1px solid #06C755;background:linear-gradient(95deg,#06C755,#04a445);color:#fff;'+
+    'font-size:15px;font-weight:700;text-align:center;text-decoration:none;cursor:pointer">'+
+    '確認報價，傳送到 LINE</a>'+
+    '<div style="margin-top:6px;font-size:11px;color:var(--muted);text-align:center">'+
+    '按下後會開啟 LINE 並帶入上方條件與報價，直接送出給喜成（'+LINE_ID+'）</div>';
 }
 function bindCopy(text){
-  var b=document.getElementById('copySpecBtn'); if(!b) return;
-  b.onclick=function(){
+  var b=document.getElementById('copySpecBtn');
+  if(b) b.onclick=function(){
     navigator.clipboard.writeText(text).then(function(){
       b.textContent='已複製 ✓'; setTimeout(function(){b.textContent='複製印刷條件與報價';},1600);
     },function(){
@@ -439,6 +449,19 @@ function bindCopy(text){
       document.body.removeChild(ta); setTimeout(function(){b.textContent='複製印刷條件與報價';},1600);
     });
   };
+  var L=document.getElementById('lineSendBtn');
+  if(L) L.href='https://line.me/R/msg/text/?'+encodeURIComponent(text+'\n\n（以上為線上估價，想下單或有問題請直接回覆）');
+}
+/* 對客模式：把所有含計價內規的說明（頁尾規則、欄位 hint）藏起來。
+   ⚠ 頁尾原本寫著「紙張印刷×1.2」「牌價×1.2」「查批價×1.2」「放數30/50/80」＝直接把加成與成本結構給客戶看到。 */
+function stripInternalNotes(){
+  if(!PUBLIC_MODE) return;
+  /* 用 class + !important，模式切換重設 style.display 也蓋不掉 */
+  document.body.classList.add('public-mode');
+  var LEAK=/×1\.2|批價|牌價|放損|放數|令|版費|印工|色階|同業|工繳|基本費|階梯|濬宇|健豪|暫估/;
+  document.querySelectorAll('.hint,.sub').forEach(function(e){
+    if(LEAK.test(e.textContent)) e.classList.add('leak');
+  });
 }
 
 /* ============================================================
@@ -1570,7 +1593,11 @@ duBuild();
 duHfBuild(); heHfBuild();
 
 /* ====== 模式切換 ====== */
-const TITLES={
+/* 對客模式的副標不得出現版費／印工等內規字樣（切換模式會重設，故在此就分開） */
+const TITLES = PUBLIC_MODE ? {
+  he:['合版紙張印刷','DM／海報／傳單／單張印刷品 · 線上估價'],
+  du:['獨立版印刷估價','客製開版印刷 · 紙袋 · 線上估價'],
+} : {
   he:['合版紙張印刷','DM／海報／傳單／單張印刷品 · 對客報價（未稅）'],
   du:['獨立版印刷估價','委外開版 · 印刷段（版費＋印工）· 未稅'],
 };
@@ -1584,6 +1611,9 @@ $('mode').querySelectorAll('button').forEach(b=>b.onclick=()=>{
   $('ttl').textContent=TITLES[m][0];
   $('sub').textContent=TITLES[m][1];
 });
+
+/* 對客模式：藏掉計價內規說明（放最後，確保所有 build 產生的 hint 都掃到） */
+stripInternalNotes();
 </script>
 </body>
 </html>
