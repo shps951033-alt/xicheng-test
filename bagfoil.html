@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>喜成印刷｜現成紙袋燙金報價</title>
+<meta name="robots" content="noindex" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet" />
+<style>
+  /* 配色與官網 xicheng-print.com 一致 */
+  :root{
+    --ink:#14110d;
+    --paper:#f6f2e9;
+    --paper-2:#efe8da;
+    --cream:#faf7f0;
+    --gold:#c6a15b;
+    --gold-lt:#e6cd8f;
+    --gold-dk:#a9843f;
+    --red:#7c1f1a;
+    --text-dk:#4a4234;
+    --text-mut:#8a7f6b;
+    --line:rgba(198,161,91,.28);
+    --gold-grad:linear-gradient(135deg,#a9843f 0%,#e6cd8f 34%,#c6a15b 52%,#8f6d31 78%,#e2c684 100%);
+    --serif:"Noto Serif TC",serif;
+    --sans:"Noto Sans TC",-apple-system,"PingFang TC","Microsoft JhengHei",sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;padding:32px 20px 56px;
+    font-family:var(--sans);
+    color:var(--text-dk);
+    background:var(--paper);
+    line-height:1.75;
+    -webkit-font-smoothing:antialiased;
+  }
+  .sheet{
+    max-width:520px;margin:0 auto;
+    background:var(--cream);
+    border:1px solid var(--line);
+    border-radius:2px;
+    padding:34px 30px 30px;
+    box-shadow:0 18px 46px -30px rgba(20,17,13,.45);
+  }
+  .eyebrow{
+    font-size:.72rem;font-weight:500;letter-spacing:.4em;
+    color:var(--text-mut);text-align:center;margin-bottom:10px;
+  }
+  h1{
+    font-family:var(--serif);
+    font-size:1.55rem;font-weight:600;letter-spacing:.06em;
+    text-align:center;margin:0 0 6px;color:var(--ink);
+  }
+  .gold-text{
+    background:var(--gold-grad);
+    -webkit-background-clip:text;background-clip:text;
+    -webkit-text-fill-color:transparent;color:transparent;
+  }
+  .lede{text-align:center;font-size:.84rem;color:var(--text-mut);margin:0 0 26px}
+  .rule{height:1px;background:var(--gold-grad);opacity:.5;margin:0 0 26px}
+
+  .field{margin-bottom:17px}
+  label{
+    display:block;margin-bottom:7px;
+    font-size:.82rem;font-weight:500;letter-spacing:.08em;color:var(--text-dk);
+  }
+  input,select{
+    width:100%;padding:11px 12px;
+    font-family:var(--sans);font-size:1rem;color:var(--ink);
+    background:#fff;
+    border:1px solid var(--line);border-radius:2px;
+    transition:border-color .25s,box-shadow .25s;
+  }
+  input:focus,select:focus{
+    outline:none;border-color:var(--gold);
+    box-shadow:0 0 0 3px rgba(198,161,91,.14);
+  }
+  .row{display:flex;gap:12px}
+  .row .field{flex:1}
+  .check{display:flex;align-items:center;gap:9px;margin:4px 0 6px}
+  .check input{width:auto;margin:0}
+  .check label{margin:0;font-weight:400;letter-spacing:.04em}
+
+  .btn{
+    width:100%;margin-top:14px;
+    padding:.85em 1.5em;
+    font-family:var(--sans);font-size:.98rem;font-weight:500;letter-spacing:.1em;
+    color:var(--ink);cursor:pointer;
+    border:1px solid var(--gold);border-radius:2px;
+    background:var(--gold-grad);background-size:180% 180%;
+    transition:.4s;
+  }
+  .btn:hover{
+    background-position:100% 0;
+    box-shadow:0 8px 26px -12px rgba(198,161,91,.7);
+    transform:translateY(-1px);
+  }
+
+  .result{
+    margin-top:28px;padding:22px 20px 20px;
+    background:var(--paper-2);
+    border:1px solid var(--line);border-radius:2px;
+  }
+  .result h2{
+    font-family:var(--serif);font-size:1rem;font-weight:600;letter-spacing:.16em;
+    margin:0 0 14px;color:var(--ink);
+  }
+  .line{
+    display:flex;justify-content:space-between;gap:14px;
+    font-size:.9rem;margin-bottom:9px;
+  }
+  .line span:last-child{color:var(--ink);white-space:nowrap}
+  .total{
+    display:flex;justify-content:space-between;align-items:baseline;gap:14px;
+    border-top:1px solid var(--line);margin-top:14px;padding-top:14px;
+  }
+  .total .lbl{font-family:var(--serif);font-size:.95rem;letter-spacing:.1em;color:var(--ink)}
+  .total .amt{font-family:var(--serif);font-size:1.5rem;font-weight:700;color:var(--red)}
+  .tip{
+    margin-top:16px;padding:12px 14px;
+    background:var(--cream);
+    border:1px solid var(--line);border-left:2px solid var(--gold);border-radius:2px;
+    font-size:.8rem;line-height:1.7;color:var(--text-dk);
+  }
+  .tip b{color:var(--red)}
+  .foot{
+    text-align:center;font-size:.74rem;letter-spacing:.14em;
+    color:var(--text-mut);margin-top:26px;
+  }
+  .foot a{color:var(--text-mut)}
+  @media(max-width:420px){
+    .row{flex-direction:column;gap:0}
+    .sheet{padding:28px 20px 24px}
+  }
+</style>
+</head>
+<body>
+
+<div class="sheet">
+  <div class="eyebrow">喜　成　印　刷</div>
+  <h1>現成紙袋<span class="gold-text">燙金</span>報價</h1>
+  <p class="lede">客戶自備現成紙袋・單純燙金加工試算</p>
+  <div class="rule"></div>
+
+  <div class="field">
+    <label for="isReprint">是否為 3 年內再版（免版費）</label>
+    <select id="isReprint" onchange="togglePlateInput()">
+      <option value="no">否 — 新圖案，需算版費</option>
+      <option value="yes">是 — 舊圖案，版費 $0</option>
+    </select>
+  </div>
+
+  <div class="row" id="plateSizeRow">
+    <div class="field">
+      <label for="length">圖案長度（公分）</label>
+      <input type="number" id="length" value="5" min="0" step="0.1">
+    </div>
+    <div class="field">
+      <label for="width">圖案寬度（公分）</label>
+      <input type="number" id="width" value="5" min="0" step="0.1">
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="field">
+      <label for="sideType">加工面數</label>
+      <select id="sideType">
+        <option value="5">單面　一個 $5</option>
+        <option value="7">雙面　一個 $7</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="quantity">預計製作數量（個）</label>
+      <input type="number" id="quantity" value="50" min="1">
+    </div>
+  </div>
+
+  <div class="check">
+    <input type="checkbox" id="needInvoice">
+    <label for="needInvoice">需要開立發票（稅金 5% 另計）</label>
+  </div>
+
+  <button class="btn" onclick="calculatePrice()">立即計算總價</button>
+
+  <div class="result" id="resultBox" style="display:none;">
+    <h2>報 價 明 細</h2>
+    <div class="line"><span>燙金版費</span><span id="resPlate">$-</span></div>
+    <div class="line"><span>開機基本費</span><span id="resBase">$-</span></div>
+    <div class="line"><span>實際加工費</span><span id="resProcess">$-</span></div>
+    <div class="line" id="taxRow"><span>營業稅 5%</span><span id="resTax">$-</span></div>
+    <div class="total"><span class="lbl">預估總計（未含運）</span><span class="amt" id="resTotal">$-</span></div>
+    <div class="tip" id="suggestTip"></div>
+  </div>
+
+  <div class="foot">燙金・模切・代工　｜　高雄　｜　<a href="https://xicheng-print.com">xicheng-print.com</a></div>
+</div>
+
+<script>
+  // 報價常數（現成紙袋燙金，與同行代工那套完全獨立）
+  const BASE_FEE = 1200;      // 開機基本費
+  const PLATE_RATE = 4;       // 版費：長 × 寬 × 4 元/平方公分
+  const PLATE_MIN = 200;      // 版費最低收費
+  const TAX_RATE = 0.05;
+
+  function togglePlateInput() {
+    const isReprint = document.getElementById('isReprint').value;
+    const plateSizeRow = document.getElementById('plateSizeRow');
+    plateSizeRow.style.display = (isReprint === 'yes') ? 'none' : 'flex';
+  }
+
+  function calculatePrice() {
+    const isReprint = document.getElementById('isReprint').value;
+    const length = parseFloat(document.getElementById('length').value) || 0;
+    const width = parseFloat(document.getElementById('width').value) || 0;
+    const sideSelect = document.getElementById('sideType');
+    const sidePrice = parseInt(sideSelect.value);
+    const sideName = sideSelect.value === '5' ? '單面' : '雙面';
+    const quantity = parseInt(document.getElementById('quantity').value) || 0;
+    const needInvoice = document.getElementById('needInvoice').checked;
+
+    // 1. 版費
+    let plateFee = 0;
+    if (isReprint === 'no') {
+      plateFee = Math.round(Math.max(length * width * PLATE_RATE, PLATE_MIN));
+    }
+
+    // 2. 加工費與基本費（未達基本費者，以基本費取代）
+    const rawProcessFee = quantity * sidePrice;
+    const baseFee = rawProcessFee < BASE_FEE ? BASE_FEE : 0;
+    const finalProcessFee = rawProcessFee < BASE_FEE ? 0 : rawProcessFee;
+
+    // 3. 小計與稅金
+    const subtotal = plateFee + baseFee + finalProcessFee;
+    const tax = needInvoice ? Math.round(subtotal * TAX_RATE) : 0;
+    const total = subtotal + tax;
+
+    // 4. 顯示
+    document.getElementById('resPlate').innerText = `$${plateFee}` + (isReprint === 'yes' ? '（享 3 年免版費）' : '');
+    document.getElementById('resBase').innerText = baseFee > 0 ? `$${baseFee}（數量未達標）` : `$0（已達標免基本費）`;
+    document.getElementById('resProcess').innerText = baseFee > 0 ? `$0（已併入基本費）` : `$${finalProcessFee}（${quantity} 個 × $${sidePrice}）`;
+
+    if (needInvoice) {
+      document.getElementById('taxRow').style.display = 'flex';
+      document.getElementById('resTax').innerText = `$${tax}`;
+    } else {
+      document.getElementById('taxRow').style.display = 'none';
+    }
+
+    document.getElementById('resTotal').innerText = `$${total}`;
+
+    // 5. 加量建議（依當下選的面數動態算，不寫死）
+    const suggestTip = document.getElementById('suggestTip');
+    if (baseFee > 0) {
+      const maxQty = Math.floor(BASE_FEE / sidePrice);
+      suggestTip.innerHTML = `目前加工費未達開機基本費門檻。同樣是 $${BASE_FEE}，${sideName}其實可以做到 <b>${maxQty}</b> 個（目前 ${quantity} 個，還可再加 <b>${maxQty - quantity}</b> 個不加價）—— 可以建議客人加量。`;
+      suggestTip.style.display = 'block';
+    } else {
+      suggestTip.style.display = 'none';
+    }
+
+    document.getElementById('resultBox').style.display = 'block';
+  }
+</script>
+
+</body>
+</html>
