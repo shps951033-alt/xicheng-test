@@ -214,6 +214,10 @@
     font-size:.87rem;margin-bottom:10px;color:#cfc6b3;font-weight:300;
   }
   .line span:last-child{color:var(--cream);white-space:nowrap;font-weight:400}
+  .line.sub{
+    border-top:1px solid rgba(198,161,91,.18);
+    margin-top:14px;padding-top:12px;
+  }
   .total{
     display:flex;justify-content:space-between;align-items:baseline;gap:14px;
     border-top:1px solid rgba(198,161,91,.35);margin-top:16px;padding-top:16px;
@@ -347,11 +351,6 @@
       </div>
     </div>
 
-    <div class="check">
-      <input type="checkbox" id="needInvoice">
-      <label for="needInvoice">需要開立發票（稅金 5% 另計）</label>
-    </div>
-
     <button class="btn" onclick="calculatePrice()">立 即 計 算 總 價</button>
 
     <div class="result" id="resultBox" style="display:none;">
@@ -361,8 +360,9 @@
       <div class="line"><span>燙金版費</span><span id="resPlate">$-</span></div>
       <div class="line"><span>開機基本費</span><span id="resBase">$-</span></div>
       <div class="line"><span>實際加工費</span><span id="resProcess">$-</span></div>
-      <div class="line" id="taxRow"><span>營業稅 5%</span><span id="resTax">$-</span></div>
-      <div class="total"><span class="lbl">預估總計（未含運）</span><span class="amt gold-text" id="resTotal">$-</span></div>
+      <div class="line sub"><span>未稅小計</span><span id="resSubtotal">$-</span></div>
+      <div class="line"><span>營業稅 5%</span><span id="resTax">$-</span></div>
+      <div class="total"><span class="lbl">含稅總計（未含運）</span><span class="amt gold-text" id="resTotal">$-</span></div>
       <div class="tip" id="suggestTip"></div>
     </div>
 
@@ -505,7 +505,6 @@
     const foil = curFoil();
     const sidePrice = basePrice + foil.sur;   // 特殊箔每個 +1
     const quantity = parseInt(document.getElementById('quantity').value) || 0;
-    const needInvoice = document.getElementById('needInvoice').checked;
 
     updateLimit();
 
@@ -558,9 +557,9 @@
     const baseFee = rawProcessFee < BASE_FEE ? BASE_FEE : 0;
     const finalProcessFee = rawProcessFee < BASE_FEE ? 0 : rawProcessFee;
 
-    // 3. 小計與稅金
+    // 3. 小計與稅金（一律含稅報價，不再問要不要發票）
     const subtotal = plateFee + baseFee + finalProcessFee;
-    const tax = needInvoice ? Math.round(subtotal * TAX_RATE) : 0;
+    const tax = Math.round(subtotal * TAX_RATE);
     const total = subtotal + tax;
 
     // 4. 顯示
@@ -571,14 +570,9 @@
     const rateNote = foil.sur > 0 ? `$${basePrice}＋$${foil.sur}箔色` : `$${sidePrice}`;
     document.getElementById('resProcess').innerText = baseFee > 0 ? `$0（已併入基本費）` : `$${finalProcessFee}（${quantity} 個 × ${rateNote}）`;
 
-    if (needInvoice) {
-      document.getElementById('taxRow').style.display = 'flex';
-      document.getElementById('resTax').innerText = `$${tax}`;
-    } else {
-      document.getElementById('taxRow').style.display = 'none';
-    }
-
-    document.getElementById('resTotal').innerText = `$${total}`;
+    document.getElementById('resSubtotal').innerText = `$${subtotal.toLocaleString()}`;
+    document.getElementById('resTax').innerText = `$${tax.toLocaleString()}`;
+    document.getElementById('resTotal').innerText = `$${total.toLocaleString()}`;
 
     // 5. 加量建議（依當下選的面數動態算，不寫死）
     const suggestTip = document.getElementById('suggestTip');
