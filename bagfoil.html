@@ -129,6 +129,37 @@
     color:var(--text-mut);margin-top:26px;
   }
   .foot a{color:var(--text-mut)}
+
+  /* 燙金範圍：可燙區間提示與超標警告 */
+  .subhead{
+    font-family:var(--serif);font-size:.86rem;font-weight:600;letter-spacing:.16em;
+    color:var(--ink);margin:24px 0 12px;padding-bottom:7px;
+    border-bottom:1px solid var(--line);
+  }
+  .subhead:first-of-type{margin-top:0}
+  .limit{
+    margin:2px 0 18px;padding:11px 14px;
+    background:var(--paper-2);
+    border:1px solid var(--line);border-left:2px solid var(--gold);border-radius:2px;
+    font-size:.82rem;line-height:1.7;
+  }
+  .limit .k{color:var(--text-mut);letter-spacing:.06em}
+  .limit .v{font-family:var(--serif);font-weight:600;color:var(--ink)}
+  .limit.bad{border-left-color:var(--red)}
+  .limit.bad .v{color:var(--red)}
+  .warn{
+    margin-top:28px;padding:20px;
+    background:#fbf3f1;
+    border:1px solid rgba(124,31,26,.3);border-left:3px solid var(--red);border-radius:2px;
+  }
+  .warn h2{
+    font-family:var(--serif);font-size:1rem;font-weight:700;letter-spacing:.1em;
+    margin:0 0 9px;color:var(--red);
+  }
+  .warn p{margin:0;font-size:.86rem;line-height:1.8;color:var(--text-dk)}
+  .warn b{color:var(--red)}
+  input.bad{border-color:var(--red);background:#fdf8f7}
+
   @media(max-width:420px){
     .row{flex-direction:column;gap:0}
     .sheet{padding:28px 20px 24px}
@@ -143,24 +174,50 @@
   <p class="lede">客戶自備現成紙袋・單純燙金加工試算</p>
   <div class="rule"></div>
 
+  <div class="subhead">紙 袋 規 格</div>
+
+  <div class="row">
+    <div class="field">
+      <label for="bagFace">面寬（公分）</label>
+      <input type="number" id="bagFace" value="25" min="0" step="0.1" oninput="updateLimit()">
+    </div>
+    <div class="field">
+      <label for="bagHeight">袋高（公分）</label>
+      <input type="number" id="bagHeight" value="33" min="0" step="0.1" oninput="updateLimit()">
+    </div>
+  </div>
+
+  <div class="field">
+    <label for="bagSide">側寬（公分）</label>
+    <input type="number" id="bagSide" value="8" min="0" step="0.1" oninput="updateLimit()">
+  </div>
+
+  <div class="limit" id="limitBox">
+    <span class="k">最大可燙範圍</span>　<span class="v" id="limitText">—</span>
+  </div>
+
+  <div class="subhead">燙 金 圖 案</div>
+
+  <div class="row">
+    <div class="field">
+      <label for="artWidth">圖案寬度・橫（公分）</label>
+      <input type="number" id="artWidth" value="5" min="0" step="0.1" oninput="updateLimit()">
+    </div>
+    <div class="field">
+      <label for="artHeight">圖案高度・直（公分）</label>
+      <input type="number" id="artHeight" value="5" min="0" step="0.1" oninput="updateLimit()">
+    </div>
+  </div>
+
   <div class="field">
     <label for="isReprint">是否為 3 年內再版（免版費）</label>
-    <select id="isReprint" onchange="togglePlateInput()">
+    <select id="isReprint">
       <option value="no">否 — 新圖案，需算版費</option>
       <option value="yes">是 — 舊圖案，版費 $0</option>
     </select>
   </div>
 
-  <div class="row" id="plateSizeRow">
-    <div class="field">
-      <label for="length">圖案長度（公分）</label>
-      <input type="number" id="length" value="5" min="0" step="0.1">
-    </div>
-    <div class="field">
-      <label for="width">圖案寬度（公分）</label>
-      <input type="number" id="width" value="5" min="0" step="0.1">
-    </div>
-  </div>
+  <div class="subhead">數 量 與 加 工</div>
 
   <div class="row">
     <div class="field">
@@ -193,6 +250,11 @@
     <div class="tip" id="suggestTip"></div>
   </div>
 
+  <div class="warn" id="warnBox" style="display:none;">
+    <h2>⚠ 無法製作</h2>
+    <p id="warnText"></p>
+  </div>
+
   <div class="foot">燙金・模切・代工　｜　高雄　｜　<a href="https://xicheng-print.com">xicheng-print.com</a></div>
 </div>
 
@@ -203,21 +265,103 @@
   const PLATE_MIN = 200;      // 版費最低收費
   const TAX_RATE = 0.05;
 
-  function togglePlateInput() {
-    const isReprint = document.getElementById('isReprint').value;
-    const plateSizeRow = document.getElementById('plateSizeRow');
-    plateSizeRow.style.display = (isReprint === 'yes') ? 'none' : 'flex';
+  // 燙金範圍限制（機台夾具與袋型結構限制，非成本）
+  const EDGE_MARGIN = 2;      // 左右／上下各留的安全邊
+  const TOP_CLEAR   = 5;      // 袋口提繩區，不可燙
+
+  const num = id => parseFloat(document.getElementById(id).value) || 0;
+
+  // 最大可燙範圍
+  //   寬 = 面寬 − 側寬 − 2
+  //   高 = 袋高 − 5 − (側寬 ÷ 2) − 2
+  function maxFoilArea() {
+    const face = num('bagFace'), height = num('bagHeight'), side = num('bagSide');
+    return {
+      face, height, side,
+      w: face - side - EDGE_MARGIN,
+      h: height - TOP_CLEAR - (side / 2) - EDGE_MARGIN
+    };
+  }
+
+  const r1 = n => Math.round(n * 10) / 10;   // 顯示到小數第 1 位
+
+  // 即時更新「最大可燙範圍」提示，並標紅超標的欄位
+  function updateLimit() {
+    const m = maxFoilArea();
+    const box = document.getElementById('limitBox');
+    const txt = document.getElementById('limitText');
+    const aw = num('artWidth'), ah = num('artHeight');
+    const wIn = document.getElementById('artWidth');
+    const hIn = document.getElementById('artHeight');
+
+    if (m.face <= 0 || m.height <= 0) {
+      box.className = 'limit';
+      txt.innerText = '請先填紙袋面寬、袋高、側寬';
+      wIn.classList.remove('bad'); hIn.classList.remove('bad');
+      return;
+    }
+    if (m.w <= 0 || m.h <= 0) {
+      box.className = 'limit bad';
+      txt.innerText = '此袋型算不出可燙範圍，請確認尺寸是否填錯';
+      return;
+    }
+
+    const overW = aw > m.w, overH = ah > m.h;
+    box.className = 'limit' + ((overW || overH) ? ' bad' : '');
+    txt.innerText = `寬 ${r1(m.w)} × 高 ${r1(m.h)} 公分`;
+    wIn.classList.toggle('bad', overW);
+    hIn.classList.toggle('bad', overH);
   }
 
   function calculatePrice() {
     const isReprint = document.getElementById('isReprint').value;
-    const length = parseFloat(document.getElementById('length').value) || 0;
-    const width = parseFloat(document.getElementById('width').value) || 0;
+    const length = num('artWidth');
+    const width = num('artHeight');
     const sideSelect = document.getElementById('sideType');
     const sidePrice = parseInt(sideSelect.value);
     const sideName = sideSelect.value === '5' ? '單面' : '雙面';
     const quantity = parseInt(document.getElementById('quantity').value) || 0;
     const needInvoice = document.getElementById('needInvoice').checked;
+
+    updateLimit();
+
+    // 0. 燙金範圍檢查 —— 燙不下就不報價
+    const resultBox = document.getElementById('resultBox');
+    const warnBox = document.getElementById('warnBox');
+    const m = maxFoilArea();
+
+    const block = msg => {
+      document.getElementById('warnText').innerHTML = msg;
+      warnBox.style.display = 'block';
+      resultBox.style.display = 'none';
+      warnBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    };
+
+    if (m.face <= 0 || m.height <= 0 || m.side <= 0) {
+      block('請先填寫紙袋的<b>面寬、袋高、側寬</b>，才能判斷這個圖案燙不燙得下。');
+      return;
+    }
+    if (m.w <= 0 || m.h <= 0) {
+      block('依這組紙袋尺寸算出來的可燙範圍是負的，<b>尺寸可能填錯了</b>，請重新確認面寬／袋高／側寬。');
+      return;
+    }
+    if (length <= 0 || width <= 0) {
+      block('請填寫<b>圖案的寬度與高度</b>。');
+      return;
+    }
+    if (length > m.w || width > m.h) {
+      const over = [];
+      if (length > m.w) over.push(`寬 ${r1(length)} 公分超出上限 ${r1(m.w)} 公分`);
+      if (width > m.h) over.push(`高 ${r1(width)} 公分超出上限 ${r1(m.h)} 公分`);
+      block(
+        `<b>燙金面積太大，無法製作，請調整尺寸。</b><br>` +
+        `這款紙袋（面寬 ${r1(m.face)}・袋高 ${r1(m.height)}・側寬 ${r1(m.side)}）的最大可燙範圍是 ` +
+        `<b>寬 ${r1(m.w)} × 高 ${r1(m.h)} 公分</b>，目前圖案${over.join('、')}。<br>` +
+        `若圖案可以轉向或縮小，調整後再試算一次。`
+      );
+      return;
+    }
+    warnBox.style.display = 'none';
 
     // 1. 版費
     let plateFee = 0;
@@ -261,6 +405,8 @@
 
     document.getElementById('resultBox').style.display = 'block';
   }
+
+  updateLimit();   // 開頁先算一次可燙範圍
 </script>
 
 </body>
