@@ -383,8 +383,9 @@
   const TAX_RATE = 0.05;
 
   // 燙金範圍限制（機台夾具與袋型結構限制，非成本）
-  const EDGE_MARGIN = 2;      // 左右／上下各留的安全邊
-  const TOP_CLEAR   = 5;      // 袋口提繩區，不可燙
+  const EDGE_W    = 2;        // 寬度方向的安全邊
+  const EDGE_H    = 4;        // 高度方向的安全邊
+  const TOP_CLEAR = 5;        // 袋口提繩區，不可燙
 
   // 箔色（與三角月曆訂購網站同一組，勿各站各一套）
   const FOILS = [
@@ -432,13 +433,13 @@
 
   // --- 最大可燙範圍 ---
   //   寬 = 面寬 − 側寬 − 2
-  //   高 = 袋高 − 5 − (側寬 ÷ 2) − 2
+  //   高 = 袋高 − 5 − (側寬 ÷ 2) − 4
   function maxFoilArea() {
     const face = num('bagFace'), height = num('bagHeight'), side = num('bagSide');
     return {
       face, height, side,
-      w: face - side - EDGE_MARGIN,
-      h: height - TOP_CLEAR - (side / 2) - EDGE_MARGIN
+      w: face - side - EDGE_W,
+      h: height - TOP_CLEAR - (side / 2) - EDGE_H
     };
   }
 
