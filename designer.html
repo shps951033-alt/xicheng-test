@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>設計師報價系統｜喜成印刷</title>
+<meta name="description" content="喜成印刷 設計師報價系統：名片報價與印刷報價線上自助試算，即時得到含稅報價。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#181410; --ink-2:#241e18;
+    --paper:#F7F3E9; --paper-dim:#E9E2D2;
+    --gold-1:#F4E4B0; --gold-2:#A07C36; --gold-3:#C9A464;
+    --muted:#9a8f7d;
+    --nav-w:230px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:'Noto Sans TC',-apple-system,"Microsoft JhengHei",sans-serif;
+    background:radial-gradient(120% 80% at 50% -10%, #2a2218 0%, var(--ink) 55%, #100d0a 100%);
+    color:var(--paper); min-height:100vh; display:flex; flex-direction:column;
+  }
+
+  /* ── 頁首 ── */
+  header{
+    display:flex; align-items:center; gap:14px;
+    padding:14px 20px; border-bottom:1px solid rgba(160,124,54,.28);
+    background:rgba(16,13,10,.72); backdrop-filter:blur(8px);
+    position:sticky; top:0; z-index:30;
+  }
+  .brand{display:flex;flex-direction:column;gap:2px;line-height:1.2}
+  .brand .eyebrow{font-size:11px;letter-spacing:.34em;color:var(--gold-2);font-weight:700}
+  .brand h1{
+    font-family:'Noto Serif TC',serif;font-weight:900;font-size:19px;letter-spacing:.06em;
+    background:linear-gradient(95deg,var(--gold-1),var(--gold-2) 45%,var(--gold-3) 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .hdr-note{margin-left:auto;font-size:12px;color:var(--muted);text-align:right;line-height:1.5}
+  .hdr-note a{color:var(--gold-3);text-decoration:none}
+  @media(max-width:720px){ .hdr-note{display:none} }
+
+  /* ── 版面：左導覽＋內容 ── */
+  .shell{flex:1;display:flex;min-height:0}
+  nav.side{
+    width:var(--nav-w); flex:0 0 var(--nav-w);
+    border-right:1px solid rgba(160,124,54,.22);
+    padding:18px 12px; display:flex; flex-direction:column; gap:6px;
+    background:rgba(20,16,12,.5);
+  }
+  nav.side .navlabel{
+    font-size:11px;letter-spacing:.24em;color:var(--gold-2);font-weight:700;
+    padding:2px 10px 8px;
+  }
+  nav.side button{
+    display:flex;align-items:center;gap:10px;width:100%;text-align:left;
+    padding:13px 14px;border-radius:11px;cursor:pointer;
+    border:1px solid transparent;background:transparent;
+    color:var(--paper-dim);font-family:inherit;font-size:15px;font-weight:600;
+    transition:background .15s,border-color .15s,color .15s;
+  }
+  nav.side button .ico{font-size:17px;line-height:1;flex:0 0 auto}
+  nav.side button small{display:block;font-size:11px;font-weight:400;color:var(--muted);margin-top:2px}
+  nav.side button:hover{background:rgba(160,124,54,.12)}
+  nav.side button[aria-current="true"]{
+    background:linear-gradient(95deg,rgba(244,228,176,.16),rgba(160,124,54,.14));
+    border-color:rgba(201,164,100,.55); color:var(--gold-1);
+  }
+  nav.side .foot{margin-top:auto;padding:12px 12px 4px;font-size:11px;color:var(--muted);line-height:1.7}
+  nav.side .foot a{color:var(--gold-3);text-decoration:none}
+
+  main{flex:1;min-width:0;position:relative;background:#100d0a}
+  iframe{width:100%;height:100%;border:0;display:block;background:#100d0a}
+  .loading{
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    color:var(--muted);font-size:14px;letter-spacing:.1em;pointer-events:none;
+    transition:opacity .25s; }
+  .loading.hide{opacity:0}
+
+  /* ── 手機：導覽改成頂部橫向 ── */
+  @media(max-width:720px){
+    .shell{flex-direction:column}
+    nav.side{
+      width:auto;flex:0 0 auto;flex-direction:row;overflow-x:auto;gap:8px;
+      border-right:0;border-bottom:1px solid rgba(160,124,54,.22);padding:10px 12px;
+    }
+    nav.side .navlabel,nav.side .foot{display:none}
+    nav.side button{width:auto;white-space:nowrap;padding:10px 16px;font-size:14px}
+    nav.side button small{display:none}
+    main{min-height:70vh}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <span class="eyebrow">C CHENG</span>
+    <h1>設計師報價系統</h1>
+  </div>
+  <div class="hdr-note">
+    線上自助試算 · 報價含 5% 營業稅<br>
+    有問題請洽 LINE <a href="https://line.me/R/ti/p/%40623bfkyg" target="_blank" rel="noopener">@623bfkyg</a>
+  </div>
+</header>
+
+<div class="shell">
+  <nav class="side" id="nav">
+    <div class="navlabel">報價項目</div>
+    <button data-src="cards.html" aria-current="true">
+      <span class="ico">🪪</span>
+      <span>名片報價<small>合版／美術紙名片</small></span>
+    </button>
+    <button data-src="print.html?public=1">
+      <span class="ico">🖨️</span>
+      <span>印刷報價<small>合版／獨立版・紙袋</small></span>
+    </button>
+    <div class="foot">
+      喜成印刷｜燙金 · 軋型 · 紙袋 · 紙盒<br>
+      高雄市阿蓮區峰園路 58 號<br>
+      <a href="tel:+886986990812">0986-990-812</a>
+    </div>
+  </nav>
+
+  <main>
+    <div class="loading" id="loading">載入中…</div>
+    <iframe id="frame" src="cards.html" title="報價工具"></iframe>
+  </main>
+</div>
+
+<script>
+(function(){
+  var nav=document.getElementById('nav'),
+      frame=document.getElementById('frame'),
+      loading=document.getElementById('loading');
+
+  function show(btn){
+    nav.querySelectorAll('button').forEach(function(b){
+      b.setAttribute('aria-current', b===btn ? 'true' : 'false');
+    });
+    loading.classList.remove('hide');
+    frame.src=btn.dataset.src;
+    /* 記住上次選的分頁，重整後留在原處 */
+    try{ localStorage.setItem('xc_designer_tab', btn.dataset.src); }catch(e){}
+  }
+
+  nav.querySelectorAll('button').forEach(function(b){
+    b.addEventListener('click', function(){ show(b); });
+  });
+
+  frame.addEventListener('load', function(){ loading.classList.add('hide'); });
+
+  /* 還原上次的分頁 */
+  try{
+    var last=localStorage.getItem('xc_designer_tab');
+    if(last){
+      var b=[].slice.call(nav.querySelectorAll('button')).filter(function(x){return x.dataset.src===last;})[0];
+      if(b) show(b);
+    }
+  }catch(e){}
+})();
+</script>
+</body>
+</html>
