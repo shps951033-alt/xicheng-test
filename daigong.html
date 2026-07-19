@@ -29,6 +29,13 @@
   .areas{margin-top:8px}
   .areas .ar{display:flex;gap:8px;align-items:center;margin-bottom:7px}
   .areas .ar span{font-size:12px;color:var(--sub);min-width:42px}
+  .areas .ar input[type=number]{flex:1;min-width:0}
+  /* 「同上」＝這一處跟上一處相同；第 1 處用等寬佔位撐開，讓各列輸入框左右對齊 */
+  .areas .ar .rs,.areas .ar .rs-pad{flex:none;width:52px;display:flex;align-items:center;gap:4px;
+    margin:0;font-size:12px;color:var(--sub);cursor:pointer;white-space:nowrap}
+  .areas .ar .rs input{width:15px;height:15px;flex:none;accent-color:var(--gold)}
+  /* 自動帶入的欄位鎖成唯讀：虛線＋灰字，一眼看得出「這不是手填的」 */
+  .areas .ar input.locked{background:#0c0e13;color:var(--sub);border-style:dashed;cursor:not-allowed}
   .hotblk{background:#11141a;border:1px solid var(--line);border-radius:10px;padding:11px 12px;margin-top:10px}
   .hotblk .blk-h{font-size:13px;color:var(--gold2);font-weight:700;margin-bottom:2px}
   .hotblk label{margin-top:6px}
@@ -71,16 +78,26 @@
   </div>
   <label>數量（張）</label>
   <input type="number" id="qty" min="1" placeholder="例：3000" oninput="calc()">
-  <label>燙金色數</label>
-  <select id="hotColors" onchange="buildHotBlocks();calc()"></select>
-  <label class="chk"><input type="checkbox" id="hotSameN" checked onchange="buildHotBlocks();calc()"> 每色燙金處數相同</label>
-  <label class="chk"><input type="checkbox" id="hotSameA" checked onchange="buildHotBlocks();calc()"> 每色燙金面積相同</label>
+  <!-- 2026-07-19 新增：表面處理只做註記，暫不影響金額（計價方式老闆待議） -->
+  <label class="chk"><input type="checkbox" id="surface" onchange="onSurface()"> 紙張已做表面處理</label>
+  <div id="surfaceBox" style="display:none">
+    <select id="surfaceType" onchange="calc()">
+      <option value="亮膜／霧膜">亮膜／霧膜（大面積最高 ×1.1）</option>
+      <option value="金油">金油（大面積最高 ×1.3）</option>
+      <option value="上膜＋金油">上膜＋金油（大面積最高 ×1.4）</option>
+    </select>
+    <div class="hint">※ 已上膜／上金油的紙，燙金箔咬不牢、要降速或換箔種 → 只加在燙金加工費，製版費與金箔材料不變。<br>
+      <b>加成隨面積變動</b>：每色用箔 100c㎡ 以下不加價（小圖難度與純紙相當），1200c㎡ 以上吃滿，中間按比例。<br>
+      係數為暫估，會用實際成交價校準。觸感膜（絲絨膜）另議，請直接來電。</div>
+  </div>
 </div>
 
 <!-- 燙金 -->
 <div class="card">
   <h2>② 燙金　<span class="tag">基本費 200／㎠×4</span></h2>
-  <div class="hint">※ 色數在 ① 選。每色一塊版、可燙多處；面積逐處填，每處可不同。兩處最短距離 ≤ 3cm 算一處。</div>
+  <label>燙金色數</label>
+  <select id="hotColors" onchange="buildHotBlocks();calc()"></select>
+  <div class="hint">※ 每色一塊版、可燙多處；處數與面積逐色各自填，每處可不同。兩處最短距離 ≤ 3cm 算一處。</div>
   <div id="hotBlocks"></div>
   <label class="chk"><input type="checkbox" id="hotOwn" onchange="calc()"> 客戶自備燙金版（免製版費）</label>
 </div>
@@ -164,7 +181,6 @@ const PAPERS = [
 /* ===== 工繳參數（暫估・待校正） ===== */
 const HOT_FLOOR = {semi:1000, rotary:1250};
 const EMB_FLOOR = {a4:600, g16:600, g8:800, g4:900, duo:1000, full:1500, s8:800, s4:1000, s3:1200, s2:1500, s1:1800, default:800};
-const AREA_RATE = 0.01;
 const CARD_HOT  = (q)=> q>=5000?0.6 : q>=2000?0.7 : 0.75;
 const CARD_EMB  = (q,multi)=> { let u = q>=5000?0.5:0.6; return multi?Math.max(u,0.8):u; };
 const FULL_RATIO = 0.5;
@@ -177,6 +193,27 @@ const AREA_REF = 1200;
 // 2026-07-11 老闆定＝$800（校準#13：菊4開100張，工繳僅算$519/647，實際現金＝押票＝800、備註「基本費」）。
 // 目前全域單一值；日後若依紙張大小／難度分級再改成表。地板綁「現金與押票」兩者、且觸底時押票不另加倍率（故兩者同為800）。
 const ORDER_MIN = 800;
+// 表面處理加成（2026-07-19 老闆定・粗胚待校準）：同業送來的紙已上膜／上金油時，箔咬不牢，
+// 要換箔種或降速 → 只加在「燙金加工費」（＝難度＝工時），製版費與金箔材料不動。
+// 「上膜＋金油」＝1.4，是兩層都有的估值，非 1.1×1.3 的相乘；等實際成交價回來一起校準。
+const SURFACE = {'亮膜／霧膜':1.1, '金油':1.3, '上膜＋金油':1.4};
+// ⚠ 加成不是固定值，隨燙金面積爬升（2026-07-19 老闆指正）：
+//    小圖燙在膜上，難度與純紙幾乎相同 → 不該加價；
+//    面積一大才會掉箔、要降速，工時顯著拉長 → 才吃到滿係數。
+//    SURF_A0 以下不加成，SURF_A1 以上吃滿，中間線性。以「每色各自的用箔面積」判斷，
+//    因為每色是各自一趟過機，難度本來就分開算。
+const SURF_A0 = 100;         // c㎡：名片級小圖，膜的影響可忽略
+const SURF_A1 = AREA_REF;    // c㎡：＝1200，沿用工繳曲線的面積基準（約菊全 1/5 版面）
+function surfaceRamp(area){
+  if(area<=SURF_A0) return 0;
+  if(area>=SURF_A1) return 1;
+  return (area-SURF_A0)/(SURF_A1-SURF_A0);
+}
+// 這一色（用箔面積 area c㎡）實際吃到的加成倍率
+function surfaceFactorFor(area){
+  const k=SURFACE[surfaceText()];
+  return k ? 1+(k-1)*surfaceRamp(area) : 1;
+}
 function foilPrice(color){ return FOIL_PRICE[color]||FOIL_DEFAULT; }
 // 工繳曲線（baseFee）：2026-07-02 由 9 筆真實成交三次校準（截距2.85、斜率-1.384、面積除數1200），200~10000張 6 點 ±3%。
 // 2026-07-11 曾試全域 +41%（PRICE_LEVEL 1.41）擬合校準#12，但真實鄰點（#6 200張870、#2 500張1500、#3/#4 10000張）
@@ -190,7 +227,6 @@ const SEASON = {1:1.10,2:1.06,3:1.00,4:0.90,5:0.85,6:0.83,7:0.82,8:0.84,9:0.95,1
 // 手動蓋台：想不管月份強制某係數就填數字（如缺工急單填 0.85）；平常設 null 走上表。
 const SEASON_OVERRIDE = null;
 function seasonFactor(){ if(SEASON_OVERRIDE!=null) return SEASON_OVERRIDE; var m=(new Date()).getMonth()+1; return SEASON[m]||1; }
-function foilAreaPerSheet(cols){ var s=0; cols.forEach(function(col){ if(col.n>0) col.areas.forEach(function(a){ s+=(a.w+2)*a.l; }); }); return s; }
 function foilCostTotal(cols,qty){ var sum=0; cols.forEach(function(col){ if(col.n>0){ var ar=0; col.areas.forEach(function(a){ ar+=(a.w+2)*a.l; }); sum += (ar*qty/FOIL_YIELD/768000)*foilPrice(col.color); } }); return sum; }
 const HOT_COLORS = ['金','銀','霧金','霧銀','古銅','蕭光古銅','紅','藍','綠','黑','白','珍珠白','透明箔','其他'];
 function hotColorOptions(saved){
@@ -221,11 +257,20 @@ function init(){
   const en=document.getElementById('embN');
   { let o0=document.createElement('option');o0.value=0;o0.textContent='無';en.appendChild(o0);
     for(let i=1;i<=20;i++){let o=document.createElement('option');o.value=i;o.textContent=i+' 處';en.appendChild(o)} }
-  // 燙金色數選單（在 ①，驅動色塊生成）
+  // 燙金色數選單（在 ②，驅動色塊生成）
   const hc=document.getElementById('hotColors');
   { let o0=document.createElement('option');o0.value=0;o0.textContent='無';hc.appendChild(o0);
     for(let i=1;i<=8;i++){let o=document.createElement('option');o.value=i;o.textContent=i+' 色';hc.appendChild(o)} }
   buildHotBlocks();buildAreas('emb');calc();
+}
+function onSurface(){
+  document.getElementById('surfaceBox').style.display =
+    document.getElementById('surface').checked ? 'block' : 'none';
+  calc();
+}
+function surfaceText(){
+  return document.getElementById('surface').checked
+    ? document.getElementById('surfaceType').value : '';
 }
 function onPaper(){
   document.getElementById('customPaper').style.display = (document.getElementById('paper').value==='other')?'flex':'none';
@@ -260,55 +305,63 @@ function getAreas(t){
   return arr;
 }
 
-// ── 燙金：色數（在①）每色一塊；塊內逐處填面積。①兩勾選：每色處數相同／每色面積相同 ──
+// ── 燙金：色數（在②）每色一塊；塊內逐處填面積 ──
+// 2026-07-19 老闆指示移除「每色處數相同／每色面積相同」兩個勾選 →
+// 一律逐色各自填處數與面積（原本勾選時是沿用第 1 色的數字）。
 function effHotN(c){
-  const sameN=document.getElementById('hotSameN').checked;
-  const sel=document.getElementById('hotN_'+(sameN?0:c));
+  const sel=document.getElementById('hotN_'+c);
   return sel?(+sel.value||0):0;
 }
 // 重建前先快照已填的處數＋面積，重建後接回（避免切換勾選/改處數時被清空）
 function snapHot(){
   const n={},a={};
   document.querySelectorAll('#hotBlocks select[id^="hotN_"]').forEach(s=>{n[s.id]=s.value;});
-  document.querySelectorAll('#hotBlocks .areas input').forEach(inp=>{
+  document.querySelectorAll('#hotBlocks .areas input[type=number]').forEach(inp=>{
     const bx=inp.closest('[id^="hotAreas_"]'); if(!bx)return;
     a[bx.id+'|'+inp.dataset.i+'|'+inp.dataset.d]=inp.value;
   });
-  const co={},coOther={};
+  const rs={};
+  document.querySelectorAll('#hotBlocks .areas input.rowsame').forEach(cb=>{
+    const bx=cb.closest('[id^="hotAreas_"]'); if(!bx)return;
+    rs[bx.id+'|'+cb.dataset.i]=cb.checked;
+  });
+  const co={},coOther={},as={};
   document.querySelectorAll('#hotBlocks select[id^="hotColor_"]').forEach(s=>{co[s.id]=s.value;});
   document.querySelectorAll('#hotBlocks input[id^="hotColorOther_"]').forEach(i=>{coOther[i.id]=i.value;});
-  return {n,a,co,coOther};
+  document.querySelectorAll('#hotBlocks input[id^="hotAreaSame_"]').forEach(i=>{as[i.id]=i.checked;});
+  return {n,a,co,coOther,as,rs};
 }
 function buildHotBlocks(){
   const colors=+document.getElementById('hotColors').value||0;
-  const sameN=document.getElementById('hotSameN').checked;
-  const sameA=document.getElementById('hotSameA').checked;
   const box=document.getElementById('hotBlocks');
   const snap=snapHot();
   box.innerHTML='';
   if(colors===0)return;
   const blocks=colors;   // 每色恆為一個獨立框（面積條件逐色不同）
   for(let c=0;c<blocks;c++){
-    const isFirst=c===0;
     const title=(colors>1)?('第 '+(c+1)+' 色'):'每色（共 1 色）';
     const blk=document.createElement('div');blk.className='hotblk';
     let h='<div class="blk-h">'+title+'</div>';
     h+=hotColorRow(c, snap.co&&snap.co['hotColor_'+c], snap.coOther&&snap.coOther['hotColorOther_'+c], '燙金顏色');
-    if(isFirst||!sameN){ h+='<label>燙金處數</label><select id="hotN_'+c+'" onchange="onHotN('+c+')"></select>'; }
-    else{ h+='<div class="hint" style="margin-top:6px">處數同第 1 色</div>'; }
-    if(isFirst||!sameA){ h+='<div id="hotAreas_'+c+'" class="areas"></div>'; }
-    else{ h+='<div class="hint">面積同第 1 色</div>'; }
+    h+='<label>燙金處數</label><select id="hotN_'+c+'" onchange="onHotN('+c+')"></select>';
+    h+='<label class="chk"><input type="checkbox" id="hotAreaSame_'+c+'"'+(snap.as['hotAreaSame_'+c]?' checked':'')+
+       ' onchange="onHotAreaSame('+c+')"> 每處燙金面積相同</label>';
+    h+='<div id="hotAreas_'+c+'" class="areas"></div>';
     blk.innerHTML=h;
     box.appendChild(blk);
     const sel=blk.querySelector('#hotN_'+c);
     if(sel){ for(let i=1;i<=20;i++){let o=document.createElement('option');o.value=i;o.textContent=i+' 處';sel.appendChild(o)} sel.value=snap.n['hotN_'+c]||'1'; }
-    if(isFirst||!sameA){ buildHotAreas(c); restoreAreas(c,snap); }
+    buildHotAreas(c); restoreAreas(c,snap); syncHotAreas(c);
   }
 }
 function restoreAreas(c,snap){
-  document.querySelectorAll('#hotAreas_'+c+' input').forEach(inp=>{
+  document.querySelectorAll('#hotAreas_'+c+' input[type=number]').forEach(inp=>{
     const k='hotAreas_'+c+'|'+inp.dataset.i+'|'+inp.dataset.d;
     if(snap.a[k]!==undefined) inp.value=snap.a[k];
+  });
+  document.querySelectorAll('#hotAreas_'+c+' input.rowsame').forEach(cb=>{
+    const k='hotAreas_'+c+'|'+cb.dataset.i;
+    if(snap.rs&&snap.rs[k]!==undefined) cb.checked=snap.rs[k];
   });
 }
 function buildHotAreas(c){
@@ -318,30 +371,70 @@ function buildHotAreas(c){
   const n=effHotN(c);
   box.innerHTML='';
   if(n===0)return;
+  const prevRS={}; box.querySelectorAll('input.rowsame').forEach(cb=>{prevRS[cb.dataset.i]=cb.checked;});
   for(let i=0;i<n;i++){
     const d=document.createElement('div');d.className='ar';
     d.innerHTML='<span>第'+(i+1)+'處</span>'+
-      '<input type="number" min="0" placeholder="寬cm" data-c="'+c+'" data-i="'+i+'" data-d="w" oninput="calc()">'+
-      '<input type="number" min="0" placeholder="長cm" data-c="'+c+'" data-i="'+i+'" data-d="l" oninput="calc()">';
+      '<input type="number" min="0" placeholder="寬cm" data-c="'+c+'" data-i="'+i+'" data-d="w" oninput="onHotArea('+c+')">'+
+      '<input type="number" min="0" placeholder="長cm" data-c="'+c+'" data-i="'+i+'" data-d="l" oninput="onHotArea('+c+')">'+
+      // 第 1 處沒有「上一處」可同 → 放個等寬佔位，讓每一列的輸入框對齊
+      (i===0 ? '<span class="rs-pad"></span>'
+             : '<label class="rs" title="同上一處"><input type="checkbox" class="rowsame" data-i="'+i+
+               '" onchange="onRowSame('+c+')">同上</label>');
     box.appendChild(d);
   }
-  box.querySelectorAll('input').forEach(inp=>{const k=inp.dataset.i+'|'+inp.dataset.d; if(prev[k]!==undefined)inp.value=prev[k];});
+  box.querySelectorAll('input[type=number]').forEach(inp=>{const k=inp.dataset.i+'|'+inp.dataset.d; if(prev[k]!==undefined)inp.value=prev[k];});
+  box.querySelectorAll('input.rowsame').forEach(cb=>{ if(prevRS[cb.dataset.i]!==undefined) cb.checked=prevRS[cb.dataset.i]; });
+}
+// ── 面積連動：兩層 ──
+// 「每處燙金面積相同」＝整色一次到底，等同把每一列的「同上」全部打勾（鏈式往下傳）。
+// 「同上」＝單列跟上一處相同；只要動了任何一列，就代表這色不再是「每處都一樣」，
+//   所以主勾選自動放開——但已填的數字全部留著，只是恢復成可各自編輯。
+// 值照樣顯示出來（而非隱藏欄位），同業一眼看得到每處實際尺寸，不必推敲。
+function hotAreaSame(c){
+  const cb=document.getElementById('hotAreaSame_'+c);
+  return !!(cb&&cb.checked);
+}
+function syncHotAreas(c){
+  const box=document.getElementById('hotAreas_'+c);
+  if(!box)return;
+  const rows=[...box.querySelectorAll('.ar')];
+  rows.forEach((row,i)=>{
+    if(i===0)return;
+    const cb=row.querySelector('input.rowsame');
+    const on=!!(cb&&cb.checked);
+    const prevIns=rows[i-1].querySelectorAll('input[type=number]');
+    row.querySelectorAll('input[type=number]').forEach((inp,k)=>{
+      inp.readOnly=on;
+      inp.classList.toggle('locked',on);
+      if(on) inp.value=prevIns[k].value;   // 由上往下逐列傳遞，可連鎖
+    });
+  });
+}
+function onHotArea(c){ syncHotAreas(c); calc(); }
+// 主勾選：一次設定全部列
+function onHotAreaSame(c){
+  const on=hotAreaSame(c);
+  document.querySelectorAll('#hotAreas_'+c+' input.rowsame').forEach(cb=>{cb.checked=on;});
+  syncHotAreas(c); calc();
+}
+// 單列「同上」：放開主鎖定（數字保留），改由各列自己決定
+function onRowSame(c){
+  const m=document.getElementById('hotAreaSame_'+c);
+  if(m) m.checked=false;
+  syncHotAreas(c); calc();
 }
 function onHotN(c){
-  const sameN=document.getElementById('hotSameN').checked;
-  if(sameN&&c===0) buildHotBlocks();   // 第1色處數變→全體連動重建
-  else buildHotAreas(c);
+  buildHotAreas(c);
+  syncHotAreas(c);
   calc();
 }
 // 回傳每色資料：[{n:處數, areas:[{w,l}]}]
 function getHotColors(){
   const colors=+document.getElementById('hotColors').value||0;
   if(colors===0)return [];
-  const sameN=document.getElementById('hotSameN').checked;
-  const sameA=document.getElementById('hotSameA').checked;
   const readAreas=(c,n)=>{
-    const srcC=sameA?0:c;
-    const ins=document.querySelectorAll('#hotAreas_'+srcC+' input');
+    const ins=document.querySelectorAll('#hotAreas_'+c+' input');
     const rd=(i,d)=>{let el=[...ins].find(x=>+x.dataset.i===i&&x.dataset.d===d);return el?(+el.value||0):0};
     let a=[];for(let i=0;i<n;i++)a.push({w:rd(i,'w'),l:rd(i,'l')});return a;
   };
@@ -353,7 +446,7 @@ function getHotColors(){
   };
   let arr=[];
   for(let c=0;c<colors;c++){
-    const sel=document.getElementById('hotN_'+(sameN?0:c));
+    const sel=document.getElementById('hotN_'+c);
     const n=sel?(+sel.value||0):0;
     arr.push({n,areas:readAreas(c,n),color:colOf(c)});
   }
@@ -428,18 +521,26 @@ function calc(){
   const fwEl=document.getElementById('fitWarn');
   if(fw){fwEl.style.display='block';fwEl.textContent='⚠ 落版警告：'+fw;}else{fwEl.style.display='none';}
 
-  // 加工費＋金箔成本（市場參考價）｜心中預期價（0.01 上限參考）
-  let foilMat=0, hotFee=0, embLabor=0, feePerSheet=0, expectHot=0;
+  // 加工費＋金箔成本（市場參考價）
+  // 2026-07-19 老闆指示移除「心中預期價（面積×0.01 上限參考）」，改顯示每張單價。
+  let foilMat=0, hotFee=0, embLabor=0, feePerSheet=0, surfEff=1;
   if(qty>0){
     if(hotN>0){
-      const foilPS = foilAreaPerSheet(cols);                 // 用箔／張 cm²
-      expectHot = Math.round(foilPS*qty*AREA_RATE);           // 心中預期工繳（0.01）
       if(mc==='card'){
-        hotFee = Math.round(qty*hotC*CARD_HOT(qty));          // 名片：車數×單價（材料內含）
+        // 名片：車數×單價（材料內含）。面積本來就小（9×5.4＝48.6c㎡），加成幾乎為 0，符合「小圖不加價」
+        var cardA=0; cols.forEach(function(col){ if(col.n>0) col.areas.forEach(function(a){ cardA+=(a.w+2)*a.l; }); });
+        surfEff = surfaceFactorFor(cardA);
+        hotFee = Math.round(qty*hotC*CARD_HOT(qty)*surfEff);
       }else{
-        foilMat = foilCostTotal(cols,qty);                    // 金箔材料（損耗 85%）
-        var perSheet=0;                                       // 每色一趟過機：各自 baseFee×面積倍率，再加總
-        cols.forEach(function(col){ if(col.n>0){ var ca=0; col.areas.forEach(function(a){ ca+=(a.w+2)*a.l; }); perSheet += baseFee(qty)*Math.max(1, ca/AREA_REF); } });
+        foilMat = foilCostTotal(cols,qty);                    // 金箔材料（損耗 85%）※ 表面處理不加在材料上
+        var perSheet=0, perSheetRaw=0;                        // 每色一趟過機：各自 baseFee×面積倍率，再加總
+        cols.forEach(function(col){ if(col.n>0){
+          var ca=0; col.areas.forEach(function(a){ ca+=(a.w+2)*a.l; });
+          var unit=baseFee(qty)*Math.max(1, ca/AREA_REF);
+          perSheetRaw += unit;
+          perSheet    += unit*surfaceFactorFor(ca);           // 加成逐色判定：大面積的那色才吃得重
+        } });
+        surfEff = perSheetRaw>0 ? perSheet/perSheetRaw : 1;    // 全案實際吃到的平均加成（供顯示）
         feePerSheet = perSheet * seasonFactor();               // ×季節競爭係數（淡月衝量／旺月保毛利）
         hotFee = Math.round(feePerSheet*qty);                 // 燙加工費（多色＝多次加工，分趟計）
       }
@@ -457,7 +558,6 @@ function calc(){
   const cash = Math.max(rawCash, ORDER_MIN);
   const press = Math.max(rawPress, ORDER_MIN);
   const atFloor = (rawCash < ORDER_MIN);
-  const expectCash = (mc!=='card') ? Math.round(plate + expectHot + embLabor) : null;
 
   // 輸出（一律算出參考價，不再走人工）
   const L=document.getElementById('lines');
@@ -475,11 +575,22 @@ function calc(){
   html+=row2('現金價'+floorTag, NT+f(cash));
   html+=row2('押票價'+floorTag, NT+f(press));
   if(atFloor) html+=row('<span class="est">※ 未達基本費 '+NT+ORDER_MIN.toLocaleString()+'，以基本費計（工繳試算 '+NT+f(rawCash)+'）</span>','');
-  if(expectCash!=null && expectHot>0) html+=row('心中預期價 <span class="est">上限參考</span>', NT+f(expectCash));
+  // 每張單價：同業最常拿來比價的就是這個數字，直接算好、不必自己除
+  if(qty>0) html+=row('每張單價 <span class="est">現金／押票</span>',
+                      NT+(cash/qty).toFixed(2)+'　／　'+NT+(press/qty).toFixed(2));
+  const surf=surfaceText();
+  if(surf){
+    const full=SURFACE[surf];
+    const tail = surfEff<1.005
+      ? '燙金面積小，難度與純紙相當 → 未加價'
+      : ('燙金加工費 ×'+surfEff.toFixed(2)+(surfEff<full-0.005?'（面積未達滿檔，上限 ×'+full+'）':'（已達滿檔）'));
+    html+=row('<span class="est">※ 表面處理（'+surf+'）：'+tail+'</span>','');
+  }
   L.innerHTML=html;
   window.__quote={paper:p,qty,hotN,hotC,embN,plate,
     foilMat:foilMatR,hotFee:hotFee,feePerSheet:feePerSheet,embLabor:embLabor,
-    labor:hotFee+embLabor, cash:cash, press:press, expectCash:expectCash,
+    labor:hotFee+embLabor, cash:cash, press:press,
+    unitCash:(qty>0?cash/qty:0), unitPress:(qty>0?press/qty:0), surface:surf, surfaceF:surfEff,
     mc:mc,ratio:ratio,sf:seasonFactor(),
     hotOwn:hotOwn, embOwn:document.getElementById('embOwn').checked,
     hotCols:cols,hotAreas:hotA,embAreas:embA};
@@ -493,11 +604,12 @@ function specText(){
   const q=window.__quote; const p=q.paper;
   let s='【同行代工詢價】\n';
   s+='紙張：'+(p.n||((p.w+'×'+p.l)+'cm'))+'\n數量：'+q.qty+' 張\n';
+  if(q.surface)s+='表面處理：'+q.surface+(q.surfaceF>1.005?'（大面積燙金難度加成已計入）':'（面積小，未加價）')+'\n';
   s+='燙金：'+q.hotC+' 色／共 '+q.hotN+' 處　打凸：'+q.embN+' 處\n';
   if(q.hotCols&&q.hotCols.length){ const cc=q.hotCols.map(x=>x.color).filter(Boolean).join('、'); if(cc)s+='燙金色：'+cc+'\n'; }
   s+='製版費：'+NT+q.plate.toLocaleString()+'\n';
   s+='系統參考價 現金：'+NT+q.cash.toLocaleString()+'／押票：'+NT+q.press.toLocaleString()+'\n';
-  if(q.expectCash!=null)s+='（心中預期上限：'+NT+q.expectCash.toLocaleString()+'）\n';
+  if(q.qty>0)s+='每張單價 現金：'+NT+q.unitCash.toFixed(2)+'／押票：'+NT+q.unitPress.toFixed(2)+'\n';
   s+='※ 此為參考價，實際以確認檔案後報價為主\n';
   return s;
 }
@@ -519,6 +631,7 @@ function trainText(){
   const fa=a=>a.map((x,i)=>'  '+(i+1)+'. '+x.w+'×'+x.l+'cm').join('\n');
   let s='【訓練資料｜同行燙金打凸代工】\n';
   s+='紙張：'+(p.n||(p.w+'×'+p.l+'cm（自訂）'))+'\n數量：'+q.qty+' 張\n';
+  s+='表面處理：'+(q.surface||'無')+(q.surface?'（實際加成 ×'+q.surfaceF.toFixed(3)+'，上限 ×'+SURFACE[q.surface]+'）':'')+'\n';
   s+='─ 燙金 ─\n色數：'+q.hotC+'　總處數：'+q.hotN+'　自備版：'+(q.hotOwn?'是':'否')+'\n';
   if(q.hotCols&&q.hotCols.length){
     q.hotCols.forEach((col,ci)=>{
@@ -534,7 +647,7 @@ function trainText(){
   s+='燙金加工費：'+NT+(q.hotFee||0).toLocaleString()+(q.feePerSheet?'（'+q.feePerSheet.toFixed(2)+'／張）':'')+'\n';
   if(q.embLabor)s+='打凸加工費：'+NT+q.embLabor.toLocaleString()+'\n';
   s+='現金參考：'+NT+q.cash.toLocaleString()+'／押票參考：'+NT+q.press.toLocaleString()+'\n';
-  if(q.expectCash!=null)s+='心中預期上限：'+NT+q.expectCash.toLocaleString()+'\n';
+  if(q.qty>0)s+='每張單價：現金 '+NT+q.unitCash.toFixed(2)+'／押票 '+NT+q.unitPress.toFixed(2)+'\n';
   const tc=document.getElementById('t_cash').value;
   const tp=document.getElementById('t_press').value;
   if(tc)s+='★實際現金價：'+NT+(+tc).toLocaleString()+'\n';
