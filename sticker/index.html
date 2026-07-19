@@ -159,6 +159,19 @@ header{
 }
 .order-form{padding:30px 28px;}
 .order-form .step{margin-bottom:24px;}
+/* 結帳區（折扣碼／金額／付款／送出）—— 與上方填寫步驟做視覺區隔 */
+.checkout{margin-top:30px;padding-top:26px;border-top:2px dashed var(--ink);}
+.checkout .promo-box{margin-top:0;}
+/* 桌機版：右欄只剩即時預覽，若維持 flex:1 會被拉到跟表單一樣高變成一大片空白。
+   改成固定高度並黏在畫面上，客戶捲動填表時預覽一直看得到。 */
+@media(min-width:861px){
+  /* .order-panel 原本用 overflow:hidden 裁圓角，但那會讓 sticky 失效 →
+     改成不裁切，由 .live-side 自己補右上圓角（它不撐到底，右下角本來就是面板底色）。 */
+  .order-panel{overflow:visible;}
+  .live-side{align-self:start;position:sticky;top:0;justify-content:flex-start;
+             border-top-right-radius:18px;}
+  .live-side .live-stage{flex:0 0 auto;height:360px;}
+}
 .step-label{
   display:flex;align-items:center;gap:10px;font-weight:900;font-size:.98rem;margin-bottom:12px;letter-spacing:.05em;
 }
@@ -516,33 +529,38 @@ footer{
           <input type="tel" id="buyerPhone" placeholder="聯絡電話" style="margin-bottom:10px;">
           <textarea id="buyerNote" placeholder="備註（取貨方式、其他需求…選填）"></textarea>
         </div>
+
+        <!-- 結帳區：折扣碼／金額／付款方式／送出。
+             原本放在右欄 .live-side 裡，但手機版 .live-side{order:-1} 會把整欄搬到最上面，
+             害「送出」跑到表單前面（客戶還沒填就先看到送出鍵）。移到表單最後才是正確順序。 -->
+        <div class="checkout">
+          <div class="promo-box">
+            <input type="text" id="promoInput" placeholder="輸入折扣碼（選填）" autocomplete="off">
+            <button type="button" id="promoBtn">套用</button>
+          </div>
+          <div class="hint" id="promoHint" style="margin-top:6px;"></div>
+
+          <div class="summary">
+            <div id="summaryRows"></div>
+            <div class="row total"><span>合計</span><span id="totalPrice">NT$ 0</span></div>
+          </div>
+          <div class="pay-note">
+            <strong>💰 付款方式：先匯款・後製作</strong>
+            <div class="bank-box">
+              中國信託商業銀行（822）<br>
+              帳號：<span class="acct" id="acctNum">182540257215</span>
+              <button type="button" class="acct-copy" id="acctCopy">複製帳號</button>
+            </div>
+            匯款完成後，請於 LINE 回傳<u>匯款帳號後五碼</u>，收到款項核對無誤後即安排製作。
+          </div>
+          <button class="submit-btn" id="submitBtn" disabled>產生訂單 ✦ 送出</button>
+        </div>
       </div>
 
       <div class="live-side">
         <h4>LIVE PREVIEW</h4>
         <div class="sub">✨ 名字即時預覽（示意，實品以固定字體印製）</div>
         <div class="live-stage" id="liveStage"></div>
-
-        <div class="promo-box">
-          <input type="text" id="promoInput" placeholder="輸入折扣碼（選填）" autocomplete="off">
-          <button type="button" id="promoBtn">套用</button>
-        </div>
-        <div class="hint" id="promoHint" style="margin-top:6px;"></div>
-
-        <div class="summary">
-          <div id="summaryRows"></div>
-          <div class="row total"><span>合計</span><span id="totalPrice">NT$ 0</span></div>
-        </div>
-        <div class="pay-note">
-          <strong>💰 付款方式：先匯款・後製作</strong>
-          <div class="bank-box">
-            中國信託商業銀行（822）<br>
-            帳號：<span class="acct" id="acctNum">182540257215</span>
-            <button type="button" class="acct-copy" id="acctCopy">複製帳號</button>
-          </div>
-          匯款完成後，請於 LINE 回傳<u>匯款帳號後五碼</u>，收到款項核對無誤後即安排製作。
-        </div>
-        <button class="submit-btn" id="submitBtn" disabled>產生訂單 ✦ 送出</button>
       </div>
     </div>
   </section>
