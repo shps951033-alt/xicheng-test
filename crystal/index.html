@@ -730,24 +730,85 @@ var items = [{ shape:'rect', w:5, h:5, qty:50 }];
 
 function fitsSheet(w, h){ return w <= LAY.W + EPS && h <= LAY.H + EPS; }
 
-/* 貨架式排版：把 list 依序排進數張 A3，回傳每張的擺放座標 */
-function pack(list){
-  var sheets = [], cur = [], x = 0, y = 0, shelfH = 0;
-  for(var i = 0; i < list.length; i++){
-    var it = list[i];
-    /* 這一列放不下 → 換列 */
-    if(x > 0 && x + it.w > LAY.W + EPS){
-      y += shelfH + LAY.GAP; x = 0; shelfH = 0;
-    }
-    /* 這張放不下 → 換新的一張 */
-    if(y + it.h > LAY.H + EPS){
-      sheets.push(cur); cur = []; x = 0; y = 0; shelfH = 0;
-    }
-    cur.push({ x:x, y:y, w:it.w, h:it.h, shape:it.shape });
-    x += it.w + LAY.GAP;
-    if(it.h > shelfH) shelfH = it.h;
+/* 每個圖案連同它的 1 cm 間距一起當成一塊「含邊框的磚」來排，
+   容器也跟著放大 1 cm —— 這樣間距是排版的一部分，不必另外檢查，邊緣也不會白白多留。 */
+var CW = LAY.W + LAY.GAP, CH = LAY.H + LAY.GAP;
+
+/* ---- 單一尺寸：規則網格，排起來整齊 ---- */
+function gridSheet(w, h){
+  var cols = Math.floor(CW / (w + LAY.GAP) + EPS);
+  var rows = Math.floor(CH / (h + LAY.GAP) + EPS);
+  return { cols:cols, rows:rows, n:cols * rows };
+}
+
+/* ---- 多種尺寸：MaxRects 排版，小圖會自動補進大圖旁邊的空隙 ---- */
+function splitFree(free, used){
+  var out = [];
+  for(var i = 0; i < free.length; i++){
+    var f = free[i];
+    /* 沒相交就原封不動留著 */
+    if(used.x >= f.x + f.w - EPS || used.x + used.w <= f.x + EPS ||
+       used.y >= f.y + f.h - EPS || used.y + used.h <= f.y + EPS){ out.push(f); continue; }
+    if(used.y > f.y + EPS) out.push({ x:f.x, y:f.y, w:f.w, h:used.y - f.y });
+    if(used.y + used.h < f.y + f.h - EPS)
+      out.push({ x:f.x, y:used.y + used.h, w:f.w, h:f.y + f.h - used.y - used.h });
+    if(used.x > f.x + EPS) out.push({ x:f.x, y:f.y, w:used.x - f.x, h:f.h });
+    if(used.x + used.w < f.x + f.w - EPS)
+      out.push({ x:used.x + used.w, y:f.y, w:f.x + f.w - used.x - used.w, h:f.h });
   }
-  if(cur.length) sheets.push(cur);
+  return out;
+}
+
+/* 被別塊完全包住的空位是多餘的，留著只會拖慢速度 */
+function pruneFree(free){
+  var out = [];
+  for(var i = 0; i < free.length; i++){
+    var keep = true, a = free[i];
+    for(var j = 0; j < free.length; j++){
+      if(i === j) continue;
+      var b = free[j];
+      if(a.x >= b.x - EPS && a.y >= b.y - EPS &&
+         a.x + a.w <= b.x + b.w + EPS && a.y + a.h <= b.y + b.h + EPS){
+        /* 完全一樣大時只留索引小的那個，免得互相刪光 */
+        if(a.w < b.w - EPS || a.h < b.h - EPS || i > j){ keep = false; break; }
+      }
+    }
+    if(keep) out.push(a);
+  }
+  return out;
+}
+
+/* 盡量把 list 塞進一張，回傳排好的與塞不下的 */
+function packSheetMax(list){
+  var free = [{ x:0, y:0, w:CW, h:CH }], placed = [], rest = [];
+  list.forEach(function(it){
+    var best = null;
+    for(var i = 0; i < free.length; i++){
+      var f = free[i];
+      if(it.pw > f.w + EPS || it.ph > f.h + EPS) continue;
+      /* Best Short Side Fit：挑剩餘短邊最小的空位，空隙才不會被切得零碎 */
+      var ss = Math.min(f.w - it.pw, f.h - it.ph), ls = Math.max(f.w - it.pw, f.h - it.ph);
+      if(!best || ss < best.ss - EPS || (Math.abs(ss - best.ss) < EPS && ls < best.ls)){
+        best = { x:f.x, y:f.y, ss:ss, ls:ls };
+      }
+    }
+    if(!best){ rest.push(it); return; }
+    placed.push({ x:best.x, y:best.y, w:it.w, h:it.h, shape:it.shape });
+    free = pruneFree(splitFree(free, { x:best.x, y:best.y, w:it.pw, h:it.ph }));
+  });
+  return { placed:placed, rest:rest };
+}
+
+var MAX_CALC_SHEETS = 40;   /* 算到這個張數就停：印製上限是 50 張，再多本來就要洽詢 */
+
+function packMixed(list){
+  var sheets = [], remain = list, guard = 0;
+  while(remain.length && guard++ < MAX_CALC_SHEETS){
+    var res = packSheetMax(remain);
+    if(!res.placed.length) break;      /* 一個都放不下就停，避免無窮迴圈 */
+    sheets.push(res.placed);
+    remain = res.rest;
+  }
   return sheets;
 }
 
@@ -755,20 +816,41 @@ function pack(list){
 function packBest(items){
   var opts = [];
   [false, true].forEach(function(rot){
-    var list = [], ok = true;
+    var list = [], ok = true, uniform = true, w0 = null, h0 = null;
     items.forEach(function(it){
       var w = rot ? it.h : it.w, h = rot ? it.w : it.h;
       if(!fitsSheet(w, h)) ok = false;
-      for(var i = 0; i < it.qty; i++) list.push({ w:w, h:h, shape:it.shape });
+      if(w0 === null){ w0 = w; h0 = h; }
+      else if(Math.abs(w - w0) > EPS || Math.abs(h - h0) > EPS) uniform = false;
+      for(var i = 0; i < it.qty; i++) list.push({ w:w, h:h, pw:w + LAY.GAP, ph:h + LAY.GAP, shape:it.shape });
     });
     if(!ok || !list.length) return;
-    /* 高的先排，貨架才不會浪費 —— 同高時寬的先排 */
-    list.sort(function(a, b){ return (b.h - a.h) || (b.w - a.w); });
-    var sheets = pack(list);
-    opts.push({ rot:rot, sheets:sheets, n:sheets.length, first:sheets[0].length });
+
+    var sheets;
+    if(uniform){
+      /* 同一種尺寸就走規則網格，排面整齊、算得也快 */
+      var g = gridSheet(w0, h0);
+      if(!g.n) return;
+      sheets = [];
+      for(var i = 0; i < list.length && sheets.length < MAX_CALC_SHEETS; i += g.n){
+        var chunk = list.slice(i, i + g.n), sh = [];
+        chunk.forEach(function(it, k){
+          sh.push({ x:(k % g.cols) * (w0 + LAY.GAP), y:Math.floor(k / g.cols) * (h0 + LAY.GAP),
+                    w:w0, h:h0, shape:it.shape });
+        });
+        sheets.push(sh);
+      }
+    } else {
+      /* 大的先放，小的才有機會補進剩下的空隙 */
+      list.sort(function(a, b){ return (b.w * b.h - a.w * a.h) || (b.h - a.h); });
+      sheets = packMixed(list);
+    }
+    if(!sheets.length) return;
+    opts.push({ rot:rot, sheets:sheets, n:sheets.length, first:sheets[0].length, uniform:uniform });
   });
   if(!opts.length) return null;
-  opts.sort(function(a, b){ return (a.n - b.n) || (b.first - a.first); });
+  /* 先比張數；一樣多就不要亂轉，保持客人填的方向比較好懂 */
+  opts.sort(function(a, b){ return (a.n - b.n) || ((a.rot ? 1 : 0) - (b.rot ? 1 : 0)); });
   return opts[0];
 }
 
