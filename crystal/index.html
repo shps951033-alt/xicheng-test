@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>水晶標轉印貼 印製訂購｜喜成燙金印刷</title>
+<meta name="description" content="水晶標轉印貼印製。印刷色 CMYK 與金屬色兩種，A3 計價，可代排版、代剪裁、去背。喜成燙金印刷。">
+<link rel="icon" href="img/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#FAF3E6; --ink:#3A3020; --ink-soft:#6B5B42;
+  --kraft:#C8A46C; --wood:#6B4E32; --card:#FFFDF7;
+  --gold-1:#E8C980; --gold-2:#B8873C; --gold-line:#C9A24B;
+  --glass:#8FC6D8; --warn:#B4483C; --ok:#2E7A4A;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+/* iOS Safari 的自動放大字（text autosizing）會把示意圖的字吹大、撐破版面，這行關掉它 */
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{font-family:'Noto Sans TC',sans-serif;background:var(--paper);color:var(--ink);line-height:1.7;padding-bottom:84px}
+.wrap{max-width:560px;margin:0 auto;padding:0 20px}
+.eyebrow{letter-spacing:.35em;font-size:12px;color:var(--gold-2);font-weight:700;text-transform:uppercase}
+
+/* hero */
+.hero{padding:44px 0 36px;text-align:center;border-bottom:1px solid #E6D8BC}
+.hero .brand{display:flex;justify-content:center;margin-bottom:26px}
+.hero .brand a{display:block;border-radius:8px;transition:transform .15s}
+.hero .brand a:hover{transform:translateY(-2px)}
+.hero .brand a:focus-visible{outline:2px solid var(--gold-line);outline-offset:4px}
+.hero .brand img{height:72px;width:auto;display:block;border-radius:8px;box-shadow:0 4px 14px rgba(40,50,45,.18)}
+@media(max-width:420px){ .hero .brand img{height:60px} }
+.hero h1{font-family:'Noto Serif TC',serif;font-weight:900;font-size:clamp(30px,8.6vw,38px);line-height:1.25;letter-spacing:.06em;margin:6px 0 12px}
+.hero h1 em{font-style:normal;
+  background:linear-gradient(115deg,var(--gold-2) 0%,var(--gold-1) 38%,#F6E3AE 50%,var(--gold-1) 62%,var(--gold-2) 100%);
+  background-size:220% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;
+  animation:sheen 5.5s ease-in-out infinite}
+@keyframes sheen{0%,100%{background-position:0% 0}50%{background-position:100% 0}}
+@media (prefers-reduced-motion:reduce){.hero h1 em{animation:none}}
+.hero p{color:var(--ink-soft);font-size:15px}
+.badge{display:inline-block;margin-top:16px;border:1px solid var(--gold-line);color:var(--gold-2);
+  padding:6px 16px;border-radius:999px;font-size:13px;letter-spacing:.12em;background:#FFF9EC}
+
+/* 水晶標示意（透明貼紙貼在深色面上） */
+.demo{margin:28px auto 4px;width:236px;height:150px;border-radius:12px;position:relative;overflow:hidden;
+  background:linear-gradient(150deg,#2F3A44,#4A5866 55%,#333E48);box-shadow:0 10px 22px rgba(50,40,20,.22)}
+.demo .sticker{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:172px;padding:16px 0;text-align:center;border-radius:6px;
+  background:linear-gradient(120deg,rgba(255,255,255,.13),rgba(255,255,255,.03) 45%,rgba(255,255,255,.16));
+  border:1px solid rgba(255,255,255,.18);backdrop-filter:blur(1px)}
+.demo .sticker b{display:block;font-family:'Noto Serif TC',serif;font-size:24px;letter-spacing:.16em;
+  background:linear-gradient(115deg,#A9762E,var(--gold-1) 45%,#FFF3CE 52%,var(--gold-1) 60%,#A9762E);
+  -webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 1px 1px rgba(0,0,0,.35))}
+.demo .sticker span{display:block;font-size:10.5px;letter-spacing:.3em;color:rgba(255,255,255,.72);margin-top:5px}
+.demo .glare{position:absolute;inset:0;background:linear-gradient(115deg,transparent 40%,rgba(255,255,255,.13) 50%,transparent 60%);
+  background-size:250% 100%;animation:sheen 5.5s ease-in-out infinite}
+@media (prefers-reduced-motion:reduce){.demo .glare{animation:none}}
+.demo .cap{position:absolute;left:0;right:0;bottom:8px;text-align:center;font-size:10.5px;letter-spacing:.2em;color:rgba(255,255,255,.55)}
+
+/* sections */
+section{padding:36px 0;border-bottom:1px solid #E6D8BC}
+h2{font-family:'Noto Serif TC',serif;font-weight:900;font-size:22px;letter-spacing:.1em;margin:8px 0 20px}
+h3{font-size:15px;font-weight:700;margin:22px 0 10px;color:var(--gold-2);letter-spacing:.05em}
+.points{display:grid;gap:14px}
+.point{background:var(--card);border:1px solid #E8DCC2;border-left:4px solid var(--gold-line);border-radius:10px;padding:16px 18px}
+.point b{display:block;font-size:16px;margin-bottom:4px}
+.point span{color:var(--ink-soft);font-size:14px}
+.list{display:grid;gap:9px;font-size:14.5px;color:var(--ink-soft)}
+.list li{list-style:none;position:relative;padding-left:20px;line-height:1.75}
+.list li::before{content:'';position:absolute;left:2px;top:11px;width:7px;height:7px;border-radius:50%;background:var(--gold-line)}
+.list li b{color:var(--ink)}
+
+/* 價目表 */
+.ptable{background:var(--card);border:1.5px solid #DECBA4;border-radius:12px;overflow:hidden}
+.ptable .pr{display:flex;justify-content:space-between;align-items:baseline;gap:12px;
+  padding:14px 16px;border-bottom:1px dashed #E9DCBE}
+.ptable .pr:last-child{border-bottom:none}
+.ptable .pr.main{background:#FFF9EC}
+.ptable .pk{font-size:15px;font-weight:700}
+.ptable .pk em{display:block;font-style:normal;font-size:12.5px;color:var(--ink-soft);font-weight:400;margin-top:2px}
+.ptable .pv{font-weight:700;white-space:nowrap;color:var(--gold-2);font-size:17px}
+.ptable .pv small{font-size:12px;color:var(--ink-soft);font-weight:400;display:block;text-align:right}
+
+/* form */
+.field{margin-bottom:20px}
+label.t{display:block;font-weight:700;font-size:15px;margin-bottom:8px}
+label.t small{color:var(--ink-soft);font-weight:400;margin-left:6px}
+.hint{font-size:12.5px;color:var(--ink-soft);margin-top:7px;line-height:1.6}
+input[type=text],input[type=number],textarea,select{
+  width:100%;background:var(--card);border:1.5px solid #DECBA4;border-radius:10px;
+  padding:12px 14px;font-size:16px;font-family:inherit;color:var(--ink)}
+input:focus,textarea:focus,select:focus{outline:2px solid var(--gold-line);outline-offset:1px;border-color:var(--gold-line)}
+.opts{display:flex;flex-wrap:wrap;gap:10px}
+.opts label{border:1.5px solid #DECBA4;background:var(--card);border-radius:999px;
+  padding:9px 16px;font-size:14.5px;cursor:pointer;user-select:none;display:inline-flex;align-items:center;gap:7px}
+.opts input{margin:0;accent-color:var(--gold-2)}
+.opts label:has(input:checked){border-color:var(--gold-2);background:#F6E9CB;font-weight:700}
+.opts label:has(input:focus-visible){outline:2px solid var(--gold-line);outline-offset:2px}
+textarea{min-height:80px;resize:vertical}
+
+/* 張數輸入列 */
+.qty{background:var(--card);border:1.5px solid #DECBA4;border-radius:12px;padding:4px 14px;margin-bottom:14px}
+.qrow{display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px dashed #E9DCBE}
+.qrow:last-child{border-bottom:none}
+.qrow .qi{flex:1;min-width:0}
+.qrow .qi b{display:block;font-size:15px}
+.qrow .qi em{font-style:normal;font-size:12.5px;color:var(--ink-soft)}
+.qrow .qc{display:flex;align-items:center;gap:8px;flex:none}
+.qrow .qc button{width:34px;height:34px;border-radius:9px;border:1.5px solid #DECBA4;background:var(--paper);
+  font-size:18px;line-height:1;cursor:pointer;font-family:inherit;color:var(--gold-2);font-weight:700}
+.qrow .qc button:active{transform:translateY(1px)}
+.qrow .qc input{width:64px;text-align:center;padding:9px 4px;font-weight:700}
+.qrow .qc span{font-size:13px;color:var(--ink-soft)}
+.swatch{width:15px;height:15px;border-radius:50%;display:inline-block;vertical-align:-2px;margin-right:6px;
+  border:1px solid rgba(60,45,20,.25)}
+.sw-cmyk{background:conic-gradient(#22B0E0,#E0369A,#F2D03B,#2A2A2A,#22B0E0)}
+.sw-metal{background:linear-gradient(120deg,#9C7A34,#F0DCA4 45%,#FFF8E2 52%,#D9BA6E 62%,#8E6C2C)}
+
+/* 加購子項（勾選後展開的張數） */
+.sub{display:none;margin-top:10px;padding-left:2px}
+.sub.on{display:block}
+.sub .qrow{border-bottom:none;padding:6px 0}
+
+/* 費用明細 */
+.cost{background:var(--card);border:1.5px solid var(--gold-line);border-radius:12px;padding:6px 14px}
+.cost .r{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:9px 0;
+  border-bottom:1px dashed #E9DCBE;font-size:14.5px}
+.cost .r:last-child{border-bottom:none}
+.cost .r .k{color:var(--ink-soft)}
+.cost .r .k em{font-style:normal;font-size:12px;display:block;opacity:.85}
+.cost .r .v{font-weight:700;white-space:nowrap}
+.cost .r.disc .v{color:var(--ok)}
+.cost .r.sum{border-top:2px solid var(--gold-line);border-bottom:none;margin-top:2px;padding:13px 0}
+.cost .r.sum .k{color:var(--ink);font-weight:700;font-size:16px}
+.cost .r.sum .v{color:var(--gold-2);font-size:22px}
+.cost .empty{padding:14px 0;color:var(--ink-soft);font-size:14px;text-align:center}
+
+.gen{width:100%;border:none;border-radius:12px;padding:15px;font-size:17px;font-weight:700;
+  font-family:inherit;letter-spacing:.1em;cursor:pointer;color:#3A2C12;
+  background:linear-gradient(115deg,var(--gold-2),var(--gold-1) 45%,#F2DFA6 55%,var(--gold-2));
+  box-shadow:0 4px 12px rgba(150,110,50,.28)}
+.gen:active{transform:translateY(1px)}
+.result{display:none;margin-top:18px;background:var(--card);border:1.5px dashed var(--gold-line);border-radius:12px;padding:16px}
+.result.show{display:block}
+.result pre{white-space:pre-wrap;font-family:inherit;font-size:14.5px;color:var(--ink);margin-bottom:14px}
+.row2{display:flex;gap:10px}
+.btn2{flex:1;text-align:center;text-decoration:none;border-radius:10px;padding:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit}
+.copy{background:#EFE3C6;border:1.5px solid var(--gold-line);color:var(--ink)}
+.line{background:#06C755;border:1.5px solid #06C755;color:#fff}
+.notebar{background:#FFF4DC;border:1px solid #E8D5A6;border-radius:10px;padding:11px 13px;
+  font-size:12.5px;color:#7A6438;margin-bottom:20px;line-height:1.65}
+.warnbar{background:#FCEDEA;border:1px solid #EBC7BF;border-radius:10px;padding:12px 14px;
+  font-size:13px;color:#8A3C31;line-height:1.7;margin-top:16px}
+.warnbar b{color:var(--warn)}
+
+/* 匯款資訊 */
+.bank{background:var(--card);border:1.5px solid #DECBA4;border-radius:12px;padding:14px 16px}
+.bank .br{display:flex;justify-content:space-between;gap:12px;padding:8px 0;font-size:14.5px;border-bottom:1px dashed #E9DCBE}
+.bank .br:last-child{border-bottom:none}
+.bank .br .k{color:var(--ink-soft);flex:none}
+.bank .br .v{font-weight:700;text-align:right;word-break:break-all}
+.bank .cp{margin-top:12px;width:100%;background:#EFE3C6;border:1.5px solid var(--gold-line);color:var(--ink);
+  border-radius:10px;padding:11px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer}
+
+/* 使用方式 */
+.howto{display:grid;gap:12px}
+.hstep{background:var(--card);border:1px solid #E8DCC2;border-radius:10px;padding:14px 16px;
+  display:flex;gap:13px;align-items:flex-start}
+.hstep .no{flex:none;width:26px;height:26px;border-radius:50%;background:var(--gold-2);color:#FFF9EC;
+  font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-top:2px}
+.hstep .hx b{display:block;font-size:15px;margin-bottom:3px}
+.hstep .hx span{font-size:13.5px;color:var(--ink-soft)}
+
+/* steps */
+.steps{counter-reset:s;display:grid;gap:12px}
+.step{position:relative;background:var(--card);border:1px solid #E8DCC2;border-radius:10px;
+  padding:14px 16px 14px 52px;font-size:14.5px}
+.step::before{counter-increment:s;content:counter(s);position:absolute;left:16px;top:50%;transform:translateY(-50%);
+  width:24px;height:24px;border-radius:50%;background:var(--gold-2);color:#FFF9EC;
+  font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center}
+
+footer{padding:30px 0 24px;text-align:center}
+.homelink{display:inline-block;margin-bottom:14px;color:var(--gold-2);font-weight:700;font-size:14px;text-decoration:none}
+.fnote{font-size:12.5px;color:var(--ink-soft);line-height:1.9}
+.fnote .gl{color:var(--gold-2);font-weight:700}
+
+.sticky{position:fixed;left:0;right:0;bottom:0;z-index:20;background:rgba(250,243,230,.96);
+  border-top:1px solid #E2D2AE;padding:10px 20px;display:flex;align-items:center;gap:12px;
+  max-width:600px;margin:0 auto;backdrop-filter:blur(6px)}
+.sticky span{flex:1;font-size:13.5px;font-weight:700;color:var(--ink)}
+.sticky span em{font-style:normal;display:block;font-size:11.5px;color:var(--ink-soft);font-weight:400}
+.sticky a{flex:none;background:#06C755;color:#fff;text-decoration:none;font-weight:700;font-size:14px;
+  border-radius:999px;padding:10px 20px}
+</style>
+</head>
+<body>
+
+<header class="hero wrap">
+  <div class="brand">
+    <a href="https://xicheng-print.com/" target="_blank" rel="noopener">
+      <img src="img/logo.png" alt="喜成燙金印刷 C CHENG ENTERPRISE">
+    </a>
+  </div>
+  <div class="eyebrow">CRYSTAL TRANSFER LABEL</div>
+  <h1><em>水晶標</em>轉印貼<br>印製訂購</h1>
+  <p>印刷色 CMYK ‧ 金屬色兩種<br>以 A3 計價，可代排版、代剪裁</p>
+  <div class="demo">
+    <div class="sticker"><b>喜成印刷</b><span>C CHENG</span></div>
+    <div class="glare"></div>
+    <div class="cap">貼上後僅留圖案，底材透明</div>
+  </div>
+  <div class="badge">製作 8～15 個工作天</div>
+</header>
+
+<section class="wrap">
+  <div class="eyebrow">WHAT</div>
+  <h2>水晶標是什麼</h2>
+  <div class="points">
+    <div class="point">
+      <b>貼上去只剩圖案</b>
+      <span>轉印式貼紙，撕除離型層後底材透明，看起來像直接印在物體表面，沒有貼紙的白邊與厚度感。</span>
+    </div>
+    <div class="point">
+      <b>兩種色彩可選</b>
+      <span><span class="swatch sw-cmyk"></span>印刷色 CMYK：全彩圖案、照片、漸層都可以。<br><span class="swatch sw-metal"></span>金屬色：金銀等金屬質感，適合 LOGO、標章、字體。</span>
+    </div>
+    <div class="point">
+      <b>常見用途</b>
+      <span>玻璃門窗、櫥窗、招牌、車體、杯壺、包裝盒、電器面板、展場道具⋯⋯平滑面效果最好。</span>
+    </div>
+  </div>
+</section>
+
+<section class="wrap">
+  <div class="eyebrow">PRICE</div>
+  <h2>價目表</h2>
+  <div class="ptable">
+    <div class="pr main">
+      <div class="pk"><span class="swatch sw-cmyk"></span>水晶標轉印貼（印刷色 CMYK）<em>全彩圖案、照片</em></div>
+      <div class="pv">350<small>元／張 A3</small></div>
+    </div>
+    <div class="pr main">
+      <div class="pk"><span class="swatch sw-metal"></span>水晶標轉印貼（金屬色）<em>金屬質感 LOGO、字體</em></div>
+      <div class="pv">550<small>元／張 A3</small></div>
+    </div>
+    <div class="pr">
+      <div class="pk">代客排版<em>不會落版、想排滿一張 A3 者適用</em></div>
+      <div class="pv">100<small>元／張 A3</small></div>
+    </div>
+    <div class="pr">
+      <div class="pk">代客剪裁<em>沿外框裁開，不含半斷</em></div>
+      <div class="pv">50<small>元／張 A3</small></div>
+    </div>
+    <div class="pr">
+      <div class="pk">照片、圖片大量去背<em>整筆一次計，不分張數</em></div>
+      <div class="pv">600<small>元／筆</small></div>
+    </div>
+    <div class="pr">
+      <div class="pk">郵寄運費<em>自取免運</em></div>
+      <div class="pv">100<small>元／筆</small></div>
+    </div>
+  </div>
+  <p class="hint">以上未稅價。基本規格為 A3 整張，未包含剪裁，需自行剪裁；要我們裁好請加購「代客剪裁」。</p>
+</section>
+
+<section class="wrap">
+  <div class="eyebrow">ORDER</div>
+  <h2>線上試算 ‧ 訂購登記</h2>
+  <div class="notebar">填好下面欄位會即時算出金額，按「產生訂購訊息」把內容複製傳到我們 LINE，
+    專人確認尺寸、數量與檔案後即可安排印製。</div>
+
+  <div class="field">
+    <label class="t">印製張數<small>（A3 為單位）</small></label>
+    <div class="qty">
+      <div class="qrow">
+        <div class="qi"><b><span class="swatch sw-cmyk"></span>印刷色 CMYK</b><em>350 元／張</em></div>
+        <div class="qc">
+          <button type="button" data-step="-1" data-target="qCmyk" aria-label="減少">−</button>
+          <input type="number" id="qCmyk" inputmode="numeric" min="0" step="1" value="1">
+          <span>張</span>
+          <button type="button" data-step="1" data-target="qCmyk" aria-label="增加">＋</button>
+        </div>
+      </div>
+      <div class="qrow">
+        <div class="qi"><b><span class="swatch sw-metal"></span>金屬色</b><em>550 元／張</em></div>
+        <div class="qc">
+          <button type="button" data-step="-1" data-target="qMetal" aria-label="減少">−</button>
+          <input type="number" id="qMetal" inputmode="numeric" min="0" step="1" value="0">
+          <span>張</span>
+          <button type="button" data-step="1" data-target="qMetal" aria-label="增加">＋</button>
+        </div>
+      </div>
+    </div>
+    <p class="hint">兩種色彩可以同時下單，各自填張數即可。</p>
+  </div>
+
+  <div class="field">
+    <label class="t">加購服務<small>（不需要就不用勾）</small></label>
+    <div class="opts">
+      <label><input type="checkbox" id="cLayout">代客排版</label>
+      <label><input type="checkbox" id="cCut">代客剪裁</label>
+      <label><input type="checkbox" id="cMat">大量去背 +600</label>
+    </div>
+
+    <div class="sub" id="sLayout">
+      <div class="qty">
+        <div class="qrow">
+          <div class="qi"><b>代客排版</b><em>100 元／張，預設＝全部張數</em></div>
+          <div class="qc">
+            <button type="button" data-step="-1" data-target="qLayout" aria-label="減少">−</button>
+            <input type="number" id="qLayout" inputmode="numeric" min="0" step="1" value="0">
+            <span>張</span>
+            <button type="button" data-step="1" data-target="qLayout" aria-label="增加">＋</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sub" id="sCut">
+      <div class="qty">
+        <div class="qrow">
+          <div class="qi"><b>代客剪裁</b><em>50 元／張，不含半斷</em></div>
+          <div class="qc">
+            <button type="button" data-step="-1" data-target="qCut" aria-label="減少">−</button>
+            <input type="number" id="qCut" inputmode="numeric" min="0" step="1" value="0">
+            <span>張</span>
+            <button type="button" data-step="1" data-target="qCut" aria-label="增加">＋</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="hint">已經自己排好版、也自己剪的話，不用勾任何一項。</p>
+  </div>
+
+  <div class="field">
+    <label class="t">取件方式</label>
+    <div class="opts" id="ship">
+      <label><input type="radio" name="ship" value="自取" checked>自取（免運）</label>
+      <label><input type="radio" name="ship" value="郵寄">郵寄 +100</label>
+    </div>
+  </div>
+
+  <div class="field">
+    <label class="t" for="rcName">聯絡人姓名</label>
+    <input type="text" id="rcName" placeholder="王小明">
+  </div>
+  <div class="field">
+    <label class="t" for="rcPhone">聯絡電話</label>
+    <input type="text" id="rcPhone" inputmode="tel" placeholder="0912-345-678">
+  </div>
+  <div class="field" id="fAddr" style="display:none">
+    <label class="t" for="rcAddr">寄送地址</label>
+    <input type="text" id="rcAddr" placeholder="高雄市○○區○○路 000 號">
+  </div>
+  <div class="field">
+    <label class="t" for="note">備註<small>（成品尺寸、用途、指定完成日等）</small></label>
+    <textarea id="note" placeholder="例：LOGO 約 10 公分寬，貼在店門玻璃上，希望月底前拿到"></textarea>
+  </div>
+
+  <div class="field">
+    <label class="t">費用明細</label>
+    <div class="cost" id="costBox"></div>
+    <p class="hint">此為線上試算，實際以我們確認檔案、尺寸與數量後的回覆為準。</p>
+  </div>
+
+  <button class="gen" id="genBtn" type="button">產生訂購訊息</button>
+
+  <div class="result" id="result">
+    <pre id="msg"></pre>
+    <div class="row2">
+      <button class="btn2 copy" id="copyBtn" type="button">複製訊息</button>
+      <a class="btn2 line" href="https://line.me/R/ti/p/@623bfkyg" target="_blank" rel="noopener">加 LINE 傳送</a>
+    </div>
+  </div>
+</section>
+
+<section class="wrap">
+  <div class="eyebrow">FILE</div>
+  <h2>檔案規格</h2>
+  <ul class="list">
+    <li><b>可接受格式：</b>PDF 檔、AI 檔。</li>
+    <li><b>文字請轉外框</b>，避免我們這端缺字型導致字跑掉。</li>
+    <li><b>圖片請嵌入</b>（連結圖請一併嵌入或附原圖），解析度建議 300dpi。</li>
+    <li><b>檔案裡只留要印的圖</b>：與印製無關的線條、色塊、說明文字請先拿掉。</li>
+    <li>不會排版沒關係，勾選「代客排版」由我們處理即可。</li>
+  </ul>
+  <div class="warnbar">
+    <b>印製前會再跟您確認大小與數量</b>，確認後即安排上機。<br>
+    <b>一旦已安排印製，即無法再修改</b>，請於確認前檢查清楚。
+  </div>
+</section>
+
+<section class="wrap">
+  <div class="eyebrow">HOW TO USE</div>
+  <h2>水晶標使用方式</h2>
+  <div class="howto">
+    <div class="hstep"><div class="no">1</div><div class="hx"><b>清潔表面</b><span>貼附面擦乾淨、保持乾燥無油無塵，平滑面效果最好。</span></div></div>
+    <div class="hstep"><div class="no">2</div><div class="hx"><b>撕開前先按壓</b><span>撕開離型紙<b>之前</b>，先整片壓實，<b>圖案與文字的細線條部分務必加強按壓</b>。</span></div></div>
+    <div class="hstep"><div class="no">3</div><div class="hx"><b>慢慢撕開</b><span>從一角以小角度、貼著表面慢慢撕。若有圖案沒跟著轉印下來，放回去再壓一次。</span></div></div>
+    <div class="hstep"><div class="no">4</div><div class="hx"><b>撕開後再壓一次</b><span>轉印完成後整片再按壓一遍，讓細線條完全服貼。</span></div></div>
+  </div>
+  <div class="warnbar"><b>細線條沒按壓是最常見的失敗原因。</b>撕開前、撕開後都要按壓，尤其是細字與細線。</div>
+</section>
+
+<section class="wrap">
+  <div class="eyebrow">PAYMENT</div>
+  <h2>付款與運送</h2>
+  <h3>付款方式：匯款</h3>
+  <div class="bank">
+    <div class="br"><span class="k">銀行</span><span class="v">中國信託商業銀行（822）</span></div>
+    <div class="br"><span class="k">帳號</span><span class="v" id="bankNo">182540257215</span></div>
+    <button class="cp" id="cpBank" type="button">複製匯款帳號</button>
+  </div>
+  <p class="hint">報價確認、圖片與張數確認後，收到款項即安排印製。</p>
+  <h3>運送方式</h3>
+  <ul class="list">
+    <li><b>自取：</b>免運費，工廠現場取件。</li>
+    <li><b>郵寄：</b>運費一律 100 元。</li>
+  </ul>
+  <h3>製作工期</h3>
+  <ul class="list">
+    <li><b>8～15 個工作天</b>（不含國定假日），自檔案與款項確認後起算。</li>
+  </ul>
+</section>
+
+<section class="wrap">
+  <div class="eyebrow">FLOW</div>
+  <h2>訂購流程</h2>
+  <div class="steps">
+    <div class="step">填上面的訂購登記，產生訊息後傳到我們 LINE，並附上印製檔案</div>
+    <div class="step">我們確認檔案、尺寸與張數，回覆正式報價</div>
+    <div class="step">匯款至中國信託（822）帳號，回傳末五碼</div>
+    <div class="step">安排印製，8～15 個工作天完成，自取或寄出</div>
+  </div>
+  <p class="hint">有設計、排版需求也可以直接跟我們說，會依需求另行報價。</p>
+</section>
+
+<footer class="wrap">
+  <a class="homelink" href="https://xicheng-print.com/">← 回喜成官網</a>
+  <div class="fnote">
+    喜成燙金印刷｜燙金 · 軋型 · 名片 · 紙袋 · 紙盒<br>
+    <span class="gl">諮詢 LINE：@623bfkyg</span>
+  </div>
+</footer>
+
+<div class="sticky">
+  <span>水晶標轉印貼 訂製中<em>CMYK 350／金屬色 550 元起 每張 A3</em></span>
+  <a href="https://line.me/R/ti/p/@623bfkyg" target="_blank" rel="noopener">LINE 詢問</a>
+</div>
+
+<script>
+/* ===== 價目（單位：元，未稅） =====
+   來源：喜成水晶標轉印貼公開報價。改價只改這裡。 */
+var PRICE = {
+  cmyk   : 350,  /* 印刷色 CMYK，每張 A3 */
+  metal  : 550,  /* 金屬色，每張 A3 */
+  layout : 100,  /* 代客排版，每張 A3 */
+  cut    :  50,  /* 代客剪裁（無半斷），每張 A3 */
+  matting: 600,  /* 照片圖片大量去背，整筆一次 */
+  ship   : 100   /* 郵寄運費，整筆一次 */
+};
+
+/* ===== 數量階梯折扣（待老闆給級距）=====
+   規則：依「印製總張數（CMYK + 金屬色）」查表，套用到印製費（不含加購與運費）。
+   填法：由小到大排，min = 該級距的起始張數，off = 折扣（0.05 ＝ 打 95 折）。
+   例：[{min:1,off:0},{min:5,off:0.05},{min:10,off:0.10}]
+   目前空表 ＝ 不打折，單價固定。 */
+var TIERS = [];
+
+/* 折數的台灣講法：0.9 → 「9 折」、0.95 → 「95 折」（整十就講一位數） */
+function tierLabel(off){
+  var p = Math.round((1 - off) * 100);
+  return (p % 10 === 0 ? p / 10 : p) + ' 折';
+}
+
+function tierOf(n){
+  var hit = null;
+  for(var i=0;i<TIERS.length;i++){ if(n >= TIERS[i].min) hit = TIERS[i]; }
+  return hit && hit.off > 0 ? hit : null;
+}
+
+function $(id){ return document.getElementById(id); }
+function num(id){ var v = parseInt($(id).value,10); return (isNaN(v)||v<0) ? 0 : v; }
+function money(n){ return n.toLocaleString('en-US'); }
+
+/* 加減按鈕 */
+document.querySelectorAll('.qc button').forEach(function(b){
+  b.addEventListener('click', function(){
+    var el = $(b.dataset.target);
+    var v = (parseInt(el.value,10)||0) + parseInt(b.dataset.step,10);
+    el.value = v < 0 ? 0 : v;
+    calc();
+  });
+});
+
+/* 加購勾選：展開子項，並把張數預設帶成目前總張數 */
+[['cLayout','sLayout','qLayout'],['cCut','sCut','qCut']].forEach(function(t){
+  $(t[0]).addEventListener('change', function(){
+    var on = $(t[0]).checked;
+    $(t[1]).classList.toggle('on', on);
+    if(on && num(t[2]) === 0) $(t[2]).value = totalSheets();
+    if(!on) $(t[2]).value = 0;
+    calc();
+  });
+});
+
+/* 取件方式：郵寄才顯示地址欄 */
+document.querySelectorAll('input[name=ship]').forEach(function(r){
+  r.addEventListener('change', function(){
+    $('fAddr').style.display = shipMode() === '郵寄' ? '' : 'none';
+    calc();
+  });
+});
+
+function shipMode(){ return document.querySelector('input[name=ship]:checked').value; }
+function totalSheets(){ return num('qCmyk') + num('qMetal'); }
+
+['qCmyk','qMetal','qLayout','qCut'].forEach(function(id){
+  $(id).addEventListener('input', calc);
+});
+$('cMat').addEventListener('change', calc);
+
+/* ===== 計價 ===== */
+function quote(){
+  var nC = num('qCmyk'), nM = num('qMetal');
+  var rows = [], print = 0;
+
+  if(nC){ var s = nC * PRICE.cmyk; print += s;
+    rows.push({k:'印刷色 CMYK', d:nC + ' 張 × ' + PRICE.cmyk, v:s}); }
+  if(nM){ var s2 = nM * PRICE.metal; print += s2;
+    rows.push({k:'金屬色', d:nM + ' 張 × ' + PRICE.metal, v:s2}); }
+
+  /* 階梯折扣：只折印製費 */
+  var t = tierOf(nC + nM), disc = 0;
+  if(t && print > 0){
+    disc = Math.round(print * t.off);
+    rows.push({k:'數量折扣', d:'滿 ' + t.min + ' 張，印製費 ' + tierLabel(t.off), v:-disc, disc:true});
+  }
+
+  var add = 0;
+  if($('cLayout').checked && num('qLayout')){
+    var a1 = num('qLayout') * PRICE.layout; add += a1;
+    rows.push({k:'代客排版', d:num('qLayout') + ' 張 × ' + PRICE.layout, v:a1});
+  }
+  if($('cCut').checked && num('qCut')){
+    var a2 = num('qCut') * PRICE.cut; add += a2;
+    rows.push({k:'代客剪裁（不含半斷）', d:num('qCut') + ' 張 × ' + PRICE.cut, v:a2});
+  }
+  if($('cMat').checked){ add += PRICE.matting;
+    rows.push({k:'大量去背', d:'整筆一次計', v:PRICE.matting}); }
+
+  var ship = shipMode() === '郵寄' ? PRICE.ship : 0;
+  if(ship) rows.push({k:'郵寄運費', d:'一律 ' + PRICE.ship + ' 元', v:ship});
+  else if(totalSheets()) rows.push({k:'自取', d:'免運費', v:0});
+
+  return { rows:rows, total: print - disc + add + ship, sheets: nC + nM };
+}
+
+function calc(){
+  var q = quote(), box = $('costBox');
+  if(!q.sheets){
+    box.innerHTML = '<div class="empty">請先填印製張數</div>';
+    return;
+  }
+  var h = '';
+  q.rows.forEach(function(r){
+    h += '<div class="r' + (r.disc ? ' disc' : '') + '"><span class="k">' + r.k +
+         '<em>' + r.d + '</em></span><span class="v">' +
+         (r.v < 0 ? '−' : '') + money(Math.abs(r.v)) + ' 元</span></div>';
+  });
+  h += '<div class="r sum"><span class="k">合計</span><span class="v">' + money(q.total) + ' 元</span></div>';
+  box.innerHTML = h;
+}
+
+/* ===== 產生訂購訊息 ===== */
+$('genBtn').addEventListener('click', function(){
+  var q = quote();
+  if(!q.sheets){ alert('請先填寫印製張數'); return; }
+
+  var m = '【水晶標轉印貼 訂購登記】\n\n';
+  m += '■ 印製內容\n';
+  if(num('qCmyk'))  m += '‧印刷色 CMYK：' + num('qCmyk') + ' 張 A3\n';
+  if(num('qMetal')) m += '‧金屬色：' + num('qMetal') + ' 張 A3\n';
+
+  var addl = [];
+  if($('cLayout').checked && num('qLayout')) addl.push('代客排版 ' + num('qLayout') + ' 張');
+  if($('cCut').checked && num('qCut'))       addl.push('代客剪裁 ' + num('qCut') + ' 張（不含半斷）');
+  if($('cMat').checked)                      addl.push('大量去背');
+  if(addl.length) m += '\n■ 加購\n‧' + addl.join('\n‧') + '\n';
+
+  m += '\n■ 費用試算\n';
+  q.rows.forEach(function(r){
+    m += '‧' + r.k + '（' + r.d + '）：' + (r.v < 0 ? '−' : '') + money(Math.abs(r.v)) + ' 元\n';
+  });
+  m += '‧合計：' + money(q.total) + ' 元\n';
+
+  m += '\n■ 聯絡資訊\n';
+  m += '‧姓名：' + ($('rcName').value.trim() || '（待填）') + '\n';
+  m += '‧電話：' + ($('rcPhone').value.trim() || '（待填）') + '\n';
+  m += '‧取件：' + shipMode() + '\n';
+  if(shipMode() === '郵寄') m += '‧地址：' + ($('rcAddr').value.trim() || '（待填）') + '\n';
+
+  var nt = $('note').value.trim();
+  if(nt) m += '\n■ 備註\n' + nt + '\n';
+
+  m += '\n※ 檔案將另以 LINE 傳送（PDF／AI，文字轉外框、圖片嵌入）\n';
+  m += '※ 以上為線上試算，實際金額以確認檔案與數量後回覆為準';
+
+  $('msg').textContent = m;
+  $('result').classList.add('show');
+  $('result').scrollIntoView({behavior:'smooth', block:'nearest'});
+});
+
+function copyTo(text, btn, done){
+  var back = btn.textContent;
+  navigator.clipboard.writeText(text).then(function(){
+    btn.textContent = done;
+    setTimeout(function(){ btn.textContent = back; }, 1600);
+  }).catch(function(){
+    alert('複製失敗，請手動選取複製');
+  });
+}
+$('copyBtn').addEventListener('click', function(){ copyTo($('msg').textContent, this, '已複製 ✓'); });
+$('cpBank').addEventListener('click', function(){ copyTo($('bankNo').textContent, this, '已複製帳號 ✓'); });
+
+calc();
+</script>
+</body>
+</html>
