@@ -81,6 +81,17 @@ h3{font-size:15px;font-weight:700;margin:22px 0 10px;color:var(--gold-2);letter-
 .ptable .pv{font-weight:700;white-space:nowrap;color:var(--gold-2);font-size:17px}
 .ptable .pv small{font-size:12px;color:var(--ink-soft);font-weight:400;display:block;text-align:right}
 
+/* 階梯單價表 */
+.tiers{width:100%;border-collapse:collapse;background:var(--card);border:1.5px solid #DECBA4;
+  border-radius:12px;overflow:hidden;font-size:14.5px}
+.tiers th,.tiers td{padding:11px 8px;text-align:center;border-bottom:1px dashed #E9DCBE}
+.tiers thead th{background:#F6E9CB;font-size:13px;font-weight:700;color:var(--ink);white-space:nowrap}
+.tiers tbody tr:last-child td{border-bottom:none}
+.tiers tbody td:first-child{color:var(--ink-soft);font-size:13.5px;white-space:nowrap}
+.tiers tbody td{font-weight:700;color:var(--gold-2)}
+.tiers tbody tr.ask td{color:var(--ink-soft);font-weight:400;font-size:13px;background:#FFF9EC}
+.tiers .swatch{margin-right:4px}
+
 /* form */
 .field{margin-bottom:20px}
 label.t{display:block;font-weight:700;font-size:15px;margin-bottom:8px}
@@ -203,7 +214,7 @@ footer{padding:30px 0 24px;text-align:center}
   </div>
   <div class="eyebrow">CRYSTAL TRANSFER LABEL</div>
   <h1><em>水晶標</em>轉印貼<br>印製訂購</h1>
-  <p>印刷色 CMYK ‧ 金屬色兩種<br>以 A3 計價，可代排版、代剪裁</p>
+  <p>印刷色 CMYK ‧ 金屬色兩種<br>以 A3 計價，量越多單價越低</p>
   <div class="demo">
     <div class="sticker"><b>喜成印刷</b><span>C CHENG</span></div>
     <div class="glare"></div>
@@ -234,15 +245,21 @@ footer{padding:30px 0 24px;text-align:center}
 <section class="wrap">
   <div class="eyebrow">PRICE</div>
   <h2>價目表</h2>
+  <table class="tiers">
+    <thead>
+      <tr>
+        <th>張數（A3）</th>
+        <th><span class="swatch sw-cmyk"></span>印刷色 CMYK</th>
+        <th><span class="swatch sw-metal"></span>金屬色</th>
+      </tr>
+    </thead>
+    <tbody id="tierBody"></tbody>
+  </table>
+  <p class="hint"><b>量越多單價越低</b>，兩種色彩各自依自己的張數計算級距。
+    單張報價即 350／550 元，表格為每張單價、非總價。<b>超過 50 張請洽詢</b>，另有優惠。</p>
+
+  <h3>加購與運費</h3>
   <div class="ptable">
-    <div class="pr main">
-      <div class="pk"><span class="swatch sw-cmyk"></span>水晶標轉印貼（印刷色 CMYK）<em>全彩圖案、照片</em></div>
-      <div class="pv">350<small>元／張 A3</small></div>
-    </div>
-    <div class="pr main">
-      <div class="pk"><span class="swatch sw-metal"></span>水晶標轉印貼（金屬色）<em>金屬質感 LOGO、字體</em></div>
-      <div class="pv">550<small>元／張 A3</small></div>
-    </div>
     <div class="pr">
       <div class="pk">代客排版<em>不會落版、想排滿一張 A3 者適用</em></div>
       <div class="pv">100<small>元／張 A3</small></div>
@@ -273,7 +290,7 @@ footer{padding:30px 0 24px;text-align:center}
     <label class="t">印製張數<small>（A3 為單位）</small></label>
     <div class="qty">
       <div class="qrow">
-        <div class="qi"><b><span class="swatch sw-cmyk"></span>印刷色 CMYK</b><em>350 元／張</em></div>
+        <div class="qi"><b><span class="swatch sw-cmyk"></span>印刷色 CMYK</b><em id="uCmyk">350 元／張</em></div>
         <div class="qc">
           <button type="button" data-step="-1" data-target="qCmyk" aria-label="減少">−</button>
           <input type="number" id="qCmyk" inputmode="numeric" min="0" step="1" value="1">
@@ -282,7 +299,7 @@ footer{padding:30px 0 24px;text-align:center}
         </div>
       </div>
       <div class="qrow">
-        <div class="qi"><b><span class="swatch sw-metal"></span>金屬色</b><em>550 元／張</em></div>
+        <div class="qi"><b><span class="swatch sw-metal"></span>金屬色</b><em id="uMetal">550 元／張</em></div>
         <div class="qc">
           <button type="button" data-step="-1" data-target="qMetal" aria-label="減少">−</button>
           <input type="number" id="qMetal" inputmode="numeric" min="0" step="1" value="0">
@@ -444,7 +461,7 @@ footer{padding:30px 0 24px;text-align:center}
 </footer>
 
 <div class="sticky">
-  <span>水晶標轉印貼 訂製中<em>CMYK 350／金屬色 550 元起 每張 A3</em></span>
+  <span>水晶標轉印貼 訂製中<em>每張 A3：CMYK 350 起、金屬色 550 起，量大更低</em></span>
   <a href="https://line.me/R/ti/p/@623bfkyg" target="_blank" rel="noopener">LINE 詢問</a>
 </div>
 
@@ -452,32 +469,44 @@ footer{padding:30px 0 24px;text-align:center}
 /* ===== 價目（單位：元，未稅） =====
    來源：喜成水晶標轉印貼公開報價。改價只改這裡。 */
 var PRICE = {
-  cmyk   : 350,  /* 印刷色 CMYK，每張 A3 */
-  metal  : 550,  /* 金屬色，每張 A3 */
   layout : 100,  /* 代客排版，每張 A3 */
   cut    :  50,  /* 代客剪裁（無半斷），每張 A3 */
   matting: 600,  /* 照片圖片大量去背，整筆一次 */
   ship   : 100   /* 郵寄運費，整筆一次 */
 };
 
-/* ===== 數量階梯折扣（待老闆給級距）=====
-   規則：依「印製總張數（CMYK + 金屬色）」查表，套用到印製費（不含加購與運費）。
-   填法：由小到大排，min = 該級距的起始張數，off = 折扣（0.05 ＝ 打 95 折）。
-   例：[{min:1,off:0},{min:5,off:0.05},{min:10,off:0.10}]
-   目前空表 ＝ 不打折，單價固定。 */
-var TIERS = [];
+/* ===== 數量階梯單價（老闆 2026-07-20 定）=====
+   兩種色彩「各自」依自己的張數查級距，不合併總張數。
+   例：CMYK 6 張 ＋ 金屬色 6 張 → 各查 1~10 級 ＝ 350 與 550，
+       不會因為加起來 12 張就跳到 11~20 級。 */
+var TIERS = [
+  { min: 1,  max: 10, cmyk: 350, metal: 550 },
+  { min: 11, max: 20, cmyk: 280, metal: 480 },
+  { min: 21, max: 30, cmyk: 200, metal: 400 },
+  { min: 31, max: 40, cmyk: 150, metal: 350 },
+  { min: 41, max: 50, cmyk: 130, metal: 330 }
+];
+/* 超過這個張數不線上報價，改請客人洽詢（大單留議價空間） */
+var MAX_SHEETS = 50;
 
-/* 折數的台灣講法：0.9 → 「9 折」、0.95 → 「95 折」（整十就講一位數） */
-function tierLabel(off){
-  var p = Math.round((1 - off) * 100);
-  return (p % 10 === 0 ? p / 10 : p) + ' 折';
+/* 依張數取該色單價；超出級距表回傳 null ＝ 不給價 */
+function unitOf(kind, n){
+  for(var i=0;i<TIERS.length;i++){
+    if(n >= TIERS[i].min && n <= TIERS[i].max) return TIERS[i][kind];
+  }
+  return null;
 }
 
-function tierOf(n){
-  var hit = null;
-  for(var i=0;i<TIERS.length;i++){ if(n >= TIERS[i].min) hit = TIERS[i]; }
-  return hit && hit.off > 0 ? hit : null;
-}
+/* 把級距表畫進價目表區塊：改 TIERS 就會跟著變，不必手改 HTML，兩邊不可能對不上 */
+(function renderTiers(){
+  var h = '';
+  TIERS.forEach(function(t){
+    h += '<tr><td>' + t.min + '～' + t.max + ' 張</td><td>' + t.cmyk + '</td><td>' + t.metal + '</td></tr>';
+  });
+  h += '<tr class="ask"><td>' + (MAX_SHEETS + 1) +
+       ' 張以上</td><td colspan="2">大量另有優惠，請洽 LINE 詢價</td></tr>';
+  document.getElementById('tierBody').innerHTML = h;
+})();
 
 function $(id){ return document.getElementById(id); }
 function num(id){ var v = parseInt($(id).value,10); return (isNaN(v)||v<0) ? 0 : v; }
@@ -525,17 +554,13 @@ function quote(){
   var nC = num('qCmyk'), nM = num('qMetal');
   var rows = [], print = 0;
 
-  if(nC){ var s = nC * PRICE.cmyk; print += s;
-    rows.push({k:'印刷色 CMYK', d:nC + ' 張 × ' + PRICE.cmyk, v:s}); }
-  if(nM){ var s2 = nM * PRICE.metal; print += s2;
-    rows.push({k:'金屬色', d:nM + ' 張 × ' + PRICE.metal, v:s2}); }
+  /* 任一色超過 50 張就整筆不線上報價，改請客人洽詢 */
+  if(nC > MAX_SHEETS || nM > MAX_SHEETS) return { over:true, sheets:nC + nM, rows:[], total:0 };
 
-  /* 階梯折扣：只折印製費 */
-  var t = tierOf(nC + nM), disc = 0;
-  if(t && print > 0){
-    disc = Math.round(print * t.off);
-    rows.push({k:'數量折扣', d:'滿 ' + t.min + ' 張，印製費 ' + tierLabel(t.off), v:-disc, disc:true});
-  }
+  if(nC){ var uC = unitOf('cmyk', nC), s = nC * uC; print += s;
+    rows.push({k:'印刷色 CMYK', d:nC + ' 張 × ' + uC + ' 元', v:s}); }
+  if(nM){ var uM = unitOf('metal', nM), s2 = nM * uM; print += s2;
+    rows.push({k:'金屬色', d:nM + ' 張 × ' + uM + ' 元', v:s2}); }
 
   var add = 0;
   if($('cLayout').checked && num('qLayout')){
@@ -553,20 +578,34 @@ function quote(){
   if(ship) rows.push({k:'郵寄運費', d:'一律 ' + PRICE.ship + ' 元', v:ship});
   else if(totalSheets()) rows.push({k:'自取', d:'免運費', v:0});
 
-  return { rows:rows, total: print - disc + add + ship, sheets: nC + nM };
+  return { rows:rows, total: print + add + ship, sheets: nC + nM };
+}
+
+/* 張數輸入列的單價標籤跟著級距即時變：客人多填 1 張就看得到單價掉下來 */
+function syncUnits(){
+  [['qCmyk','uCmyk','cmyk'],['qMetal','uMetal','metal']].forEach(function(t){
+    var n = num(t[0]);
+    var u = unitOf(t[2], n < 1 ? 1 : n);
+    $(t[1]).textContent = u === null ? '超過 ' + MAX_SHEETS + ' 張，請洽詢' : u + ' 元／張';
+  });
 }
 
 function calc(){
+  syncUnits();
   var q = quote(), box = $('costBox');
   if(!q.sheets){
     box.innerHTML = '<div class="empty">請先填印製張數</div>';
     return;
   }
+  if(q.over){
+    box.innerHTML = '<div class="empty">單一色彩超過 ' + MAX_SHEETS +
+      ' 張，屬大量印製，<b>另有優惠價</b>。<br>請直接產生訊息傳給我們，會盡快回覆專屬報價。</div>';
+    return;
+  }
   var h = '';
   q.rows.forEach(function(r){
-    h += '<div class="r' + (r.disc ? ' disc' : '') + '"><span class="k">' + r.k +
-         '<em>' + r.d + '</em></span><span class="v">' +
-         (r.v < 0 ? '−' : '') + money(Math.abs(r.v)) + ' 元</span></div>';
+    h += '<div class="r"><span class="k">' + r.k + '<em>' + r.d +
+         '</em></span><span class="v">' + money(r.v) + ' 元</span></div>';
   });
   h += '<div class="r sum"><span class="k">合計</span><span class="v">' + money(q.total) + ' 元</span></div>';
   box.innerHTML = h;
@@ -577,7 +616,7 @@ $('genBtn').addEventListener('click', function(){
   var q = quote();
   if(!q.sheets){ alert('請先填寫印製張數'); return; }
 
-  var m = '【水晶標轉印貼 訂購登記】\n\n';
+  var m = q.over ? '【水晶標轉印貼 大量詢價】\n\n' : '【水晶標轉印貼 訂購登記】\n\n';
   m += '■ 印製內容\n';
   if(num('qCmyk'))  m += '‧印刷色 CMYK：' + num('qCmyk') + ' 張 A3\n';
   if(num('qMetal')) m += '‧金屬色：' + num('qMetal') + ' 張 A3\n';
@@ -588,11 +627,15 @@ $('genBtn').addEventListener('click', function(){
   if($('cMat').checked)                      addl.push('大量去背');
   if(addl.length) m += '\n■ 加購\n‧' + addl.join('\n‧') + '\n';
 
-  m += '\n■ 費用試算\n';
-  q.rows.forEach(function(r){
-    m += '‧' + r.k + '（' + r.d + '）：' + (r.v < 0 ? '−' : '') + money(Math.abs(r.v)) + ' 元\n';
-  });
-  m += '‧合計：' + money(q.total) + ' 元\n';
+  if(q.over){
+    m += '\n■ 費用\n‧超過 ' + MAX_SHEETS + ' 張，屬大量印製，煩請提供專屬報價\n';
+  } else {
+    m += '\n■ 費用試算\n';
+    q.rows.forEach(function(r){
+      m += '‧' + r.k + '（' + r.d + '）：' + money(r.v) + ' 元\n';
+    });
+    m += '‧合計：' + money(q.total) + ' 元\n';
+  }
 
   m += '\n■ 聯絡資訊\n';
   m += '‧姓名：' + ($('rcName').value.trim() || '（待填）') + '\n';
@@ -604,7 +647,8 @@ $('genBtn').addEventListener('click', function(){
   if(nt) m += '\n■ 備註\n' + nt + '\n';
 
   m += '\n※ 檔案將另以 LINE 傳送（PDF／AI，文字轉外框、圖片嵌入）\n';
-  m += '※ 以上為線上試算，實際金額以確認檔案與數量後回覆為準';
+  m += q.over ? '※ 大量印製，煩請回覆專屬報價'
+             : '※ 以上為線上試算，實際金額以確認檔案與數量後回覆為準';
 
   $('msg').textContent = m;
   $('result').classList.add('show');
