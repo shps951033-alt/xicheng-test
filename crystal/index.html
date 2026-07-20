@@ -312,11 +312,12 @@ footer{padding:30px 0 24px;text-align:center}
       <div class="pv">600<small>元／筆</small></div>
     </div>
     <div class="pr">
-      <div class="pk">郵寄運費<em>自取免運</em></div>
+      <div class="pk">郵寄運費<em>自取免運；訂單滿 5,000 元免運</em></div>
       <div class="pv">100<small>元／筆</small></div>
     </div>
   </div>
-  <p class="hint">以上未稅價。基本規格為 A3 整張，未包含剪裁，需自行剪裁；要我們裁好請加購「代客剪裁」。</p>
+  <p class="hint"><b>以上皆為未稅價</b>，發票與稅金於報價時一併確認。
+    基本規格為 A3 整張，未包含剪裁，需自行剪裁；要我們裁好請加購「代客剪裁」。</p>
 </section>
 
 <section class="wrap">
@@ -418,8 +419,9 @@ footer{padding:30px 0 24px;text-align:center}
     <label class="t">取件方式</label>
     <div class="opts" id="ship">
       <label><input type="radio" name="ship" value="自取" checked>自取（免運）</label>
-      <label><input type="radio" name="ship" value="郵寄">郵寄 +100</label>
+      <label><input type="radio" name="ship" value="郵寄">郵寄</label>
     </div>
+    <p class="hint">郵寄運費 100 元，<b>訂單金額滿 5,000 元免運</b>（未稅、不含運費計）。</p>
   </div>
 
   <div class="field">
@@ -442,7 +444,7 @@ footer{padding:30px 0 24px;text-align:center}
   <div class="field">
     <label class="t">費用明細</label>
     <div class="cost" id="costBox"></div>
-    <p class="hint">此為線上試算，實際以我們確認檔案、尺寸與數量後的回覆為準。</p>
+    <p class="hint"><b>金額皆為未稅價。</b>此為線上試算，實際以我們確認檔案、尺寸與數量後的回覆為準。</p>
   </div>
 
   <button class="gen" id="genBtn" type="button">產生訂購訊息</button>
@@ -489,15 +491,16 @@ footer{padding:30px 0 24px;text-align:center}
   <h2>付款與運送</h2>
   <h3>付款方式：匯款</h3>
   <div class="bank">
-    <div class="br"><span class="k">銀行</span><span class="v">中國信託商業銀行（822）</span></div>
-    <div class="br"><span class="k">帳號</span><span class="v" id="bankNo">182540257215</span></div>
-    <button class="cp" id="cpBank" type="button">複製匯款帳號</button>
+    <div class="br"><span class="k">帳號提供</span><span class="v">由專人以 LINE 發送</span></div>
+    <p class="hint" style="margin-top:10px">為了帳務正確與您的款項安全，<b>匯款資訊一律由專人透過官方 LINE
+      （@623bfkyg）提供</b>，本頁不公布帳號。<br>
+      收到您的訂購訊息、確認檔案與張數後，我們會回覆正式報價與匯款資訊；款項確認後即安排印製。</p>
   </div>
-  <p class="hint">報價確認、圖片與張數確認後，收到款項即安排印製。</p>
+  <div class="warnbar">請留意：<b>若有人以其他管道提供帳號或要求變更匯款帳戶，請先與我們電話確認</b>，避免詐騙。</div>
   <h3>運送方式</h3>
   <ul class="list">
     <li><b>自取：</b>免運費，工廠現場取件。</li>
-    <li><b>郵寄：</b>運費一律 100 元。</li>
+    <li><b>郵寄：</b>運費 100 元；<b>訂單金額滿 5,000 元免運</b>。</li>
   </ul>
   <h3>製作工期</h3>
   <ul class="list">
@@ -511,7 +514,7 @@ footer{padding:30px 0 24px;text-align:center}
   <div class="steps">
     <div class="step">填上面的訂購登記，產生訊息後傳到我們 LINE，並附上印製檔案</div>
     <div class="step">我們確認檔案、尺寸與張數，回覆正式報價</div>
-    <div class="step">匯款至中國信託（822）帳號，回傳末五碼</div>
+    <div class="step">專人以 LINE 提供匯款資訊，匯款後回傳末五碼</div>
     <div class="step">安排印製，8～15 個工作天完成，自取或寄出</div>
   </div>
   <p class="hint">有設計、排版需求也可以直接跟我們說，會依需求另行報價。</p>
@@ -539,6 +542,9 @@ var PRICE = {
   matting: 600,  /* 照片圖片大量去背，整筆一次 */
   ship   : 100   /* 郵寄運費，整筆一次 */
 };
+
+/* 訂單金額（未稅，不含運費）滿這個數字免運（老闆 2026-07-20 定） */
+var FREE_SHIP = 5000;
 
 /* ===== 數量階梯單價（老闆 2026-07-20 定）=====
    兩種色彩「各自」依自己的張數查級距，不合併總張數。
@@ -649,7 +655,7 @@ function quote(){
     var p = priceOf(c[0], n); print += p.total;
     /* billQty > n ＝ 用了下一級距的優惠價，明細要講清楚為什麼單價跟張數對不起來 */
     var d = p.billQty > n
-      ? '已套用 ' + p.billQty + ' 張級距優惠價（' + p.unit + ' 元／張）'
+      ? '已套用 ' + p.billQty + ' 張級距優惠價 ' + p.unit + ' 元／張'
       : n + ' 張 × ' + p.unit + ' 元';
     rows.push({ k:c[2], d:d, v:p.total });
   });
@@ -657,20 +663,25 @@ function quote(){
   var add = 0;
   if($('cLayout').checked && num('qLayout')){
     var a1 = num('qLayout') * PRICE.layout; add += a1;
-    rows.push({k:'代客排版', d:num('qLayout') + ' 張 × ' + PRICE.layout, v:a1});
+    rows.push({k:'代客排版', d:num('qLayout') + ' 張 × ' + PRICE.layout + ' 元', v:a1});
   }
   if($('cCut').checked && num('qCut')){
     var a2 = num('qCut') * PRICE.cut; add += a2;
-    rows.push({k:'代客剪裁（不含半斷）', d:num('qCut') + ' 張 × ' + PRICE.cut, v:a2});
+    rows.push({k:'代客剪裁（不含半斷）', d:num('qCut') + ' 張 × ' + PRICE.cut + ' 元', v:a2});
   }
   if($('cMat').checked){ add += PRICE.matting;
     rows.push({k:'大量去背', d:'整筆一次計', v:PRICE.matting}); }
 
-  var ship = shipMode() === '郵寄' ? PRICE.ship : 0;
-  if(ship) rows.push({k:'郵寄運費', d:'一律 ' + PRICE.ship + ' 元', v:ship});
-  else if(totalSheets()) rows.push({k:'自取', d:'免運費', v:0});
+  /* 運費看「未稅小計」：印製＋加購滿 FREE_SHIP 免運，不把運費本身算進門檻 */
+  var sub = print + add, ship = 0, freeShip = false;
+  if(shipMode() === '郵寄'){
+    if(sub >= FREE_SHIP){ freeShip = true; rows.push({k:'郵寄運費', d:'訂單滿 ' + money(FREE_SHIP) + ' 元，免運', v:0}); }
+    else { ship = PRICE.ship; rows.push({k:'郵寄運費', d:'滿 ' + money(FREE_SHIP) + ' 元免運，還差 ' + money(FREE_SHIP - sub) + ' 元', v:ship}); }
+  } else if(totalSheets()){
+    rows.push({k:'自取', d:'免運費', v:0});
+  }
 
-  return { rows:rows, total: print + add + ship, sheets: nC + nM };
+  return { rows:rows, total: sub + ship, sheets: nC + nM, freeShip:freeShip, sub:sub };
 }
 
 /* 張數輸入列的單價標籤跟著級距即時變：客人多填 1 張就看得到單價掉下來 */
@@ -702,7 +713,7 @@ function calc(){
     h += '<div class="r"><span class="k">' + r.k + '<em>' + r.d +
          '</em></span><span class="v">' + money(r.v) + ' 元</span></div>';
   });
-  h += '<div class="r sum"><span class="k">合計</span><span class="v">' + money(q.total) + ' 元</span></div>';
+  h += '<div class="r sum"><span class="k">合計<em>未稅價</em></span><span class="v">' + money(q.total) + ' 元</span></div>';
   box.innerHTML = h;
 }
 
@@ -963,7 +974,7 @@ $('genBtn').addEventListener('click', function(){
     q.rows.forEach(function(r){
       m += '‧' + r.k + '（' + r.d + '）：' + money(r.v) + ' 元\n';
     });
-    m += '‧合計：' + money(q.total) + ' 元\n';
+    m += '‧合計：' + money(q.total) + ' 元（未稅）\n';
   }
 
   m += '\n■ 聯絡資訊\n';
@@ -994,7 +1005,6 @@ function copyTo(text, btn, done){
   });
 }
 $('copyBtn').addEventListener('click', function(){ copyTo($('msg').textContent, this, '已複製 ✓'); });
-$('cpBank').addEventListener('click', function(){ copyTo($('bankNo').textContent, this, '已複製帳號 ✓'); });
 
 layout();
 calc();
