@@ -105,9 +105,29 @@ h3{font-size:15px;font-weight:700;margin:22px 0 10px;color:var(--gold-2);letter-
 .layout-out.bad{border-color:#EBC7BF;background:#FCEDEA}
 .layout-out.bad .ln{color:#8A3C31}
 
-.a3box{background:#EFE7D4;border:1.5px solid #DECBA4;border-radius:12px;padding:14px;text-align:center}
-.a3box svg{width:100%;max-width:280px;height:auto;display:block;margin:0 auto;
-  filter:drop-shadow(0 4px 10px rgba(80,58,30,.18))}
+.a3box{background:#EFE7D4;border:1.5px solid #DECBA4;border-radius:12px;padding:14px;
+  display:flex;flex-wrap:wrap;gap:12px;justify-content:center}
+.sheet{flex:0 0 auto;width:150px;max-width:46%}
+.sheet svg{width:100%;height:auto;display:block;filter:drop-shadow(0 4px 10px rgba(80,58,30,.18))}
+.sheet .lb{font-size:11.5px;color:var(--ink-soft);text-align:center;margin-top:6px}
+.a3box.solo .sheet{width:280px;max-width:100%}
+.a3box .more{flex:1 0 100%;text-align:center;font-size:12.5px;color:var(--ink-soft)}
+
+/* 圖案清單列 */
+.irow{background:var(--card);border:1.5px solid #DECBA4;border-radius:12px;padding:11px 13px;margin-bottom:10px}
+.irow .top{display:flex;align-items:center;gap:9px;margin-bottom:9px}
+.irow .top .nm{flex:1;font-size:14px;font-weight:700;display:flex;align-items:center;gap:7px}
+.irow .top .sw{width:17px;height:17px;flex:none;background:#E8C980;border:1.5px solid var(--gold-2)}
+.irow .top .sw.circle{border-radius:50%}
+.irow .top .del{flex:none;background:none;border:1px solid #DECBA4;color:var(--ink-soft);border-radius:999px;
+  width:28px;height:28px;font-size:14px;line-height:1;cursor:pointer;font-family:inherit}
+.irow .fs{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.irow .fs select{width:auto;flex:none;padding:9px 10px;font-size:14px}
+.irow .fs input{width:66px;flex:none;text-align:center;padding:9px 6px;font-size:15px;font-weight:700}
+.irow .fs span{font-size:13px;color:var(--ink-soft)}
+.irow .fs .qn{margin-left:auto}
+.addrow{width:100%;background:#F6E9CB;border:1.5px dashed var(--gold-line);color:var(--gold-2);
+  border-radius:12px;padding:12px;font-size:14.5px;font-weight:700;font-family:inherit;cursor:pointer}
 
 /* form */
 .field{margin-bottom:20px}
@@ -273,7 +293,9 @@ footer{padding:30px 0 24px;text-align:center}
     <tbody id="tierBody"></tbody>
   </table>
   <p class="hint"><b>量越多單價越低</b>，兩種色彩各自依自己的張數計算級距。
-    單張報價即 350／550 元，表格為每張單價、非總價。<b>超過 50 張請洽詢</b>，另有優惠。</p>
+    表格為每張單價、非總價。<b>超過 50 張請洽詢</b>，另有優惠。<br>
+    系統會自動幫你算最划算的價格：張數接近下一個級距時直接以優惠價計，
+    <b>不會發生「多印一張反而比較便宜」的情形</b>。</p>
 
   <h3>加購與運費</h3>
   <div class="ptable">
@@ -304,37 +326,18 @@ footer{padding:30px 0 24px;text-align:center}
     可排範圍 <b>28 × 42 公分</b>，圖案之間固定留 <b>1 公分</b>以上間距。</p>
 
   <div class="field">
-    <div class="qty">
-      <div class="qrow">
-        <div class="qi"><b>圖案寬度</b><em>含圖案最外緣，單位公分</em></div>
-        <div class="qc">
-          <input type="number" id="pw" inputmode="decimal" min="0.5" max="42" step="0.1" value="5">
-          <span>cm</span>
-        </div>
-      </div>
-      <div class="qrow">
-        <div class="qi"><b>圖案高度</b><em>含圖案最外緣，單位公分</em></div>
-        <div class="qc">
-          <input type="number" id="ph" inputmode="decimal" min="0.5" max="42" step="0.1" value="5">
-          <span>cm</span>
-        </div>
-      </div>
-      <div class="qrow">
-        <div class="qi"><b>想製作的總數量</b><em>全部總共要幾個</em></div>
-        <div class="qc">
-          <button type="button" data-step="-1" data-target="pn" aria-label="減少">−</button>
-          <input type="number" id="pn" inputmode="numeric" min="1" step="1" value="50">
-          <span>個</span>
-          <button type="button" data-step="1" data-target="pn" aria-label="增加">＋</button>
-        </div>
-      </div>
-    </div>
+    <div id="shapeRows"></div>
+    <button class="addrow" id="addRow" type="button">＋ 再加一種圖案（不同形狀或不同大小）</button>
+    <p class="hint">同一張 A3 可以混排不同圖案、不同尺寸。每種各填一列即可。</p>
   </div>
 
   <div class="layout-out" id="layoutOut"></div>
-  <div class="a3box"><svg id="a3svg" viewBox="0 0 297 420" role="img" aria-label="A3 落版示意"></svg></div>
-  <p class="hint">示意圖僅供估算張數，實際落版會由我們依你的檔案微調（圖案形狀不是方的時候通常還能再多排一些）。
-    不同尺寸的圖案想排在同一張，直接跟我們說即可。</p>
+  <div class="a3box" id="sheetBox"></div>
+  <div class="warnbar" style="margin-top:14px">
+    <b>此示意圖僅供參考。</b>系統以圖案的外框方框估算，
+    <b>實際可排數量會依圖形不同而有所差別</b> —— 圓形、不規則形、有斜邊的圖案通常還能再排得更密一些。
+    實際落版由我們依你的檔案調整，會以確認後的張數為準。
+  </div>
   <div class="row2" style="margin-top:14px">
     <button class="btn2 copy" type="button" data-apply="qCmyk">帶入 CMYK 張數</button>
     <button class="btn2 copy" type="button" data-apply="qMetal">帶入金屬色張數</button>
@@ -551,12 +554,34 @@ var TIERS = [
 /* 超過這個張數不線上報價，改請客人洽詢（大單留議價空間） */
 var MAX_SHEETS = 50;
 
-/* 依張數取該色單價；超出級距表回傳 null ＝ 不給價 */
+/* 依張數取該色的「牌價」單價（價目表上寫的那個） */
 function unitOf(kind, n){
   for(var i=0;i<TIERS.length;i++){
     if(n >= TIERS[i].min && n <= TIERS[i].max) return TIERS[i][kind];
   }
   return null;
+}
+
+/* ===== 實收價：不會因為多印一張反而變便宜 =====
+   整段套同一單價的級距，天生會反轉：10 張 ×350 ＝ 3,500，但 11 張 ×280 只要 3,080。
+   客人自己按得出來，看起來像陷阱。這裡改成「拿較低的那個算」——
+   張數不足下一級距時，直接以下一級距的起跳張數計價，客人付的錢只會更少、不會更多。
+   最低仍守住 130／330（41~50 級距的單價），不會低於老闆的底價。
+   老闆 2026-07-20 授權調整。 */
+function priceOf(kind, n){
+  if(n <= 0) return null;
+  if(n > MAX_SHEETS) return null;
+  var best = null;
+  for(var i=0;i<TIERS.length;i++){
+    var t = TIERS[i];
+    var billQty = Math.max(n, t.min);        /* 不足起跳張數就以起跳張數計 */
+    if(billQty > MAX_SHEETS) continue;
+    var total = billQty * t[kind];
+    if(best === null || total < best.total){
+      best = { total:total, unit:t[kind], tier:t, billQty:billQty };
+    }
+  }
+  return best;
 }
 
 /* 把級距表畫進價目表區塊：改 TIERS 就會跟著變，不必手改 HTML，兩邊不可能對不上 */
@@ -579,9 +604,8 @@ document.querySelectorAll('.qc button').forEach(function(b){
   b.addEventListener('click', function(){
     var el = $(b.dataset.target);
     var v = (parseInt(el.value,10)||0) + parseInt(b.dataset.step,10);
-    var min = el.id === 'pn' ? 1 : 0;   /* 落版的「想做幾個」最少 1 個 */
-    el.value = v < min ? min : v;
-    if(el.id === 'pn') layout(); else calc();
+    el.value = v < 0 ? 0 : v;
+    calc();
   });
 });
 
@@ -620,10 +644,15 @@ function quote(){
   /* 任一色超過 50 張就整筆不線上報價，改請客人洽詢 */
   if(nC > MAX_SHEETS || nM > MAX_SHEETS) return { over:true, sheets:nC + nM, rows:[], total:0 };
 
-  if(nC){ var uC = unitOf('cmyk', nC), s = nC * uC; print += s;
-    rows.push({k:'印刷色 CMYK', d:nC + ' 張 × ' + uC + ' 元', v:s}); }
-  if(nM){ var uM = unitOf('metal', nM), s2 = nM * uM; print += s2;
-    rows.push({k:'金屬色', d:nM + ' 張 × ' + uM + ' 元', v:s2}); }
+  [['cmyk', nC, '印刷色 CMYK'], ['metal', nM, '金屬色']].forEach(function(c){
+    var n = c[1]; if(!n) return;
+    var p = priceOf(c[0], n); print += p.total;
+    /* billQty > n ＝ 用了下一級距的優惠價，明細要講清楚為什麼單價跟張數對不起來 */
+    var d = p.billQty > n
+      ? '已套用 ' + p.billQty + ' 張級距優惠價（' + p.unit + ' 元／張）'
+      : n + ' 張 × ' + p.unit + ' 元';
+    rows.push({ k:c[2], d:d, v:p.total });
+  });
 
   var add = 0;
   if($('cLayout').checked && num('qLayout')){
@@ -647,9 +676,12 @@ function quote(){
 /* 張數輸入列的單價標籤跟著級距即時變：客人多填 1 張就看得到單價掉下來 */
 function syncUnits(){
   [['qCmyk','uCmyk','cmyk'],['qMetal','uMetal','metal']].forEach(function(t){
-    var n = num(t[0]);
-    var u = unitOf(t[2], n < 1 ? 1 : n);
-    $(t[1]).textContent = u === null ? '超過 ' + MAX_SHEETS + ' 張，請洽詢' : u + ' 元／張';
+    var n = num(t[0]); if(n < 1) n = 1;
+    var p = priceOf(t[2], n);
+    if(!p){ $(t[1]).textContent = '超過 ' + MAX_SHEETS + ' 張，請洽詢'; return; }
+    /* 顯示實際平均單價，客人看到的數字才會跟合計對得起來 */
+    var avg = Math.round(p.total / n);
+    $(t[1]).textContent = avg + ' 元／張' + (p.billQty > n ? '（已套用量大優惠）' : '');
   });
 }
 
@@ -676,102 +708,212 @@ function calc(){
 
 /* ===== A3 落版預覽 =====
    可排範圍 28 × 42 cm，圖案之間至少留 1 cm（老闆 2026-07-20 定的落版規則）。
-   n 個圖案橫排佔 n×寬 ＋ (n−1)×間距 ≤ 28 → n ≤ (28 + 1) / (寬 + 1)，直排同理。 */
+   支援多種圖案混排（不同形狀、不同尺寸），用貨架式排版（shelf packing）：
+   高的先排，逐列由左往右填，填不下就換列、換張。
+   單一尺寸時結果與「每列排滿再換列」的格狀排版完全相同。
+   這是估算用的近似排法，實際落版由師傅依檔案調整（圓形、不規則形通常還能更密）。 */
 var LAY = { W:28, H:42, GAP:1 };
-var EPS = 1e-9;   /* 5 cm 這種輸入用浮點算會差一點點，容差避免整格被判掉 */
+var EPS = 1e-9;      /* 5 cm 這種輸入浮點會差一點點，容差避免整格被判掉 */
+var MAX_DRAW = 6;    /* 最多畫幾張示意圖，超過只畫前幾張並註明 */
 
-function fitGrid(a, b){
-  if(a <= 0 || b <= 0) return null;
-  if(a > LAY.W + EPS || b > LAY.H + EPS) return null;
-  var c = Math.floor((LAY.W + LAY.GAP) / (a + LAY.GAP) + EPS);
-  var r = Math.floor((LAY.H + LAY.GAP) / (b + LAY.GAP) + EPS);
-  if(c < 1 || r < 1) return null;
-  return { cols:c, rows:r, n:c * r, iw:a, ih:b };
+/* 客人填的圖案清單：形狀、寬、高、數量 */
+var items = [{ shape:'rect', w:5, h:5, qty:50 }];
+
+function fitsSheet(w, h){ return w <= LAY.W + EPS && h <= LAY.H + EPS; }
+
+/* 貨架式排版：把 list 依序排進數張 A3，回傳每張的擺放座標 */
+function pack(list){
+  var sheets = [], cur = [], x = 0, y = 0, shelfH = 0;
+  for(var i = 0; i < list.length; i++){
+    var it = list[i];
+    /* 這一列放不下 → 換列 */
+    if(x > 0 && x + it.w > LAY.W + EPS){
+      y += shelfH + LAY.GAP; x = 0; shelfH = 0;
+    }
+    /* 這張放不下 → 換新的一張 */
+    if(y + it.h > LAY.H + EPS){
+      sheets.push(cur); cur = []; x = 0; y = 0; shelfH = 0;
+    }
+    cur.push({ x:x, y:y, w:it.w, h:it.h, shape:it.shape });
+    x += it.w + LAY.GAP;
+    if(it.h > shelfH) shelfH = it.h;
+  }
+  if(cur.length) sheets.push(cur);
+  return sheets;
 }
 
-/* 直放與轉 90 度各算一次，取排得多的那個 */
-function bestFit(w, h){
-  var A = fitGrid(w, h), B = fitGrid(h, w);
-  if(A) A.rot = false;
-  if(B) B.rot = true;
-  if(!A) return B;
-  if(!B) return A;
-  return B.n > A.n ? B : A;
+/* 全部直放 vs 全部轉 90 度，取張數少的（同張數取第一張排得多的） */
+function packBest(items){
+  var opts = [];
+  [false, true].forEach(function(rot){
+    var list = [], ok = true;
+    items.forEach(function(it){
+      var w = rot ? it.h : it.w, h = rot ? it.w : it.h;
+      if(!fitsSheet(w, h)) ok = false;
+      for(var i = 0; i < it.qty; i++) list.push({ w:w, h:h, shape:it.shape });
+    });
+    if(!ok || !list.length) return;
+    /* 高的先排，貨架才不會浪費 —— 同高時寬的先排 */
+    list.sort(function(a, b){ return (b.h - a.h) || (b.w - a.w); });
+    var sheets = pack(list);
+    opts.push({ rot:rot, sheets:sheets, n:sheets.length, first:sheets[0].length });
+  });
+  if(!opts.length) return null;
+  opts.sort(function(a, b){ return (a.n - b.n) || (b.first - a.first); });
+  return opts[0];
 }
 
-function fnum(id){ var v = parseFloat($(id).value); return (isNaN(v) || v <= 0) ? 0 : v; }
-
-function drawA3(f){
-  var svg = $('a3svg'), s = '';
-  /* viewBox 單位＝公釐，1 cm ＝ 10 */
+function drawSheet(placed, rot){
+  var s = '';
   var ox = (297 - LAY.W * 10) / 2, oy = (420 - LAY.H * 10) / 2;
   s += '<rect x="0" y="0" width="297" height="420" rx="3" fill="#FFFDF7" stroke="#C9A24B" stroke-width="1.2"/>';
   s += '<rect x="' + ox + '" y="' + oy + '" width="' + LAY.W * 10 + '" height="' + LAY.H * 10 +
        '" fill="none" stroke="#C9A24B" stroke-width="0.8" stroke-dasharray="5 4" opacity=".7"/>';
-
-  if(f){
-    var iw = f.iw * 10, ih = f.ih * 10, g = LAY.GAP * 10;
-    var totW = f.cols * iw + (f.cols - 1) * g, totH = f.rows * ih + (f.rows - 1) * g;
-    var sx = ox + (LAY.W * 10 - totW) / 2, sy = oy + (LAY.H * 10 - totH) / 2;
-    for(var r = 0; r < f.rows; r++){
-      for(var c = 0; c < f.cols; c++){
-        s += '<rect x="' + (sx + c * (iw + g)).toFixed(2) + '" y="' + (sy + r * (ih + g)).toFixed(2) +
-             '" width="' + iw.toFixed(2) + '" height="' + ih.toFixed(2) +
-             '" rx="1" fill="#E8C980" fill-opacity=".55" stroke="#B8873C" stroke-width="0.7"/>';
-      }
+  (placed || []).forEach(function(p){
+    var x = ox + p.x * 10, y = oy + p.y * 10, w = p.w * 10, h = p.h * 10;
+    if(p.shape === 'circle'){
+      s += '<ellipse cx="' + (x + w / 2).toFixed(2) + '" cy="' + (y + h / 2).toFixed(2) +
+           '" rx="' + (w / 2).toFixed(2) + '" ry="' + (h / 2).toFixed(2) +
+           '" fill="#E8C980" fill-opacity=".55" stroke="#B8873C" stroke-width="0.7"/>';
+    } else {
+      s += '<rect x="' + x.toFixed(2) + '" y="' + y.toFixed(2) + '" width="' + w.toFixed(2) +
+           '" height="' + h.toFixed(2) + '" rx="1" fill="#E8C980" fill-opacity=".55" stroke="#B8873C" stroke-width="0.7"/>';
     }
-  }
-  s += '<text x="148.5" y="414" text-anchor="middle" font-size="11" fill="#8A7550">A3　29.7 × 42 cm</text>';
-  svg.innerHTML = s;
+  });
+  s += '<text x="148.5" y="414" text-anchor="middle" font-size="11" fill="#8A7550">A3　29.7 × 42 cm' +
+       (rot ? '（轉 90 度）' : '') + '</text>';
+  return '<svg viewBox="0 0 297 420" role="img" aria-label="A3 落版示意">' + s + '</svg>';
 }
 
+/* ---------- 圖案清單的輸入列 ---------- */
+function renderRows(){
+  var h = '';
+  items.forEach(function(it, i){
+    h += '<div class="irow" data-i="' + i + '">' +
+           '<div class="top">' +
+             '<span class="nm"><i class="sw' + (it.shape === 'circle' ? ' circle' : '') + '"></i>' +
+               '圖案 ' + (i + 1) + '</span>' +
+             (items.length > 1 ? '<button type="button" class="del" data-del="' + i + '" aria-label="刪除這列">✕</button>' : '') +
+           '</div>' +
+           '<div class="fs">' +
+             '<select data-f="shape"><option value="rect"' + (it.shape === 'rect' ? ' selected' : '') + '>方形</option>' +
+               '<option value="circle"' + (it.shape === 'circle' ? ' selected' : '') + '>圓形</option></select>' +
+             '<input type="number" data-f="w" inputmode="decimal" min="0.5" max="42" step="0.1" value="' + it.w + '">' +
+             '<span>×</span>' +
+             '<input type="number" data-f="h" inputmode="decimal" min="0.5" max="42" step="0.1" value="' + it.h + '">' +
+             '<span>cm</span>' +
+             '<span class="qn">數量</span>' +
+             '<input type="number" data-f="qty" inputmode="numeric" min="1" step="1" value="' + it.qty + '">' +
+             '<span>個</span>' +
+           '</div>' +
+         '</div>';
+  });
+  $('shapeRows').innerHTML = h;
+}
+
+/* 圓形填的是直徑：寬高其中一個改了、另一個沒被手動改過時跟著同步，省得客人填兩次 */
+$('shapeRows').addEventListener('input', function(e){
+  var f = e.target.dataset.f; if(!f) return;
+  var i = +e.target.closest('.irow').dataset.i, it = items[i];
+  var v = parseFloat(e.target.value);
+  if(f === 'qty') it.qty = (isNaN(v) || v < 1) ? 1 : Math.round(v);
+  else it[f] = (isNaN(v) || v <= 0) ? 0 : v;
+  layoutTouched = true;
+  layout();
+});
+$('shapeRows').addEventListener('change', function(e){
+  if(e.target.dataset.f !== 'shape') return;
+  var i = +e.target.closest('.irow').dataset.i;
+  items[i].shape = e.target.value;
+  layoutTouched = true;
+  renderRows(); layout();
+});
+$('shapeRows').addEventListener('click', function(e){
+  var d = e.target.dataset.del; if(d === undefined) return;
+  items.splice(+d, 1);
+  layoutTouched = true;
+  renderRows(); layout();
+});
+$('addRow').addEventListener('click', function(){
+  var last = items[items.length - 1];
+  items.push({ shape:last ? last.shape : 'rect', w:3, h:3, qty:20 });
+  layoutTouched = true;
+  renderRows(); layout();
+});
+
+/* ---------- 主流程 ---------- */
 function layout(){
-  var w = fnum('pw'), h = fnum('ph'), want = num('pn');
-  var box = $('layoutOut');
+  var box = $('layoutOut'), sb = $('sheetBox');
   box.classList.remove('bad');
 
-  if(!w || !h){
-    box.innerHTML = '<div class="ln">請填入圖案的寬度與高度。</div>';
-    drawA3(null); return null;
+  var valid = items.filter(function(it){ return it.w > 0 && it.h > 0 && it.qty > 0; });
+  if(!valid.length){
+    box.innerHTML = '<div class="ln">請填入圖案的寬度、高度與數量。</div>';
+    sb.innerHTML = drawSheetWrap(drawSheet([], false), '');
+    return null;
   }
 
-  var f = bestFit(w, h);
-  if(!f){
+  var tooBig = valid.filter(function(it){
+    return !fitsSheet(it.w, it.h) && !fitsSheet(it.h, it.w);
+  });
+  if(tooBig.length){
     box.classList.add('bad');
-    box.innerHTML = '<div class="ln"><b>這個尺寸排不進 A3。</b><br>可排範圍是 ' +
-      LAY.W + ' × ' + LAY.H + ' 公分，你填的是 ' + w + ' × ' + h +
-      ' 公分。超過這個尺寸需要分件或改用其他規格，請洽 LINE 詢問。</div>';
-    drawA3(null); return null;
+    box.innerHTML = '<div class="ln"><b>有圖案排不進 A3。</b><br>可排範圍是 ' + LAY.W + ' × ' + LAY.H +
+      ' 公分，' + tooBig.map(function(it){ return it.w + ' × ' + it.h + ' 公分'; }).join('、') +
+      ' 超過了。這種尺寸需要分件或改用其他規格，請洽 LINE 詢問。</div>';
+    sb.innerHTML = drawSheetWrap(drawSheet([], false), '');
+    return null;
   }
 
-  var per = f.n, sheets = want ? Math.ceil(want / per) : 0;
-  var left = sheets ? sheets * per - want : 0;
+  var res = packBest(valid);
+  if(!res){ box.innerHTML = '<div class="ln">請填入圖案的寬度、高度與數量。</div>'; return null; }
+
+  var totalQty = valid.reduce(function(a, it){ return a + it.qty; }, 0);
+  var sheets = res.n, per = res.sheets[0].length;
+  var kinds = valid.length;
 
   var h2 = '<div class="big">';
-  h2 += '<div class="b"><em>每張 A3 可排</em><b>' + per + '<small>個</small></b></div>';
-  if(sheets) h2 += '<div class="b"><em>做 ' + want + ' 個需要</em><b>' + sheets + '<small>張 A3</small></b></div>';
+  h2 += '<div class="b"><em>' + (kinds > 1 ? '第一張 A3 排' : '每張 A3 可排') + '</em><b>' + per + '<small>個</small></b></div>';
+  h2 += '<div class="b"><em>做 ' + totalQty + ' 個需要</em><b>' + sheets + '<small>張 A3</small></b></div>';
   h2 += '</div>';
 
-  h2 += '<div class="ln">排法：<b>' + f.cols + ' 欄 × ' + f.rows + ' 列</b>' +
-        (f.rot ? '，圖案<b>轉 90 度</b>排比較省' : '') + '。';
-  if(sheets && left > 0){
-    h2 += '<br>最後一張還空著 <b>' + left + ' 個</b>位置 —— 同一張版費用一樣，' +
-          '做滿 <b>' + sheets * per + ' 個</b>不會多收錢。';
-  } else if(sheets && left === 0){
-    h2 += '<br>剛好排滿 <b>' + sheets + ' 張</b>，沒有浪費。';
+  h2 += '<div class="ln">';
+  if(kinds > 1){
+    h2 += '共 <b>' + kinds + ' 種圖案</b>混排，系統把大的先排、小的補空隙。';
+  } else {
+    var lastSheet = res.sheets[sheets - 1].length, left = per - lastSheet;
+    h2 += '每張排 <b>' + per + ' 個</b>' + (res.rot ? '（圖案<b>轉 90 度</b>排比較省）' : '') + '。';
+    if(left > 0){
+      h2 += '<br>最後一張還空著 <b>' + left + ' 個</b>位置 —— 同一張版費用一樣，' +
+            '做滿 <b>' + (sheets * per) + ' 個</b>不會多收錢。';
+    } else {
+      h2 += '<br>剛好排滿 <b>' + sheets + ' 張</b>，沒有浪費。';
+    }
   }
   h2 += '</div>';
   box.innerHTML = h2;
 
-  drawA3(f);
+  var draw = res.sheets.slice(0, MAX_DRAW), out = '';
+  draw.forEach(function(sh, i){
+    out += drawSheetWrap(drawSheet(sh, res.rot),
+      sheets > 1 ? '第 ' + (i + 1) + ' 張　' + sh.length + ' 個' : sh.length + ' 個');
+  });
+  if(sheets > MAX_DRAW) out += '<div class="more">⋯⋯ 另有 ' + (sheets - MAX_DRAW) + ' 張排法相同，未逐一顯示</div>';
+  sb.className = 'a3box' + (draw.length === 1 ? ' solo' : '');
+  sb.innerHTML = out;
+
   return sheets;
+}
+
+function drawSheetWrap(svg, label){
+  return '<div class="sheet">' + svg + (label ? '<div class="lb">' + label + '</div>' : '') + '</div>';
 }
 
 /* 帶入下單張數 */
 document.querySelectorAll('[data-apply]').forEach(function(b){
   b.addEventListener('click', function(){
     var sheets = layout();
-    if(!sheets){ alert('請先填好圖案尺寸與想製作的數量'); return; }
+    if(!sheets){ alert('請先填好圖案尺寸與數量'); return; }
     layoutTouched = true;
     $(b.dataset.apply).value = sheets;
     calc();
@@ -779,11 +921,9 @@ document.querySelectorAll('[data-apply]').forEach(function(b){
   });
 });
 
-/* 客人有沒有真的用過落版預覽：沒動過就不要把預設值 5×5 當成他的圖案尺寸寫進訊息 */
+/* 客人有沒有真的用過落版預覽：沒動過就不要把預設值當成他的圖案尺寸寫進訊息 */
 var layoutTouched = false;
-['pw','ph','pn'].forEach(function(id){
-  $(id).addEventListener('input', function(){ layoutTouched = true; layout(); });
-});
+renderRows();
 
 /* ===== 產生訂購訊息 ===== */
 $('genBtn').addEventListener('click', function(){
@@ -797,13 +937,16 @@ $('genBtn').addEventListener('click', function(){
 
   /* 客人用過落版預覽就一併附上，我們收到就知道圖多大、怎麼排 */
   if(layoutTouched){
-    var lw = fnum('pw'), lh = fnum('ph'), lf = (lw && lh) ? bestFit(lw, lh) : null;
-    if(lf){
-      m += '\n■ 落版（客人自行預估）\n';
-      m += '‧圖案尺寸：' + lw + ' × ' + lh + ' 公分\n';
-      m += '‧想製作數量：' + num('pn') + ' 個\n';
-      m += '‧每張 A3 可排 ' + lf.n + ' 個（' + lf.cols + ' 欄 × ' + lf.rows + ' 列' +
-           (lf.rot ? '，轉 90 度' : '') + '）\n';
+    var vi = items.filter(function(it){ return it.w > 0 && it.h > 0 && it.qty > 0; });
+    var lr = vi.length ? packBest(vi) : null;
+    if(lr){
+      m += '\n■ 落版（客人自行預估，僅供參考）\n';
+      vi.forEach(function(it, i){
+        m += '‧圖案 ' + (i + 1) + '：' + (it.shape === 'circle' ? '圓形' : '方形') + ' ' +
+             it.w + ' × ' + it.h + ' 公分，' + it.qty + ' 個\n';
+      });
+      m += '‧預估 ' + lr.n + ' 張 A3（第一張排 ' + lr.sheets[0].length + ' 個' +
+           (lr.rot ? '，轉 90 度' : '') + '）\n';
     }
   }
 
