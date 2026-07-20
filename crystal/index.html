@@ -92,6 +92,23 @@ h3{font-size:15px;font-weight:700;margin:22px 0 10px;color:var(--gold-2);letter-
 .tiers tbody tr.ask td{color:var(--ink-soft);font-weight:400;font-size:13px;background:#FFF9EC}
 .tiers .swatch{margin-right:4px}
 
+/* A3 落版預覽 */
+.layout-out{background:var(--card);border:1.5px solid var(--gold-line);border-radius:12px;padding:14px 16px;margin-bottom:14px}
+.layout-out .big{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px}
+.layout-out .big .b{flex:1;min-width:130px;background:#FFF9EC;border:1px solid #E8D5A6;border-radius:10px;
+  padding:11px 13px;text-align:center}
+.layout-out .big .b em{font-style:normal;display:block;font-size:12.5px;color:var(--ink-soft)}
+.layout-out .big .b b{font-size:24px;color:var(--gold-2);line-height:1.3}
+.layout-out .big .b b small{font-size:13px;font-weight:400;color:var(--ink-soft);margin-left:3px}
+.layout-out .ln{font-size:13.5px;color:var(--ink-soft);line-height:1.75}
+.layout-out .ln b{color:var(--ink)}
+.layout-out.bad{border-color:#EBC7BF;background:#FCEDEA}
+.layout-out.bad .ln{color:#8A3C31}
+
+.a3box{background:#EFE7D4;border:1.5px solid #DECBA4;border-radius:12px;padding:14px;text-align:center}
+.a3box svg{width:100%;max-width:280px;height:auto;display:block;margin:0 auto;
+  filter:drop-shadow(0 4px 10px rgba(80,58,30,.18))}
+
 /* form */
 .field{margin-bottom:20px}
 label.t{display:block;font-weight:700;font-size:15px;margin-bottom:8px}
@@ -281,6 +298,50 @@ footer{padding:30px 0 24px;text-align:center}
 </section>
 
 <section class="wrap">
+  <div class="eyebrow">LAYOUT</div>
+  <h2>A3 落版預覽</h2>
+  <p class="hint" style="margin:-8px 0 18px">填入你要製作的圖案尺寸，看看一張 A3 排得下幾個、總共需要幾張。
+    可排範圍 <b>28 × 42 公分</b>，圖案之間固定留 <b>1 公分</b>以上間距。</p>
+
+  <div class="field">
+    <div class="qty">
+      <div class="qrow">
+        <div class="qi"><b>圖案寬度</b><em>含圖案最外緣，單位公分</em></div>
+        <div class="qc">
+          <input type="number" id="pw" inputmode="decimal" min="0.5" max="42" step="0.1" value="5">
+          <span>cm</span>
+        </div>
+      </div>
+      <div class="qrow">
+        <div class="qi"><b>圖案高度</b><em>含圖案最外緣，單位公分</em></div>
+        <div class="qc">
+          <input type="number" id="ph" inputmode="decimal" min="0.5" max="42" step="0.1" value="5">
+          <span>cm</span>
+        </div>
+      </div>
+      <div class="qrow">
+        <div class="qi"><b>想製作的總數量</b><em>全部總共要幾個</em></div>
+        <div class="qc">
+          <button type="button" data-step="-1" data-target="pn" aria-label="減少">−</button>
+          <input type="number" id="pn" inputmode="numeric" min="1" step="1" value="50">
+          <span>個</span>
+          <button type="button" data-step="1" data-target="pn" aria-label="增加">＋</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="layout-out" id="layoutOut"></div>
+  <div class="a3box"><svg id="a3svg" viewBox="0 0 297 420" role="img" aria-label="A3 落版示意"></svg></div>
+  <p class="hint">示意圖僅供估算張數，實際落版會由我們依你的檔案微調（圖案形狀不是方的時候通常還能再多排一些）。
+    不同尺寸的圖案想排在同一張，直接跟我們說即可。</p>
+  <div class="row2" style="margin-top:14px">
+    <button class="btn2 copy" type="button" data-apply="qCmyk">帶入 CMYK 張數</button>
+    <button class="btn2 copy" type="button" data-apply="qMetal">帶入金屬色張數</button>
+  </div>
+</section>
+
+<section class="wrap">
   <div class="eyebrow">ORDER</div>
   <h2>線上試算 ‧ 訂購登記</h2>
   <div class="notebar">填好下面欄位會即時算出金額，按「產生訂購訊息」把內容複製傳到我們 LINE，
@@ -308,7 +369,8 @@ footer{padding:30px 0 24px;text-align:center}
         </div>
       </div>
     </div>
-    <p class="hint">兩種色彩可以同時下單，各自填張數即可。</p>
+    <p class="hint">兩種色彩可以同時下單，各自填張數即可。
+      不確定要幾張？先用上面的 <b>A3 落版預覽</b>算，再按「帶入張數」。</p>
   </div>
 
   <div class="field">
@@ -517,8 +579,9 @@ document.querySelectorAll('.qc button').forEach(function(b){
   b.addEventListener('click', function(){
     var el = $(b.dataset.target);
     var v = (parseInt(el.value,10)||0) + parseInt(b.dataset.step,10);
-    el.value = v < 0 ? 0 : v;
-    calc();
+    var min = el.id === 'pn' ? 1 : 0;   /* 落版的「想做幾個」最少 1 個 */
+    el.value = v < min ? min : v;
+    if(el.id === 'pn') layout(); else calc();
   });
 });
 
@@ -611,6 +674,117 @@ function calc(){
   box.innerHTML = h;
 }
 
+/* ===== A3 落版預覽 =====
+   可排範圍 28 × 42 cm，圖案之間至少留 1 cm（老闆 2026-07-20 定的落版規則）。
+   n 個圖案橫排佔 n×寬 ＋ (n−1)×間距 ≤ 28 → n ≤ (28 + 1) / (寬 + 1)，直排同理。 */
+var LAY = { W:28, H:42, GAP:1 };
+var EPS = 1e-9;   /* 5 cm 這種輸入用浮點算會差一點點，容差避免整格被判掉 */
+
+function fitGrid(a, b){
+  if(a <= 0 || b <= 0) return null;
+  if(a > LAY.W + EPS || b > LAY.H + EPS) return null;
+  var c = Math.floor((LAY.W + LAY.GAP) / (a + LAY.GAP) + EPS);
+  var r = Math.floor((LAY.H + LAY.GAP) / (b + LAY.GAP) + EPS);
+  if(c < 1 || r < 1) return null;
+  return { cols:c, rows:r, n:c * r, iw:a, ih:b };
+}
+
+/* 直放與轉 90 度各算一次，取排得多的那個 */
+function bestFit(w, h){
+  var A = fitGrid(w, h), B = fitGrid(h, w);
+  if(A) A.rot = false;
+  if(B) B.rot = true;
+  if(!A) return B;
+  if(!B) return A;
+  return B.n > A.n ? B : A;
+}
+
+function fnum(id){ var v = parseFloat($(id).value); return (isNaN(v) || v <= 0) ? 0 : v; }
+
+function drawA3(f){
+  var svg = $('a3svg'), s = '';
+  /* viewBox 單位＝公釐，1 cm ＝ 10 */
+  var ox = (297 - LAY.W * 10) / 2, oy = (420 - LAY.H * 10) / 2;
+  s += '<rect x="0" y="0" width="297" height="420" rx="3" fill="#FFFDF7" stroke="#C9A24B" stroke-width="1.2"/>';
+  s += '<rect x="' + ox + '" y="' + oy + '" width="' + LAY.W * 10 + '" height="' + LAY.H * 10 +
+       '" fill="none" stroke="#C9A24B" stroke-width="0.8" stroke-dasharray="5 4" opacity=".7"/>';
+
+  if(f){
+    var iw = f.iw * 10, ih = f.ih * 10, g = LAY.GAP * 10;
+    var totW = f.cols * iw + (f.cols - 1) * g, totH = f.rows * ih + (f.rows - 1) * g;
+    var sx = ox + (LAY.W * 10 - totW) / 2, sy = oy + (LAY.H * 10 - totH) / 2;
+    for(var r = 0; r < f.rows; r++){
+      for(var c = 0; c < f.cols; c++){
+        s += '<rect x="' + (sx + c * (iw + g)).toFixed(2) + '" y="' + (sy + r * (ih + g)).toFixed(2) +
+             '" width="' + iw.toFixed(2) + '" height="' + ih.toFixed(2) +
+             '" rx="1" fill="#E8C980" fill-opacity=".55" stroke="#B8873C" stroke-width="0.7"/>';
+      }
+    }
+  }
+  s += '<text x="148.5" y="414" text-anchor="middle" font-size="11" fill="#8A7550">A3　29.7 × 42 cm</text>';
+  svg.innerHTML = s;
+}
+
+function layout(){
+  var w = fnum('pw'), h = fnum('ph'), want = num('pn');
+  var box = $('layoutOut');
+  box.classList.remove('bad');
+
+  if(!w || !h){
+    box.innerHTML = '<div class="ln">請填入圖案的寬度與高度。</div>';
+    drawA3(null); return null;
+  }
+
+  var f = bestFit(w, h);
+  if(!f){
+    box.classList.add('bad');
+    box.innerHTML = '<div class="ln"><b>這個尺寸排不進 A3。</b><br>可排範圍是 ' +
+      LAY.W + ' × ' + LAY.H + ' 公分，你填的是 ' + w + ' × ' + h +
+      ' 公分。超過這個尺寸需要分件或改用其他規格，請洽 LINE 詢問。</div>';
+    drawA3(null); return null;
+  }
+
+  var per = f.n, sheets = want ? Math.ceil(want / per) : 0;
+  var left = sheets ? sheets * per - want : 0;
+
+  var h2 = '<div class="big">';
+  h2 += '<div class="b"><em>每張 A3 可排</em><b>' + per + '<small>個</small></b></div>';
+  if(sheets) h2 += '<div class="b"><em>做 ' + want + ' 個需要</em><b>' + sheets + '<small>張 A3</small></b></div>';
+  h2 += '</div>';
+
+  h2 += '<div class="ln">排法：<b>' + f.cols + ' 欄 × ' + f.rows + ' 列</b>' +
+        (f.rot ? '，圖案<b>轉 90 度</b>排比較省' : '') + '。';
+  if(sheets && left > 0){
+    h2 += '<br>最後一張還空著 <b>' + left + ' 個</b>位置 —— 同一張版費用一樣，' +
+          '做滿 <b>' + sheets * per + ' 個</b>不會多收錢。';
+  } else if(sheets && left === 0){
+    h2 += '<br>剛好排滿 <b>' + sheets + ' 張</b>，沒有浪費。';
+  }
+  h2 += '</div>';
+  box.innerHTML = h2;
+
+  drawA3(f);
+  return sheets;
+}
+
+/* 帶入下單張數 */
+document.querySelectorAll('[data-apply]').forEach(function(b){
+  b.addEventListener('click', function(){
+    var sheets = layout();
+    if(!sheets){ alert('請先填好圖案尺寸與想製作的數量'); return; }
+    layoutTouched = true;
+    $(b.dataset.apply).value = sheets;
+    calc();
+    $('costBox').scrollIntoView({behavior:'smooth', block:'center'});
+  });
+});
+
+/* 客人有沒有真的用過落版預覽：沒動過就不要把預設值 5×5 當成他的圖案尺寸寫進訊息 */
+var layoutTouched = false;
+['pw','ph','pn'].forEach(function(id){
+  $(id).addEventListener('input', function(){ layoutTouched = true; layout(); });
+});
+
 /* ===== 產生訂購訊息 ===== */
 $('genBtn').addEventListener('click', function(){
   var q = quote();
@@ -620,6 +794,18 @@ $('genBtn').addEventListener('click', function(){
   m += '■ 印製內容\n';
   if(num('qCmyk'))  m += '‧印刷色 CMYK：' + num('qCmyk') + ' 張 A3\n';
   if(num('qMetal')) m += '‧金屬色：' + num('qMetal') + ' 張 A3\n';
+
+  /* 客人用過落版預覽就一併附上，我們收到就知道圖多大、怎麼排 */
+  if(layoutTouched){
+    var lw = fnum('pw'), lh = fnum('ph'), lf = (lw && lh) ? bestFit(lw, lh) : null;
+    if(lf){
+      m += '\n■ 落版（客人自行預估）\n';
+      m += '‧圖案尺寸：' + lw + ' × ' + lh + ' 公分\n';
+      m += '‧想製作數量：' + num('pn') + ' 個\n';
+      m += '‧每張 A3 可排 ' + lf.n + ' 個（' + lf.cols + ' 欄 × ' + lf.rows + ' 列' +
+           (lf.rot ? '，轉 90 度' : '') + '）\n';
+    }
+  }
 
   var addl = [];
   if($('cLayout').checked && num('qLayout')) addl.push('代客排版 ' + num('qLayout') + ' 張');
@@ -667,6 +853,7 @@ function copyTo(text, btn, done){
 $('copyBtn').addEventListener('click', function(){ copyTo($('msg').textContent, this, '已複製 ✓'); });
 $('cpBank').addEventListener('click', function(){ copyTo($('bankNo').textContent, this, '已複製帳號 ✓'); });
 
+layout();
 calc();
 </script>
 </body>
