@@ -36,6 +36,24 @@
   .areas .ar .rs input{width:15px;height:15px;flex:none;accent-color:var(--gold)}
   /* 自動帶入的欄位鎖成唯讀：虛線＋灰字，一眼看得出「這不是手填的」 */
   .areas .ar input.locked{background:#0c0e13;color:var(--sub);border-style:dashed;cursor:not-allowed}
+  /* 落版圖：直行＝一條箔路徑，用來判定要燙幾趟（一趟＝一次工繳） */
+  .lay{display:flex;gap:8px;margin-top:8px}
+  .lay .pull{flex:none;width:20px;display:flex;align-items:center;justify-content:center;
+    color:var(--sub);font-size:10px;writing-mode:vertical-rl;text-orientation:upright;letter-spacing:1px}
+  .lay .gw{flex:1}
+  .lay .grid{display:grid;gap:2px;background:var(--line);border:1px solid var(--line);border-radius:5px;overflow:hidden}
+  .lay .cel{background:#fbfaf7;aspect-ratio:1.2/1;cursor:pointer}
+  .lay .cel:active{opacity:.7}
+  .lay .bite{background:#9c9c9c;color:#1a1a1a;text-align:center;font-size:11px;font-weight:700;
+    padding:2px;border-radius:0 0 5px 5px;letter-spacing:3px}
+  .laypal{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 2px}
+  .laypal .sw{display:flex;align-items:center;gap:5px;padding:5px 9px;border:2px solid var(--line);
+    border-radius:18px;cursor:pointer;font-size:12px;background:#11141a;user-select:none}
+  .laypal .sw.on{border-color:var(--gold);background:#1a1710}
+  .laypal .sw i{width:13px;height:13px;border-radius:3px;display:block;border:1px solid #444}
+  .layout-res{font-size:12.5px;margin-top:8px;padding:8px 10px;background:#11141a;border-radius:8px;border-left:3px solid var(--gold)}
+  .layout-res.one{border-left-color:#6bd39a;color:#bfe6cf}
+  .layout-res.many{border-left-color:#ff9a6b;color:#f2d8c6}
   .hotblk{background:#11141a;border:1px solid var(--line);border-radius:10px;padding:11px 12px;margin-top:10px}
   .hotblk .blk-h{font-size:13px;color:var(--gold2);font-weight:700;margin-bottom:2px}
   .hotblk label{margin-top:6px}
@@ -99,6 +117,25 @@
   <select id="hotColors" onchange="buildHotBlocks();calc()"></select>
   <div class="hint">※ 每色一塊版、可燙多處；處數與面積逐色各自填，每處可不同。兩處最短距離 ≤ 3cm 算一處。</div>
   <div id="hotBlocks"></div>
+  <!-- 落版圖（2026-07-19 新增）：一趟＝一次工繳，趟數由拉箔路徑決定，不是由色數決定。
+       不標＝以「每色各一趟」保守計價（等同舊版行為），標了才可能合併省錢。 -->
+  <div id="layBox" style="display:none">
+    <label class="chk"><input type="checkbox" id="useLay" onchange="onUseLay()"> 標出各色落版位置（可能少收工繳）</label>
+    <div class="hint">多色若落在<b>不同直行</b>，可同一趟帶多捲箔跑完 ＝ <b>只收一次工繳</b>；
+      拉箔路徑重疊就得分趟、分次收。不標則以「每色各一趟」計價。</div>
+    <div id="layPanel" style="display:none">
+      <div class="laypal" id="layPal"></div>
+      <div class="lay">
+        <div class="pull">↑拉箔↑</div>
+        <div class="gw">
+          <div class="grid" id="layGrid"></div>
+          <div class="bite">咬　口</div>
+        </div>
+      </div>
+      <div class="hint">點格子標位置，再點一次清除。同一格可疊多色（＝套準，必定分趟）。</div>
+      <div class="layout-res" id="layRes"></div>
+    </div>
+  </div>
   <label class="chk"><input type="checkbox" id="hotOwn" onchange="calc()"> 客戶自備燙金版（免製版費）</label>
 </div>
 
@@ -336,7 +373,7 @@ function buildHotBlocks(){
   const box=document.getElementById('hotBlocks');
   const snap=snapHot();
   box.innerHTML='';
-  if(colors===0)return;
+  if(colors===0){ syncLayBox(); return; }
   const blocks=colors;   // 每色恆為一個獨立框（面積條件逐色不同）
   for(let c=0;c<blocks;c++){
     const title=(colors>1)?('第 '+(c+1)+' 色'):'每色（共 1 色）';
@@ -353,6 +390,7 @@ function buildHotBlocks(){
     if(sel){ for(let i=1;i<=20;i++){let o=document.createElement('option');o.value=i;o.textContent=i+' 處';sel.appendChild(o)} sel.value=snap.n['hotN_'+c]||'1'; }
     buildHotAreas(c); restoreAreas(c,snap); syncHotAreas(c);
   }
+  syncLayBox();
 }
 function restoreAreas(c,snap){
   document.querySelectorAll('#hotAreas_'+c+' input[type=number]').forEach(inp=>{
@@ -428,6 +466,115 @@ function onHotN(c){
   buildHotAreas(c);
   syncHotAreas(c);
   calc();
+}
+
+/* ═══ 落版圖：判定要燙幾趟（2026-07-19 老闆定・七張手繪圖驗證 7/7）═══
+   咬口在下、拉箔方向垂直於咬口（上下走）→ 同一「直行」＝同一條箔路徑。
+   ① 不同色佔到同一直行 → 拉箔重疊，必須分趟
+   ② 不同色完全不共用直行 → 同一趟帶多捲箔跑完
+   ③ 同色同直行的多處 → 可跳箔，仍算一趟
+   ④ 一趟＝一次工繳。趟數決定價格，色數本身不決定。
+   註：網路上查不到這套實務規則（只查得到箔捲方向與 foil pitch 的物理原理），
+       規則來源＝老闆口述，日後有異動請以老闆為準。 */
+const LAY_COLS=6, LAY_ROWS=5;
+let layG=Array.from({length:LAY_ROWS},()=>Array.from({length:LAY_COLS},()=>[]));
+let layCur=0;
+function useLayout(){ const cb=document.getElementById('useLay'); return !!(cb&&cb.checked); }
+function onUseLay(){
+  document.getElementById('layPanel').style.display = useLayout()?'block':'none';
+  if(useLayout()) buildLay();
+  calc();
+}
+function syncLayBox(){
+  // 只有 2 色以上才有「能不能合併」的問題；1 色本來就是一趟
+  const n=+document.getElementById('hotColors').value||0;
+  const box=document.getElementById('layBox');
+  if(!box)return;
+  box.style.display = (n>=2)?'block':'none';
+  if(n<2){ const cb=document.getElementById('useLay'); if(cb)cb.checked=false;
+           const p=document.getElementById('layPanel'); if(p)p.style.display='none'; }
+  else if(useLayout()) buildLay();
+}
+function layColorList(){
+  const n=+document.getElementById('hotColors').value||0;
+  const out=[];
+  for(let c=0;c<n;c++){
+    const sel=document.getElementById('hotColor_'+c);
+    out.push({i:c, name:'第'+(c+1)+'色'+(sel?'（'+sel.value+'）':''), css:LAY_CSS[c%LAY_CSS.length]});
+  }
+  return out;
+}
+const LAY_CSS=['#111111','#e30613','#1a73e8','#0a8f3c','#8e44ad','#e67e22','#16a085','#7f8c8d'];
+function buildLay(){
+  const list=layColorList();
+  if(layCur>=list.length) layCur=0;
+  const pal=document.getElementById('layPal');
+  pal.innerHTML='';
+  list.forEach(f=>{
+    const d=document.createElement('div'); d.className='sw'+(f.i===layCur?' on':'');
+    d.innerHTML='<i style="background:'+f.css+'"></i>'+f.name;
+    d.onclick=()=>{ layCur=f.i; buildLay(); };
+    pal.appendChild(d);
+  });
+  // 色數變少時，清掉已不存在的色
+  for(let r=0;r<LAY_ROWS;r++)for(let c=0;c<LAY_COLS;c++)
+    layG[r][c]=layG[r][c].filter(f=>f<list.length);
+  const grid=document.getElementById('layGrid');
+  grid.style.gridTemplateColumns='repeat('+LAY_COLS+',1fr)';
+  grid.innerHTML='';
+  for(let r=0;r<LAY_ROWS;r++)for(let c=0;c<LAY_COLS;c++){
+    const d=document.createElement('div'); d.className='cel';
+    const set=layG[r][c];
+    if(!set.length) d.style.background='#fbfaf7';
+    else if(set.length===1) d.style.background=LAY_CSS[set[0]%LAY_CSS.length];
+    else{ const n=set.length;
+      d.style.background='repeating-linear-gradient(45deg,'+set.map((f,i)=>
+        LAY_CSS[f%LAY_CSS.length]+' '+(i*100/n)+'%, '+LAY_CSS[f%LAY_CSS.length]+' '+((i+1)*100/n)+'%').join(',')+')';
+      d.title='此格多色重疊（套準）'; }
+    d.onclick=()=>{ const k=set.indexOf(layCur); if(k>=0)set.splice(k,1); else set.push(layCur); buildLay(); calc(); };
+    grid.appendChild(d);
+  }
+}
+// 把分趟結果寫回落版圖下方的說明框
+function updateLayRes(groups, cols){
+  const el=document.getElementById('layRes');
+  if(!el)return;
+  if(!useLayout()||!groups.length){ el.textContent=''; el.className='layout-res'; return; }
+  const nm=i=>{ const s=document.getElementById('hotColor_'+i); return '第'+(i+1)+'色'+(s?'（'+s.value+'）':''); };
+  const one=groups.length===1;
+  el.className='layout-res '+(one?'one':'many');
+  let h='<b>判定：'+groups.length+' 趟 ＝ '+groups.length+' 次工繳</b><br>';
+  h+=groups.map((g,i)=>'第 '+(i+1)+' 趟：'+g.map(nm).join(' ＋ ')).join('<br>');
+  const saved=cols.filter(c=>c.n>0).length-groups.length;
+  if(saved>0) h+='<br>✔ 比「每色各一趟」少收 '+saved+' 次工繳';
+  else if(groups.length>1) h+='<br>※ 拉箔路徑重疊，無法合併';
+  el.innerHTML=h;
+}
+// 回傳分趟結果：[[色index,...], [色index,...]]。沒標落版就每色各一趟（保守，不會少報）
+function passGroups(cols){
+  const active=[]; cols.forEach(function(col,i){ if(col.n>0) active.push(i); });
+  if(!active.length) return [];
+  if(!useLayout()) return active.map(function(i){ return [i]; });
+  // 該色在落版圖佔到哪些直行
+  const lanes={};
+  active.forEach(function(i){
+    const s={};
+    for(let c=0;c<LAY_COLS;c++) for(let r=0;r<LAY_ROWS;r++)
+      if(layG[r][c].indexOf(i)>=0){ s[c]=1; break; }
+    lanes[i]=s;
+  });
+  // 完全沒標到格子的色 → 無從判斷，保守自成一趟
+  const marked=active.filter(function(i){ return Object.keys(lanes[i]).length>0; });
+  const unmarked=active.filter(function(i){ return Object.keys(lanes[i]).length===0; });
+  const groups=[];
+  marked.forEach(function(i){
+    const fit=groups.find(function(gp){
+      return gp.every(function(j){ return !Object.keys(lanes[i]).some(function(c){ return lanes[j][c]; }); });
+    });
+    if(fit) fit.push(i); else groups.push([i]);
+  });
+  unmarked.forEach(function(i){ groups.push([i]); });
+  return groups;
 }
 // 回傳每色資料：[{n:處數, areas:[{w,l}]}]
 function getHotColors(){
@@ -524,6 +671,9 @@ function calc(){
   // 加工費＋金箔成本（市場參考價）
   // 2026-07-19 老闆指示移除「心中預期價（面積×0.01 上限參考）」，改顯示每張單價。
   let foilMat=0, hotFee=0, embLabor=0, feePerSheet=0, surfEff=1;
+  const groups = passGroups(cols);          // 分趟結果（一趟＝一次工繳）
+  const nPass  = groups.length;
+  updateLayRes(groups, cols);
   if(qty>0){
     if(hotN>0){
       if(mc==='card'){
@@ -533,13 +683,17 @@ function calc(){
         hotFee = Math.round(qty*hotC*CARD_HOT(qty)*surfEff);
       }else{
         foilMat = foilCostTotal(cols,qty);                    // 金箔材料（損耗 85%）※ 表面處理不加在材料上
-        var perSheet=0, perSheetRaw=0;                        // 每色一趟過機：各自 baseFee×面積倍率，再加總
-        cols.forEach(function(col){ if(col.n>0){
-          var ca=0; col.areas.forEach(function(a){ ca+=(a.w+2)*a.l; });
+        // ⚠️ 2026-07-19 老闆定：計價單位是「趟」不是「色」——一趟＝一次工繳。
+        //    多色若拉箔路徑不重疊可同趟跑完（只收一次）；套準／同直行才分趟。
+        //    舊版按色數加總，4 色分散的單會超收 4 倍。趟數判定見 passGroups()。
+        var perSheet=0, perSheetRaw=0;
+        groups.forEach(function(grp){
+          var ca=0;
+          grp.forEach(function(i){ cols[i].areas.forEach(function(a){ ca+=(a.w+2)*a.l; }); });
           var unit=baseFee(qty)*Math.max(1, ca/AREA_REF);
           perSheetRaw += unit;
-          perSheet    += unit*surfaceFactorFor(ca);           // 加成逐色判定：大面積的那色才吃得重
-        } });
+          perSheet    += unit*surfaceFactorFor(ca);           // 加成逐趟判定：大面積的那趟才吃得重
+        });
         surfEff = perSheetRaw>0 ? perSheet/perSheetRaw : 1;    // 全案實際吃到的平均加成（供顯示）
         feePerSheet = perSheet * seasonFactor();               // ×季節競爭係數（淡月衝量／旺月保毛利）
         hotFee = Math.round(feePerSheet*qty);                 // 燙加工費（多色＝多次加工，分趟計）
@@ -568,7 +722,8 @@ function calc(){
   if(mc!=='card' && foilMatR>0) html+=row('金箔成本（材料）', NT+f(foilMatR));
   if(hotFee>0){
     const tag = (mc!=='card'&&feePerSheet)? ' <span class="est">'+feePerSheet.toFixed(2)+'／張</span>':'';
-    html+=row('燙金加工費'+tag, NT+f(hotFee));
+    const pt  = (mc!=='card'&&nPass>0)? ' <span class="est">'+nPass+' 趟</span>':'';
+    html+=row('燙金加工費'+pt+tag, NT+f(hotFee));
   }
   if(embLabor>0) html+=row('打凸加工費', NT+f(embLabor));
   const floorTag = atFloor ? ' <span class="est">基本費</span>' : ' <span class="est">參考</span>';
@@ -591,6 +746,7 @@ function calc(){
     foilMat:foilMatR,hotFee:hotFee,feePerSheet:feePerSheet,embLabor:embLabor,
     labor:hotFee+embLabor, cash:cash, press:press,
     unitCash:(qty>0?cash/qty:0), unitPress:(qty>0?press/qty:0), surface:surf, surfaceF:surfEff,
+    nPass:nPass, layout:useLayout(),
     mc:mc,ratio:ratio,sf:seasonFactor(),
     hotOwn:hotOwn, embOwn:document.getElementById('embOwn').checked,
     hotCols:cols,hotAreas:hotA,embAreas:embA};
@@ -606,6 +762,7 @@ function specText(){
   s+='紙張：'+(p.n||((p.w+'×'+p.l)+'cm'))+'\n數量：'+q.qty+' 張\n';
   if(q.surface)s+='表面處理：'+q.surface+(q.surfaceF>1.005?'（大面積燙金難度加成已計入）':'（面積小，未加價）')+'\n';
   s+='燙金：'+q.hotC+' 色／共 '+q.hotN+' 處　打凸：'+q.embN+' 處\n';
+  if(q.hotC>0)s+='燙印趟數：'+q.nPass+' 趟'+(q.layout?'（依落版位置判定）':'（未標落版，以每色一趟計）')+'\n';
   if(q.hotCols&&q.hotCols.length){ const cc=q.hotCols.map(x=>x.color).filter(Boolean).join('、'); if(cc)s+='燙金色：'+cc+'\n'; }
   s+='製版費：'+NT+q.plate.toLocaleString()+'\n';
   s+='系統參考價 現金：'+NT+q.cash.toLocaleString()+'／押票：'+NT+q.press.toLocaleString()+'\n';
@@ -633,6 +790,7 @@ function trainText(){
   s+='紙張：'+(p.n||(p.w+'×'+p.l+'cm（自訂）'))+'\n數量：'+q.qty+' 張\n';
   s+='表面處理：'+(q.surface||'無')+(q.surface?'（實際加成 ×'+q.surfaceF.toFixed(3)+'，上限 ×'+SURFACE[q.surface]+'）':'')+'\n';
   s+='─ 燙金 ─\n色數：'+q.hotC+'　總處數：'+q.hotN+'　自備版：'+(q.hotOwn?'是':'否')+'\n';
+  s+='燙印趟數：'+q.nPass+'（'+(q.layout?'依落版圖判定':'未標落版，每色一趟')+'）\n';
   if(q.hotCols&&q.hotCols.length){
     q.hotCols.forEach((col,ci)=>{
       s+='　第'+(ci+1)+'色'+(col.color?'（'+col.color+'）':'')+'：'+col.n+' 處';
