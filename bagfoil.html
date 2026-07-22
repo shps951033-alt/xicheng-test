@@ -244,6 +244,56 @@
   .warn p{margin:0;font-size:.86rem;line-height:1.8;color:var(--text-dk)}
   .warn b{color:var(--red)}
 
+  /* ============ 說明區 ============ */
+  .guide{padding:0 0 64px}
+  .guide .card{
+    background:var(--cream);border:1px solid var(--line);border-radius:2px;
+    padding:26px 26px 22px;margin-bottom:16px;
+  }
+  .guide .card h3{
+    font-family:var(--serif);font-size:.98rem;font-weight:700;letter-spacing:.1em;
+    color:var(--ink);margin:0 0 4px;
+    display:flex;align-items:baseline;gap:10px;
+  }
+  .guide .card h3 .idx{
+    font-family:var(--latin);font-style:italic;font-weight:500;
+    font-size:1.05rem;color:var(--gold);letter-spacing:0;
+  }
+  .guide .card > p{font-size:.86rem;line-height:1.95;margin:10px 0 0;color:var(--text-dk)}
+  .guide .card b{color:var(--ink)}
+  .guide .card .em{color:var(--red);font-weight:500}
+  .guide ul{margin:12px 0 0;padding-left:1.1em}
+  .guide li{font-size:.86rem;line-height:1.95;margin-bottom:6px}
+  .guide li::marker{color:var(--gold-dk)}
+  .guide .eg{
+    margin-top:14px;padding:12px 14px;
+    background:var(--paper-2);border-left:2px solid var(--gold);border-radius:2px;
+    font-size:.82rem;line-height:1.85;
+  }
+  .guide .eg .hl{font-family:var(--serif);font-weight:700;color:var(--red)}
+  .guide .plan{
+    margin-top:12px;display:flex;gap:12px;flex-wrap:wrap;
+  }
+  .guide .plan > div{
+    flex:1;min-width:210px;
+    padding:13px 15px;background:#fff;
+    border:1px solid var(--line);border-radius:2px;
+  }
+  .guide .plan .t{
+    font-family:var(--serif);font-size:.85rem;font-weight:700;letter-spacing:.08em;
+    color:var(--gold-dk);margin-bottom:5px;
+  }
+  .guide .plan p{margin:0;font-size:.82rem;line-height:1.8}
+  .guide .foot{
+    font-size:.76rem;color:var(--text-mut);line-height:1.85;
+    margin-top:14px;padding-top:12px;border-top:1px solid var(--line);
+  }
+  .sec-title{text-align:center;margin:0 0 22px}
+  .sec-title h2{
+    font-family:var(--serif);font-size:1.15rem;font-weight:700;letter-spacing:.2em;
+    color:var(--ink);margin:10px 0 0;
+  }
+
   /* ============ FOOTER ============ */
   footer{
     background:var(--ink);color:var(--text-mut);
@@ -287,6 +337,8 @@
   <div class="sheet">
 
     <div class="sec-head"><span class="idx">I</span><h2>紙 袋 規 格</h2><span class="bar"></span></div>
+
+    <div class="note" style="margin:-6px 0 14px">現成紙袋已經成型，袋口提繩、側邊與袋底折線都無法施作，只能燙在正面平整處。麻煩拿尺量一下紙袋三圍，下方會即時算出最大可燙範圍。</div>
 
     <div class="row">
       <div class="field">
@@ -364,6 +416,7 @@
       <div class="line"><span>營業稅 5%</span><span id="resTax">$-</span></div>
       <div class="total"><span class="lbl">含稅總計（未含運）</span><span class="amt gold-text" id="resTotal">$-</span></div>
       <div class="tip" id="suggestTip"></div>
+      <div class="tip" id="lossTip"></div>
     </div>
 
     <div class="warn" id="warnBox" style="display:none;">
@@ -372,6 +425,64 @@
     </div>
 
   </div>
+  </div>
+</section>
+
+<section class="guide">
+  <div class="wrap">
+
+    <div class="sec-title">
+      <div class="eyebrow">Before You Order</div>
+      <h2>製 作 前 必 讀</h2>
+    </div>
+
+    <div class="card">
+      <h3><span class="idx">01</span>費用怎麼算（少量有基本費）</h3>
+      <p>現成紙袋加燙金非常合適！由於要製作專屬的「金屬鋅版」，並由師傅人工對位、調整機器，計價上有兩塊：</p>
+      <ul>
+        <li><b>加工費</b>：單面每個 <b>$5</b>、雙面每個 <b>$7</b>（亮金／亮銀以外的特殊箔色，每個 +$1）。</li>
+        <li><b>開機基本費 $1,200</b>：工廠每開一次機器都要製版、上機對位、調溫調壓，這段工資是固定的，所以設有最低基本費。</li>
+        <li>加工費未達 $1,200 時，<b>一律以 $1,200 計</b>（是「取代」加工費，不是另外加收）。</li>
+      </ul>
+      <div class="eg">
+        <b>舉例</b>：做 50 個單面亮金，加工費 50 × $5 ＝ $250，未達門檻 → 以基本費 <span class="hl">$1,200</span> 計價。<br>
+        💡 同樣這 $1,200，單面亮金其實可以做到 <span class="hl">240 個</span>。袋子後續還用得到的話，一次做足平均下來最划算！
+      </div>
+    </div>
+
+    <div class="card">
+      <h3><span class="idx">02</span>燙金範圍（請協助提供尺寸）</h3>
+      <p>現成紙袋因為已經成型，機器有結構限制，<b>袋子邊緣、底部折線以及提繩附近無法施作</b>，圖案需位於紙袋正中央平整處。</p>
+      <p>再麻煩您拿尺幫我們量一下：<b>紙袋的面寬、袋高、側寬</b>，以及<b>預計燙金的圖案長寬各是多少公分</b>。填進上方工具就會即時算出可不可以做。</p>
+      <div class="foot">若圖案超出可燙範圍，工具會直接跳出提醒並告知最大範圍；圖案有時只要<b>轉個方向</b>（橫直對調）就進得去了。</div>
+    </div>
+
+    <div class="card">
+      <h3><span class="idx">03</span>工藝耗損（放損說明）</h3>
+      <p>每家紙袋的紙質和表面塗佈都不同（有無上膜、觸感膜、特殊紙），師傅開機時必須先用您的袋子<b>試燙、調整溫度與壓力</b>來確保最高品質，過程中會有 <b>5～10% 的必要耗損</b>。以需要 50 個成品為例：</p>
+      <div class="plan">
+        <div>
+          <div class="t">方案 A｜要足量</div>
+          <p>需要「足足 50 個」成品 → 建議寄 <b>60 個</b>袋子給我們，<b>多退少補</b>。</p>
+        </div>
+        <div>
+          <div class="t">方案 B｜就這些</div>
+          <p>手上剛好只有 50 個 → 最後交貨的完美成品大約落在 <b>45～48 個</b>。</p>
+        </div>
+      </div>
+      <div class="foot">燙壞的袋子恕無法補袋，請先評估要走哪個方案。表面已上膜或特殊塗佈的紙袋影響附著，沒把握的話可先寄一個來試燙。</div>
+    </div>
+
+    <div class="card">
+      <h3><span class="idx">04</span>確認製作，請回覆這三項</h3>
+      <ul>
+        <li>燙金的<b>圖案長寬（公分）</b>，以及要做<b>單面還是雙面</b>。</li>
+        <li>袋子預計寄<b>幾個</b>（例：50 個成品約 45 個／寄 60 個足 50 個成品）。</li>
+        <li><b>黑白向量圖檔</b>（如 AI 檔，文字需轉外框）。圖案細線最細 0.25pt，太細的稿需先調整。</li>
+      </ul>
+      <div class="foot">收到您的尺寸與決定後，我們就可以馬上幫您開單安排囉，謝謝您！<br>※ 以上報價一律含稅，<b>未含運費</b>，運費另計。</div>
+    </div>
+
   </div>
 </section>
 
@@ -386,6 +497,10 @@
   const PLATE_RATE = 4;       // 版費：寬 × 高 × 4 元/平方公分
   const PLATE_MIN = 200;      // 版費最低收費
   const TAX_RATE = 0.05;
+
+  // 放損（試燙調機的必要耗損，非計價項目，只用來給客人建議寄件數）
+  const LOSS_MIN = 0.05;
+  const LOSS_MAX = 0.10;
 
   // 燙金範圍限制（機台夾具與袋型結構限制，非成本）
   const EDGE_W    = 2;        // 寬度方向的安全邊
@@ -566,7 +681,7 @@
     document.getElementById('resColor').innerText =
       foil.n + (foil.sur > 0 ? `（特殊箔 每個 +$${foil.sur}）` : '（標準箔 不加價）');
     document.getElementById('resPlate').innerText = `$${plateFee}` + (isReprint === 'yes' ? '（享 3 年免版費）' : '');
-    document.getElementById('resBase').innerText = baseFee > 0 ? `$${baseFee}（數量未達標）` : `$0（已達標免基本費）`;
+    document.getElementById('resBase').innerText = baseFee > 0 ? `$${baseFee.toLocaleString()}（數量未達標）` : `$0（已達標免基本費）`;
     const rateNote = foil.sur > 0 ? `$${basePrice}＋$${foil.sur}箔色` : `$${sidePrice}`;
     document.getElementById('resProcess').innerText = baseFee > 0 ? `$0（已併入基本費）` : `$${finalProcessFee}（${quantity} 個 × ${rateNote}）`;
 
@@ -578,11 +693,23 @@
     const suggestTip = document.getElementById('suggestTip');
     if (baseFee > 0) {
       const maxQty = Math.floor(BASE_FEE / sidePrice);
-      suggestTip.innerHTML = `目前加工費未達開機基本費門檻。同樣是 $${BASE_FEE}，${sideName}其實可以做到 <b>${maxQty}</b> 個（目前 ${quantity} 個，還可再加 <b>${maxQty - quantity}</b> 個不加價）—— 可以建議客人加量。`;
+      suggestTip.innerHTML = `目前加工費未達開機基本費門檻。同樣是 $${BASE_FEE.toLocaleString()}，${sideName}其實可以做到 <b>${maxQty}</b> 個（目前 ${quantity} 個，還可再加 <b>${maxQty - quantity}</b> 個不加價）—— 可以建議客人加量。`;
       suggestTip.style.display = 'block';
     } else {
       suggestTip.style.display = 'none';
     }
+
+    // 6. 放損建議（紙質不同要試燙調機，必要耗損 5～10%）
+    //    寄件數＝成品數 ÷ (1−最大耗損)，再進位到整數關卡（好記、也留餘裕）
+    //    例：要足 50 個 → 55.6 → 進位 60，與業務口頭話術一致
+    const step = quantity < 50 ? 5 : 10;
+    const sendQty = Math.ceil(quantity / (1 - LOSS_MAX) / step) * step;
+    const okLow  = Math.floor(quantity * (1 - LOSS_MAX));
+    const okHigh = Math.round(quantity * (1 - LOSS_MIN));
+    document.getElementById('lossTip').innerHTML =
+      `<b>放損提醒</b>　師傅要先拿您的袋子試燙、調溫度與壓力，會有 ${LOSS_MIN * 100}～${LOSS_MAX * 100}% 的必要耗損。<br>` +
+      `・要足 <b>${quantity}</b> 個成品 → 建議寄 <b>${sendQty}</b> 個來，多退少補。<br>` +
+      `・手上只有 <b>${quantity}</b> 個 → 完成品大約 <b>${okLow}～${okHigh}</b> 個。`;
 
     resultBox.style.display = 'block';
   }
