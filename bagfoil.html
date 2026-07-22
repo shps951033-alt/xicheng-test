@@ -34,6 +34,7 @@
     margin:0;font-family:var(--sans);color:var(--text-dk);
     background:var(--paper);line-height:1.75;
     -webkit-font-smoothing:antialiased;overflow-x:hidden;
+    -webkit-text-size-adjust:100%;   /* iOS 直式轉橫式會自動放大字，先擋掉 */
   }
   .wrap{max-width:600px;margin:0 auto;padding:0 24px}
 
@@ -232,6 +233,40 @@
   }
   .tip b{color:var(--gold-lt)}
 
+  /* 一鍵複製 → 傳官方 LINE */
+  .send{margin-top:20px;padding-top:18px;border-top:1px solid rgba(198,161,91,.35)}
+  .send .sh{
+    font-family:var(--serif);font-size:.86rem;font-weight:600;letter-spacing:.14em;
+    color:var(--gold-lt);margin-bottom:10px;text-align:center;
+  }
+  .send pre{
+    margin:0;padding:14px 15px;max-height:260px;overflow:auto;overscroll-behavior:contain;
+    background:rgba(255,255,255,.05);
+    border:1px solid rgba(198,161,91,.22);border-radius:2px;
+    font-family:var(--sans);font-size:.76rem;line-height:1.85;
+    color:#ded5c2;white-space:pre-wrap;word-break:break-word;
+    -webkit-text-size-adjust:100%;
+  }
+  .send .row2{display:flex;gap:10px;margin-top:12px}
+  .btn2{
+    flex:1;display:flex;align-items:center;justify-content:center;
+    padding:.85em 1em;
+    font-family:var(--sans);font-size:.85rem;font-weight:500;letter-spacing:.06em;
+    border-radius:2px;cursor:pointer;text-decoration:none;text-align:center;
+    transition:.25s;
+  }
+  .btn2.copy{
+    color:var(--gold-lt);background:transparent;
+    border:1px solid var(--gold-dk);
+  }
+  .btn2.copy:hover{background:rgba(198,161,91,.14)}
+  .btn2.line{
+    color:#0b2f1c;background:#06C755;border:1px solid #06C755;font-weight:700;
+  }
+  .btn2.line:hover{background:#05b34c;border-color:#05b34c}
+  .send .sn{font-size:.74rem;line-height:1.8;color:#a89c85;margin-top:11px}
+  @media(max-width:430px){ .send .row2{flex-direction:column} }
+
   .warn{
     margin-top:26px;padding:22px;
     background:#fbf3f1;
@@ -328,7 +363,7 @@
     <div class="eyebrow">Foil Stamping</div>
     <h1>現成紙袋<span class="gold-text">燙金</span>報價</h1>
     <div class="latin-sub">Ready-made Bag · Foil Quote</div>
-    <p class="lead">客戶自備現成紙袋，喜成單純承接燙金加工。填幾個尺寸，馬上知道燙不燙得下、要多少錢。</p>
+    <p class="lead">客戶自備現成紙袋，喜成單純承接燙金加工。填幾個尺寸，馬上知道燙不燙得下、要多少錢，並可一鍵複製詢價訊息傳到官方 LINE。</p>
   </div>
 </section>
 
@@ -417,6 +452,16 @@
       <div class="total"><span class="lbl">含稅總計（未含運）</span><span class="amt gold-text" id="resTotal">$-</span></div>
       <div class="tip" id="suggestTip"></div>
       <div class="tip" id="lossTip"></div>
+
+      <div class="send">
+        <div class="sh">送 出 詢 價</div>
+        <pre id="msgText"></pre>
+        <div class="row2">
+          <button class="btn2 copy" id="copyBtn" type="button">① 複製這則訊息</button>
+          <a class="btn2 line" href="https://line.me/R/ti/p/%40623bfkyg" target="_blank" rel="noopener">② 開啟官方 LINE</a>
+        </div>
+        <div class="sn">複製後開啟官方 LINE（@623bfkyg），貼進對話框直接傳送即可，圖檔也一併傳過來。專人核對紙袋材質與圖檔後回覆最終確認價。</div>
+      </div>
     </div>
 
     <div class="warn" id="warnBox" style="display:none;">
@@ -480,7 +525,7 @@
         <li>袋子預計寄<b>幾個</b>（例：50 個成品約 45 個／寄 60 個足 50 個成品）。</li>
         <li><b>黑白向量圖檔</b>（如 AI 檔，文字需轉外框）。圖案細線最細 0.25pt，太細的稿需先調整。</li>
       </ul>
-      <div class="foot">收到您的尺寸與決定後，我們就可以馬上幫您開單安排囉，謝謝您！<br>※ 以上報價一律含稅，<b>未含運費</b>，運費另計。</div>
+      <div class="foot"><b>不用自己打字</b>：上方填完按「立即計算總價」，工具會把您的規格與試算整理成一則訊息，按「<b>複製這則訊息</b>」再貼到官方 LINE（@623bfkyg）傳給我們就完成了。<br>收到您的尺寸與決定後，我們就可以馬上幫您開單安排囉，謝謝您！<br>※ 以上報價一律含稅，<b>未含運費</b>，運費另計。</div>
     </div>
 
   </div>
@@ -711,8 +756,69 @@
       `・要足 <b>${quantity}</b> 個成品 → 建議寄 <b>${sendQty}</b> 個來，多退少補。<br>` +
       `・手上只有 <b>${quantity}</b> 個 → 完成品大約 <b>${okLow}～${okHigh}</b> 個。`;
 
+    // 7. 組出可直接貼到官方 LINE 的詢價訊息
+    const money = n => '$' + n.toLocaleString();
+    document.getElementById('msgText').textContent = [
+      '【現成紙袋燙金 詢價】',
+      '',
+      '■ 紙袋規格',
+      `　面寬 ${r1(m.face)} × 袋高 ${r1(m.height)} × 側寬 ${r1(m.side)} 公分`,
+      `　最大可燙範圍：寬 ${r1(m.w)} × 高 ${r1(m.h)} 公分`,
+      '',
+      '■ 燙金內容',
+      `　圖案尺寸：寬 ${r1(artW)} × 高 ${r1(artH)} 公分`,
+      `　燙金顏色：${foil.n}${foil.sur > 0 ? `（特殊箔 每個 +$${foil.sur}）` : '（標準箔）'}`,
+      `　加工面數：${sideName}（每個 ${money(sidePrice)}）`,
+      `　製作數量：${quantity} 個`,
+      `　版　　費：${isReprint === 'yes' ? '3 年內再版，免版費' : '新圖案，需製版'}`,
+      '',
+      '■ 線上試算',
+      `　燙金版費　　${money(plateFee)}`,
+      `　開機基本費　${baseFee > 0 ? money(baseFee) + '（數量未達標）' : '$0（已達標免收）'}`,
+      `　實際加工費　${baseFee > 0 ? '$0（已併入基本費）' : money(finalProcessFee)}`,
+      `　未稅小計　　${money(subtotal)}`,
+      `　營業稅 5%　 ${money(tax)}`,
+      `　含稅總計　　${money(total)}（未含運費）`,
+      '',
+      `■ 放損方案（必要耗損 ${LOSS_MIN * 100}～${LOSS_MAX * 100}%）`,
+      `　A｜要足 ${quantity} 個成品 → 我寄 ${sendQty} 個過去，多退少補`,
+      `　B｜我只有 ${quantity} 個 → 完成品約 ${okLow}～${okHigh} 個可接受`,
+      '　→ 我選擇：（請填 A 或 B）',
+      '',
+      '■ 我會另外提供',
+      '　黑白向量圖檔（AI 檔，文字已轉外框）',
+      '　紙袋材質／表面（有無上膜）：',
+      '',
+      '※ 以上為線上工具試算，實際以專人確認材質與圖檔後回覆為準。'
+    ].join('\n');
+
     resultBox.style.display = 'block';
   }
+
+  // 複製訊息（https 走 clipboard API，file:// 等不支援的環境退回 execCommand）
+  document.getElementById('copyBtn').addEventListener('click', function () {
+    const btn = this, text = document.getElementById('msgText').textContent;
+    const done = () => {
+      const back = btn.textContent;
+      btn.textContent = '已複製 ✓ 請開 LINE 貼上';
+      setTimeout(() => { btn.textContent = back; }, 2200);
+    };
+    const fallback = () => {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.cssText = 'position:fixed;top:-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      const ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+      ok ? done() : alert('複製失敗，請長按訊息手動選取複製。');
+    };
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(done).catch(fallback);
+    } else {
+      fallback();
+    }
+  });
 
   updateLimit();      // 開頁先算一次可燙範圍
   syncSideLabels();   // 面數選項單價對齊預設箔色
