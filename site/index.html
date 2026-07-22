@@ -345,6 +345,12 @@ section{position:relative}
 .tool:hover .go{gap:.9em;color:var(--gold-lt)}
 .tool .go svg{width:18px;height:18px}
 .tool-row.two{grid-template-columns:repeat(2,1fr);max-width:880px;margin:0 auto}
+/* 四張卡時排 2×2，比 3+1 那種一列落單的版面平衡（2026-07-22 加現成紙袋燙金）。
+   ⚠️ 一定要包在 min-width 裡：下面 940/640 斷點用的是特異性較低的 .tool-row，
+   如果這條寫在外面，.tool-row.four 會蓋過手機版的單欄設定，變成兩欄擠在一起。 */
+@media(min-width:941px){
+  .tool-row.four{grid-template-columns:repeat(2,1fr);max-width:980px;margin:0 auto}
+}
 .tool .go.line{display:inline-flex;align-items:center;gap:.55em;background:var(--gold-grad);color:var(--ink);
   padding:.7em 1.4em;border-radius:3px;align-self:flex-start;font-weight:600;box-shadow:0 12px 28px -14px rgba(169,132,63,.7)}
 .tool:hover .go.line{transform:translateY(-2px)}
@@ -723,7 +729,7 @@ footer{background:#0d0b08;color:#8a7f6b;padding:64px 0 30px;border-top:1px solid
       <h2 class="reveal d1">1 分鐘，算出你的報價</h2>
       <p class="reveal d1">喜成提供即時試算工具，輸入規格一秒出價。加 LINE、傳一張名片給我們，我們將開通您的專屬報價工具，永久免費使用。</p>
     </div>
-    <div class="tool-row">
+    <div class="tool-row four">
       <div class="tool reveal d1">
         <span class="badge live">設計師 · 品牌直客</span>
         <h3>名片 · 紙袋 · 紙盒 報價</h3>
@@ -742,8 +748,14 @@ footer{background:#0d0b08;color:#8a7f6b;padding:64px 0 30px;border-top:1px solid
         <p>上傳你的圖檔尺寸，線上算出 A3 印製費用，還能預覽一張 A3 排得下幾個。印刷色 CMYK 與金屬色皆可，量大單價更低。</p>
         <a class="go" href="crystal/">立即試算報價 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
       </div>
+      <div class="tool reveal d3">
+        <span class="badge live">免加 LINE · 直接試算</span>
+        <h3>現成紙袋 燙金報價</h3>
+        <p>手邊已經有紙袋，只想加燙金？填紙袋三圍與圖案尺寸，馬上知道燙不燙得下、要多少錢，還會自動幫你算出該寄幾個才夠。</p>
+        <a class="go" href="bagfoil/">立即試算報價 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      </div>
     </div>
-    <p class="quote-note reveal d2">水晶標可直接線上試算；名片與代工報價工具加 LINE 傳名片即可索取 · 我們會依你的需求給對應的連結</p>
+    <p class="quote-note reveal d2">水晶標與現成紙袋燙金可直接線上試算；名片與代工報價工具加 LINE 傳名片即可索取 · 我們會依你的需求給對應的連結</p>
   </div>
 </section>
 
