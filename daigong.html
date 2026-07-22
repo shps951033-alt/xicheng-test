@@ -96,18 +96,17 @@
   </div>
   <label>數量（張）</label>
   <input type="number" id="qty" min="1" placeholder="例：3000" oninput="calc()">
-  <!-- 2026-07-19 新增：表面處理只做註記，暫不影響金額（計價方式老闆待議） -->
-  <label class="chk"><input type="checkbox" id="surface" onchange="onSurface()"> 紙張已做表面處理</label>
-  <div id="surfaceBox" style="display:none">
-    <select id="surfaceType" onchange="calc()">
-      <option value="亮膜／霧膜">亮膜／霧膜（大面積最高 ×1.1）</option>
-      <option value="金油">金油（大面積最高 ×1.3）</option>
-      <option value="上膜＋金油">上膜＋金油（大面積最高 ×1.4）</option>
-    </select>
-    <div class="hint">※ 已上膜／上金油的紙，燙金箔咬不牢、要降速或換箔種 → 只加在燙金加工費，製版費與金箔材料不變。<br>
-      <b>加成隨面積變動</b>：每色用箔 100c㎡ 以下不加價（小圖難度與純紙相當），1200c㎡ 以上吃滿，中間按比例。<br>
-      係數為暫估，會用實際成交價校準。觸感膜（絲絨膜）另議，請直接來電。</div>
-  </div>
+  <!-- 2026-07-20 老闆指示：取消勾選、直接做成下拉（預設無），少一次點擊 -->
+  <label>紙張表面處理</label>
+  <select id="surfaceType" onchange="calc()">
+    <option value="">無</option>
+    <option value="亮膜／霧膜">亮膜／霧膜（大面積最高 ×1.15）</option>
+    <option value="金油">金油（大面積最高 ×1.15）</option>
+    <option value="上膜＋金油">上膜＋金油（大面積最高 ×1.18）</option>
+    <option value="觸感膜（絲絨膜）">觸感膜／絲絨膜（大面積最高 ×1.25）</option>
+  </select>
+  <div class="hint">※ 已上膜／上金油的紙，燙金箔咬不牢、要降速或換箔種 → 只加在燙金加工費，製版費與金箔材料不變。
+    加成隨面積變動：每色用箔 100c㎡ 以下不加價，1200c㎡ 以上吃滿，中間按比例。</div>
 </div>
 
 <!-- 燙金 -->
@@ -182,9 +181,19 @@
         <div><label>實際現金價（選填）</label><input type="number" id="t_cash" placeholder="實際現金價"></div>
         <div><label>實際押票價（選填）</label><input type="number" id="t_press" placeholder="實際押票價"></div>
       </div>
+      <!-- 2026-07-20：老闆的實際成交價習慣「不含製版費」，但系統的現金參考含製版。
+           基準不同若不註明，日後校準會把定義差誤判成模型誤差。預設＝不含（老闆的習慣）。 -->
+      <label class="chk"><input type="checkbox" id="t_incPlate" checked> 上列實際價<b>不含</b>製版費（製版另外收）</label>
       <label>備註（選填）</label><input type="text" id="t_note" placeholder="機台／特殊狀況…">
       <button class="send" onclick="sendTrain()">複製訓練資料（貼給 Jesper）</button>
     </div>
+    </div>
+    <!-- 複製失敗時的退路：把文字攤開讓老闆自己全選（手機／webview 常擋 clipboard API） -->
+    <div id="copyFallback" style="display:none;margin-top:10px">
+      <div class="hint" style="color:#ff9a6b">⚠ 這個瀏覽器不給自動複製 —— 下面文字已全選，長按／Ctrl+C 自己複製。</div>
+      <textarea id="copyFallbackText" readonly
+        style="width:100%;min-height:150px;padding:9px;background:#11141a;border:1px solid #2a2e38;
+               border-radius:8px;color:#eef1f6;font-size:12px;font-family:inherit"></textarea>
     </div>
   </div>
 </div>
@@ -229,11 +238,61 @@ const AREA_REF = 1200;
 // 基本費／低消（ORDER_MIN）：任何單的保底價。少量攤不掉「代來回物流＋上機工時」→ 低於此一律以此報。
 // 2026-07-11 老闆定＝$800（校準#13：菊4開100張，工繳僅算$519/647，實際現金＝押票＝800、備註「基本費」）。
 // 目前全域單一值；日後若依紙張大小／難度分級再改成表。地板綁「現金與押票」兩者、且觸底時押票不另加倍率（故兩者同為800）。
-const ORDER_MIN = 800;
+const ORDER_MIN = 800;   // ⚠ 2026-07-20 起改用 MIN_FEE 分級表，此值僅保留為最低一級參考
+
+/* ═══════ 2026-07-20 曲線重建（老闆三輪校準・對照表逐項確認後上線）═══════
+   來源：營運部\曲線重建-新舊對照-20260720.html
+   　　　＋ 報價校準表-第二輪實案/第三輪階梯-20260719.html（老闆親筆開價）
+
+   新模型：燙金工繳／張 ＝ BASE_LABOUR × f量 × f面積 × f密度 × f處數 × f紙張 × f表面
+   　　　　每一「趟」各算一次（一趟＝一次工繳，見 passGroups）
+   基準情境：菊對開・2,000張・1色1處・500c㎡・一般圖文・亮金・無表面處理
+
+   為什麼是 1.64：老闆該情境開 2.1 元/張（含箔材），扣掉亮金箔材 0.46 元/張 ＝ 工繳 1.64。
+   老闆的單價定義含箔材，模型必須拆開，否則箔材會被算兩次。                              */
+const BASE_LABOUR = 1.64;
+
+// 面積係數（老闆第三輪①，已除以密度 1.4 換算成「一般圖文」基準）
+// 1,000c㎡＝5 元經老闆 07-20 口頭確認，落在 800(3.0)→1200(7.2) 的插值線上 → 用線性插值、不做階梯
+const F_AREA=[[100,0.82],[200,0.95],[500,1.00],[800,1.07],[1000,1.79],
+              [1200,2.57],[1500,3.26],[2000,3.57],[2500,5.36]];
+// 數量係數（老闆第三輪⑦）。舊 baseFee 對數曲線在大量單超折：10,000 張多折 29%
+const F_QTY =[[1000,1.14],[2000,1.00],[5000,0.864],[10000,0.727],[30000,0.636]];
+// 紙張係數（老闆第三輪⑧）——全新，舊引擎完全沒有這個因素。用紙張面積 c㎡ 內插
+const F_PAPER=[[682,0.90],[1364,0.90],[2794,1.00],[4289,1.05],[5645,1.20]];
+// 圖案密度（老闆第三輪②）——全新。舊引擎只量外框，空心線框與實心色塊同價
+const F_DENS={'細線條':1.00,'一般圖文':1.00,'半色塊':1.25,'大面積色塊':1.40};
+// 下拉只給兩項（2026-07-20 老闆指示：選單簡化成「一般圖文／大面積色塊」）。
+// 細線條與一般圖文係數相同（都 1.00），合併不失真；
+// ⚠ 半色塊（1.25）因此不在選單上 —— 這類單會被當一般圖文計、少收約 25%。老闆要的話加回來即可。
+const DENS_OPTS=['一般圖文','大面積色塊'];
+// 處數係數（老闆第三輪⑥，總面積固定下純粹「拆散」的成本）——全新
+const F_SPOT=[[1,1.00],[3,1.045],[5,1.14],[10,1.18],[20,1.27]];
+// 基本費分級（老闆 2026-07-20 定）：依紙張面積四級。
+// ⚠ 與舊 ORDER_MIN 的差異：老闆的定義是「箔材＋工繳」的地板，製版費另計、不納入比較。
+//    舊版是含製版的地板，會讓大版單被製版費頂過門檻而失效。
+// 四六3開(2,857c㎡) 落在 1,500 級是 Jesper 推的（面積與菊對開 2,794 幾乎相同），老闆 07-20 認可。
+const MIN_FEE=[[1100,800],[1600,1200],[3000,1500],[Infinity,2000]];
+function tblInterp(tbl,x){
+  if(x<=tbl[0][0])return tbl[0][1];
+  if(x>=tbl[tbl.length-1][0])return tbl[tbl.length-1][1];
+  for(var i=1;i<tbl.length;i++) if(x<=tbl[i][0]){
+    var x0=tbl[i-1][0],y0=tbl[i-1][1],x1=tbl[i][0],y1=tbl[i][1];
+    return y0+(y1-y0)*(x-x0)/(x1-x0);
+  }
+}
+function minFeeOf(p){
+  var a=(p&&p.w&&p.l)?p.w*p.l:0;
+  for(var i=0;i<MIN_FEE.length;i++) if(a<=MIN_FEE[i][0]) return MIN_FEE[i][1];
+  return 2000;
+}
+function paperFactor(p){ return (p&&p.w&&p.l)? tblInterp(F_PAPER,p.w*p.l) : 1; }
 // 表面處理加成（2026-07-19 老闆定・粗胚待校準）：同業送來的紙已上膜／上金油時，箔咬不牢，
 // 要換箔種或降速 → 只加在「燙金加工費」（＝難度＝工時），製版費與金箔材料不動。
 // 「上膜＋金油」＝1.4，是兩層都有的估值，非 1.1×1.3 的相乘；等實際成交價回來一起校準。
-const SURFACE = {'亮膜／霧膜':1.1, '金油':1.3, '上膜＋金油':1.4};
+// 2026-07-20 依老闆第三輪③實填改寫。原本 Jesper 粗胚假設膜的種類有梯度（1.1／1.3／1.4），
+// 老闆實填 1.15／1.15／1.25 → 有沒有上膜是門檻，膜的種類差別不大。以老闆為準。
+const SURFACE = {'亮膜／霧膜':1.15, '金油':1.15, '上膜＋金油':1.18, '觸感膜（絲絨膜）':1.25};
 // ⚠ 加成不是固定值，隨燙金面積爬升（2026-07-19 老闆指正）：
 //    小圖燙在膜上，難度與純紙幾乎相同 → 不該加價；
 //    面積一大才會掉箔、要降速，工時顯著拉長 → 才吃到滿係數。
@@ -300,14 +359,10 @@ function init(){
     for(let i=1;i<=8;i++){let o=document.createElement('option');o.value=i;o.textContent=i+' 色';hc.appendChild(o)} }
   buildHotBlocks();buildAreas('emb');calc();
 }
-function onSurface(){
-  document.getElementById('surfaceBox').style.display =
-    document.getElementById('surface').checked ? 'block' : 'none';
-  calc();
-}
+// 2026-07-20 起改為單一下拉，空字串＝無表面處理
 function surfaceText(){
-  return document.getElementById('surface').checked
-    ? document.getElementById('surfaceType').value : '';
+  const s=document.getElementById('surfaceType');
+  return s ? s.value : '';
 }
 function onPaper(){
   document.getElementById('customPaper').style.display = (document.getElementById('paper').value==='other')?'flex':'none';
@@ -366,7 +421,9 @@ function snapHot(){
   document.querySelectorAll('#hotBlocks select[id^="hotColor_"]').forEach(s=>{co[s.id]=s.value;});
   document.querySelectorAll('#hotBlocks input[id^="hotColorOther_"]').forEach(i=>{coOther[i.id]=i.value;});
   document.querySelectorAll('#hotBlocks input[id^="hotAreaSame_"]').forEach(i=>{as[i.id]=i.checked;});
-  return {n,a,co,coOther,as,rs};
+  const dn={};
+  document.querySelectorAll('#hotBlocks select[id^="hotDens_"]').forEach(s=>{dn[s.id]=s.value;});
+  return {n,a,co,coOther,as,rs,dn};
 }
 function buildHotBlocks(){
   const colors=+document.getElementById('hotColors').value||0;
@@ -380,6 +437,13 @@ function buildHotBlocks(){
     const blk=document.createElement('div');blk.className='hotblk';
     let h='<div class="blk-h">'+title+'</div>';
     h+=hotColorRow(c, snap.co&&snap.co['hotColor_'+c], snap.coOther&&snap.coOther['hotColorOther_'+c], '燙金顏色');
+    // 圖文概況（2026-07-20 老闆命名）：同樣外框，實心色塊要降速加壓、報廢率高；線條圖文跑得快
+    h+='<label>圖文概況</label><select id="hotDens_'+c+'" onchange="calc()">'+
+       DENS_OPTS.map(function(k){
+         var sv=snap.dn&&snap.dn['hotDens_'+c];
+         var sel=(sv?sv===k:k==='一般圖文')?' selected':'';
+         return '<option value="'+k+'"'+sel+'>'+k+'（×'+F_DENS[k].toFixed(2)+'）</option>';
+       }).join('')+'</select>';
     h+='<label>燙金處數</label><select id="hotN_'+c+'" onchange="onHotN('+c+')"></select>';
     h+='<label class="chk"><input type="checkbox" id="hotAreaSame_'+c+'"'+(snap.as['hotAreaSame_'+c]?' checked':'')+
        ' onchange="onHotAreaSame('+c+')"> 每處燙金面積相同</label>';
@@ -595,7 +659,8 @@ function getHotColors(){
   for(let c=0;c<colors;c++){
     const sel=document.getElementById('hotN_'+c);
     const n=sel?(+sel.value||0):0;
-    arr.push({n,areas:readAreas(c,n),color:colOf(c)});
+    const ds=document.getElementById('hotDens_'+c);
+    arr.push({n,areas:readAreas(c,n),color:colOf(c),dens:(ds?ds.value:'一般圖文')});
   }
   return arr;
 }
@@ -630,18 +695,23 @@ function isBig(areas,p){
   let pa=p.w*p.l;
   return areas.some(a=> a.w*a.l > pa*FULL_RATIO);
 }
+// 2026-07-20 老闆指正：燙金與打凸是兩種不同工藝，同一個位置可以既燙又打凸（燙金打凸是常見組合）。
+// 舊版把兩者面積加總後跟紙張比，會把最普通的單誤判成「落版不下」。改成各自獨立檢查。
 function fitCheck(p,hotA,embA){
   if(!p.w||!p.l)return null;
   const pa=p.w*p.l;
-  const all=[...hotA,...embA].filter(a=>a.w>0&&a.l>0);
-  if(!all.length)return null;
-  for(const a of all){
-    const fit=(a.w<=p.w&&a.l<=p.l)||(a.l<=p.w&&a.w<=p.l);
-    if(!fit)return '單一圖 '+a.w+'×'+a.l+'cm 超過紙張 '+p.w+'×'+p.l+'cm，無法落版';
-  }
-  let sum=0; all.forEach(a=>sum+=a.w*a.l);
-  if(sum>pa)return '落版面積總和 '+Math.round(sum)+'㎠ 超過紙張可容 '+Math.round(pa)+'㎠，請減少色數/處數或換大紙';
-  return null;
+  const fits=a=>(a.w<=p.w&&a.l<=p.l)||(a.l<=p.w&&a.w<=p.l);
+  const chk=(arr,name)=>{
+    const list=arr.filter(a=>a.w>0&&a.l>0);
+    if(!list.length)return null;
+    for(const a of list)
+      if(!fits(a))return '單一'+name+'圖 '+a.w+'×'+a.l+'cm 超過紙張 '+p.w+'×'+p.l+'cm，無法落版';
+    let sum=0; list.forEach(a=>sum+=a.w*a.l);
+    if(sum>pa)return name+'面積總和 '+Math.round(sum)+'㎠ 超過紙張可容 '+Math.round(pa)+
+      '㎠，請減少處數或換大紙';
+    return null;
+  };
+  return chk(hotA,'燙金') || chk(embA,'打凸');
 }
 
 function calc(){
@@ -686,13 +756,28 @@ function calc(){
         // ⚠️ 2026-07-19 老闆定：計價單位是「趟」不是「色」——一趟＝一次工繳。
         //    多色若拉箔路徑不重疊可同趟跑完（只收一次）；套準／同直行才分趟。
         //    舊版按色數加總，4 色分散的單會超收 4 倍。趟數判定見 passGroups()。
+        // 2026-07-20 曲線重建：舊式 baseFee(qty)×max(1,面積/1200) 已換成六因素模型。
+        // 舊式在 1200c㎡ 以下完全不看面積、沒有紙張與密度因素、大量單超折。
         var perSheet=0, perSheetRaw=0;
         groups.forEach(function(grp){
-          var ca=0;
-          grp.forEach(function(i){ cols[i].areas.forEach(function(a){ ca+=(a.w+2)*a.l; }); });
-          var unit=baseFee(qty)*Math.max(1, ca/AREA_REF);
+          var ca=0, nSpot=0, densW=0;
+          grp.forEach(function(i){
+            var cArea=0;
+            cols[i].areas.forEach(function(a){ cArea+=(a.w+2)*a.l; });
+            ca    += cArea;
+            nSpot += cols[i].n;
+            var ds=document.getElementById('hotDens_'+i);
+            densW += cArea*(F_DENS[ds?ds.value:'一般圖文']||1);   // 面積加權，一趟裡各色密度可不同
+          });
+          var fDens = ca>0 ? densW/ca : 1;
+          var unit = BASE_LABOUR
+                   * tblInterp(F_QTY, qty)
+                   * tblInterp(F_AREA, ca)
+                   * fDens
+                   * tblInterp(F_SPOT, Math.max(1,nSpot))
+                   * paperFactor(p);
           perSheetRaw += unit;
-          perSheet    += unit*surfaceFactorFor(ca);           // 加成逐趟判定：大面積的那趟才吃得重
+          perSheet    += unit*surfaceFactorFor(ca);           // 表面處理加成逐趟判定
         });
         surfEff = perSheetRaw>0 ? perSheet/perSheetRaw : 1;    // 全案實際吃到的平均加成（供顯示）
         feePerSheet = perSheet * seasonFactor();               // ×季節競爭係數（淡月衝量／旺月保毛利）
@@ -705,13 +790,20 @@ function calc(){
     }
   }
   const foilMatR=Math.round(foilMat);
-  const rawCash = Math.round(plate + foilMatR + hotFee + embLabor);
+  // 基本費地板（2026-07-20 改分級）：老闆的定義是「箔材＋工繳」的地板，製版費另計。
+  // 舊版把製版一起算進來比地板，大版單常被製版費頂過門檻 → 地板等於沒作用。
+  const ORDER_FLOOR = minFeeOf(p);
+  const workRaw  = foilMatR + hotFee + embLabor;      // 不含製版
+  // 地板只在「真的有工可做」時才套用；空表單不該憑空跳出基本費
+  const hasWork  = qty>0 && (hotN>0 || embN>0);
+  const workBase = hasWork ? Math.max(workRaw, ORDER_FLOOR) : workRaw;
+  const rawCash = Math.round(plate + workBase);
   const ratio = rawCash<3000?1.15 : 1.05;
   const rawPress = Math.round(rawCash*ratio/100)*100;
-  // 基本費地板：現金與押票各自不低於 ORDER_MIN；觸底時兩者皆＝ORDER_MIN（押票不另加倍率）
-  const cash = Math.max(rawCash, ORDER_MIN);
-  const press = Math.max(rawPress, ORDER_MIN);
-  const atFloor = (rawCash < ORDER_MIN);
+  // 地板已在 workBase 套用（不含製版），這裡不再二次比較
+  const cash = rawCash;
+  const press = rawPress;
+  const atFloor = hasWork && (workRaw < ORDER_FLOOR);
 
   // 輸出（一律算出參考價，不再走人工）
   const L=document.getElementById('lines');
@@ -729,7 +821,8 @@ function calc(){
   const floorTag = atFloor ? ' <span class="est">基本費</span>' : ' <span class="est">參考</span>';
   html+=row2('現金價'+floorTag, NT+f(cash));
   html+=row2('押票價'+floorTag, NT+f(press));
-  if(atFloor) html+=row('<span class="est">※ 未達基本費 '+NT+ORDER_MIN.toLocaleString()+'，以基本費計（工繳試算 '+NT+f(rawCash)+'）</span>','');
+  if(atFloor) html+=row('<span class="est">※ 未達'+p.n.replace(/\s*\(.*/,'')+'的基本費 '+NT+ORDER_FLOOR.toLocaleString()+
+    '（箔材＋工繳，製版另計），以基本費計（實算 '+NT+f(workRaw)+'）</span>','');
   // 每張單價：同業最常拿來比價的就是這個數字，直接算好、不必自己除
   if(qty>0) html+=row('每張單價 <span class="est">現金／押票</span>',
                       NT+(cash/qty).toFixed(2)+'　／　'+NT+(press/qty).toFixed(2));
@@ -795,6 +888,10 @@ function trainText(){
     q.hotCols.forEach((col,ci)=>{
       s+='　第'+(ci+1)+'色'+(col.color?'（'+col.color+'）':'')+'：'+col.n+' 處';
       if(col.areas.length)s+='｜'+col.areas.map(a=>a.w+'×'+a.l).join('、')+' cm';
+      // 圖文概況會直接乘進工繳（一般 ×1.00／大色塊 ×1.40），不記下來事後無法校準
+      s+='｜'+(col.dens||'一般圖文');
+      let ca=0; col.areas.forEach(a=>{ca+=(a.w+2)*a.l;});
+      s+='｜用箔 '+Math.round(ca)+'c㎡';
       s+='\n';
     });
   }
@@ -808,8 +905,23 @@ function trainText(){
   if(q.qty>0)s+='每張單價：現金 '+NT+q.unitCash.toFixed(2)+'／押票 '+NT+q.unitPress.toFixed(2)+'\n';
   const tc=document.getElementById('t_cash').value;
   const tp=document.getElementById('t_press').value;
-  if(tc)s+='★實際現金價：'+NT+(+tc).toLocaleString()+'\n';
-  if(tp)s+='★實際押票價：'+NT+(+tp).toLocaleString()+'\n';
+  // 基準對齊：實際成交價若不含製版，就把系統參考也扣掉製版再比，否則差額裡混著定義差
+  const exPlate=document.getElementById('t_incPlate').checked;
+  if(tc||tp){
+    s+='★實際成交（'+(exPlate?'不含製版費':'已含製版費')+'）\n';
+    if(tc)s+='　現金：'+NT+(+tc).toLocaleString()+'\n';
+    if(tp)s+='　押票：'+NT+(+tp).toLocaleString()+'\n';
+    const refCash = exPlate ? (q.cash-q.plate) : q.cash;
+    s+='　↔ 同基準的系統參考現金：'+NT+Math.round(refCash).toLocaleString();
+    if(tc&&refCash>0){
+      const gap=(+tc)/refCash;
+      s+='　→ 實際是參考的 '+(gap*100).toFixed(0)+'%'+
+         (gap<0.9?'（讓價 '+((1-gap)*100).toFixed(0)+'%）':gap>1.1?'（高於參考）':'（接近參考）');
+    }
+    s+='\n';
+    if(q.qty>0&&tc)s+='　實際工繳／張（扣掉箔材）：'+NT+
+      (((+tc)-(exPlate?0:q.plate)-q.foilMat)/q.qty).toFixed(2)+'\n';
+  }
   const tn=document.getElementById('t_note').value; if(tn)s+='備註：'+tn+'\n';
   s+='─ Jesper 解析（系統內部・勿手改）─\n';
   s+='機台：'+(q.mc==='card'?'名片':q.mc==='rotary'?'輪轉':'半自動')+'\n';
@@ -817,10 +929,35 @@ function trainText(){
   s+='[訓練資料·非實際報價·報價浮動·供 Jesper 校準工繳邏輯]\n';
   return s;
 }
+// 2026-07-20 修：原本 navigator.clipboard.writeText() 的 Promise 沒接，
+// 失敗（手機 webview／非 HTTPS／權限被擋）會靜靜 reject，alert 卻照樣說「已複製」＝假成功。
+// 現在三層保險：clipboard API → execCommand → 攤開文字讓老闆自己全選複製。
+function copyText(s, okMsg){
+  const done=()=>alert(okMsg);
+  const manual=()=>{
+    const box=document.getElementById('copyFallback');
+    const ta=document.getElementById('copyFallbackText');
+    ta.value=s; box.style.display='block';
+    ta.focus(); ta.select();
+    box.scrollIntoView({block:'center'});
+  };
+  // 舊式 execCommand：手機與非安全環境的救命稻草
+  const legacy=()=>{
+    try{
+      const t=document.createElement('textarea');
+      t.value=s; t.style.position='fixed'; t.style.opacity='0';
+      document.body.appendChild(t); t.focus(); t.select();
+      const ok=document.execCommand('copy');
+      document.body.removeChild(t);
+      ok?done():manual();
+    }catch(e){ manual(); }
+  };
+  if(navigator.clipboard&&window.isSecureContext){
+    navigator.clipboard.writeText(s).then(done).catch(legacy);
+  }else legacy();
+}
 function sendTrain(){
-  const s=trainText();
-  if(navigator.clipboard)navigator.clipboard.writeText(s);
-  alert('訓練資料已複製 ✦ 直接貼到對話框給 Jesper 即可（不會傳 LINE）');
+  copyText(trainText(), '訓練資料已複製 ✦ 直接貼到對話框給 Jesper 即可（不會傳 LINE）');
 }
 
 init();

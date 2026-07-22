@@ -290,13 +290,7 @@ textarea{resize:vertical;min-height:64px;}
   background:#fff;border:1.5px dashed var(--sunset-deep);border-radius:10px;
   padding:10px 12px;margin:8px 0;font-size:.88rem;font-weight:700;color:#3d3d3d;line-height:1.9;
 }
-.acct{font-size:1.05rem;letter-spacing:.08em;color:var(--ink);}
-.acct-copy{
-  margin-left:8px;padding:4px 12px;border-radius:999px;border:1.5px solid var(--ink);
-  background:var(--ink);color:#fff;font-size:.72rem;font-weight:700;cursor:pointer;
-  font-family:inherit;vertical-align:middle;
-}
-.acct-copy:hover{background:var(--sunset-deep);border-color:var(--sunset-deep);}
+/* .acct / .acct-copy 已移除：匯款帳號改由官方 LINE 專人提供，不公開於網站。 */
 .submit-btn{
   width:100%;margin-top:16px;background:var(--sunset-deep);color:#fff;border:2px solid var(--ink);
   border-radius:14px;padding:16px;font-size:1.08rem;font-weight:900;letter-spacing:.2em;
@@ -547,9 +541,8 @@ footer{
           <div class="pay-note">
             <strong>💰 付款方式：先匯款・後製作</strong>
             <div class="bank-box">
-              中國信託商業銀行（822）<br>
-              帳號：<span class="acct" id="acctNum">182540257215</span>
-              <button type="button" class="acct-copy" id="acctCopy">複製帳號</button>
+              送出訂單後，<b>專人會在官方 LINE 提供匯款帳戶</b>。<br>
+              為了保障雙方，帳號不公開於網站上。
             </div>
             匯款完成後，請於 LINE 回傳<u>匯款帳號後五碼</u>，收到款項核對無誤後即安排製作。
           </div>
@@ -647,7 +640,7 @@ footer{
     </details>
     <details>
       <summary>怎麼付款？什麼時候開始製作？</summary>
-      <div class="a">本商品為客製品，採<strong>先匯款、後製作</strong>。匯款帳戶：<strong>中國信託商業銀行（822）帳號 182540257215</strong>。流程：官網產生訂單 → LINE 傳送訂單 → 完成匯款 → 於 LINE <strong>回傳匯款帳號後五碼</strong> → 核對入帳後即安排印製。未完成匯款前不會開始製作喔。</div>
+      <div class="a">本商品為客製品，採<strong>先匯款、後製作</strong>。流程：官網產生訂單 → LINE 傳送訂單 → <strong>專人於官方 LINE 提供匯款帳戶</strong> → 完成匯款 → 於 LINE <strong>回傳匯款帳號後五碼</strong> → 核對入帳後即安排印製。未完成匯款前不會開始製作喔。<br>※ 為保障雙方權益，匯款帳號不公開於網站，一律由官方 LINE（@623bfkyg）專人提供。</div>
     </details>
     <details>
       <summary>怎麼取貨？運費多少？</summary>
@@ -686,7 +679,7 @@ footer{
 <div class="modal-mask" id="modalMask" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
   <div class="modal">
     <h3 id="modalTitle">🎉 訂單已產生！</h3>
-    <p class="modal-sub">① 點「複製訂單內容」→ ② 點「開啟 LINE 下單」加入官方帳號（<strong>@623bfkyg</strong>）貼上訂單 → ③ 匯款至 <strong>中國信託（822）182540257215</strong>，並於 LINE <strong>回傳匯款帳號後五碼</strong>。收到款項核對無誤後即開始製作！</p>
+    <p class="modal-sub">① 點「複製訂單內容」→ ② 點「開啟 LINE 下單」加入官方帳號（<strong>@623bfkyg</strong>）貼上訂單 → ③ <strong>專人會回覆匯款帳戶</strong>，完成匯款後於 LINE <strong>回傳匯款帳號後五碼</strong>。收到款項核對無誤後即開始製作！</p>
     <div class="order-text" id="orderText"></div>
     <div class="modal-actions">
       <button class="copy-btn" id="copyBtn">① 複製訂單內容</button>
@@ -1021,7 +1014,7 @@ function buildOrderText(){
   if(note) lines.push('備註：'+note);
   lines.push('────────────');
   lines.push('※ 付款方式：先匯款後製作');
-  lines.push('※ 匯款帳戶：中國信託(822) 182540257215');
+  lines.push('※ 請稍候，專人將於此提供匯款帳戶');
   lines.push('※ 匯款後請回傳「帳號後五碼」以便核帳');
   lines.push('（此訂單由官網產生 '+new Date().toLocaleDateString('zh-TW')+'）');
   return lines.join('\n');
@@ -1103,14 +1096,8 @@ shipStore.addEventListener('click',()=>{
   mailField.style.display='none';storeField.style.display='block';renderSummary();
 });
 
-/* ================= 複製匯款帳號 ================= */
-document.getElementById('acctCopy').addEventListener('click',async function(){
-  try{
-    await navigator.clipboard.writeText('182540257215');
-    this.textContent='已複製 ✓';
-    setTimeout(()=>this.textContent='複製帳號',2000);
-  }catch(e){alert('帳號：182540257215（請手動複製）');}
-});
+/* 匯款帳號已改為「由官方 LINE 專人提供」，不公開在網站上
+   （2026-07-17 老闆指示）→ 原本的「複製帳號」按鈕與其 JS 一併移除。 */
 
 /* ================= Lightbox ================= */
 const lbEl=document.getElementById('lightbox'), lbImg=document.getElementById('lightboxImg');
