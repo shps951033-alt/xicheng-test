@@ -100,18 +100,21 @@
   <label>紙張表面處理</label>
   <select id="surfaceType" onchange="calc()">
     <option value="">無</option>
-    <option value="亮膜／霧膜">亮膜／霧膜（大面積最高 ×1.15）</option>
-    <option value="金油">金油（大面積最高 ×1.15）</option>
-    <option value="上膜＋金油">上膜＋金油（大面積最高 ×1.18）</option>
-    <option value="觸感膜（絲絨膜）">觸感膜／絲絨膜（大面積最高 ×1.25）</option>
+    <!-- 2026-07-25 老闆：「不要顯示計算過程」→ 選項只留名稱，加成倍率不上頁面 -->
+    <option value="亮膜／霧膜">亮膜／霧膜</option>
+    <option value="金油">金油</option>
+    <option value="上膜＋金油">上膜＋金油</option>
+    <option value="觸感膜（絲絨膜）">觸感膜／絲絨膜</option>
   </select>
-  <div class="hint">※ 已上膜／上金油的紙，燙金箔咬不牢、要降速或換箔種 → 只加在燙金加工費，製版費與金箔材料不變。
-    加成隨面積變動：每色用箔 100c㎡ 以下不加價，1200c㎡ 以上吃滿，中間按比例。</div>
+  <div class="hint">※ 已上膜／上金油的紙，燙金箔咬不牢、要降速或換箔種 → 只加在燙金加工費，製版費與金箔材料不變。</div>
+  <!-- 2026-07-25 老闆：「直接套用不要勾選，這網頁是給同行客戶自己填的」→ 季節係數自動套當月，
+       勾選框與係數顯示全部移除（同行不該看到我們的淡旺季折扣，也不該自己決定要不要套）。
+       ⚠ 校準／訓練資料一律是正常月基準，換算時記得除回當月係數（複製訓練資料那段有原始係數）。 -->
 </div>
 
 <!-- 燙金 -->
 <div class="card">
-  <h2>② 燙金　<span class="tag">基本費 200／㎠×4</span></h2>
+  <h2>② 燙金　<span class="tag">製版費另計</span></h2><!-- 07-25：版費算式（㎠×4）不上頁面 -->
   <label>燙金色數</label>
   <select id="hotColors" onchange="buildHotBlocks();calc()"></select>
   <div class="hint">※ 每色一塊版、可燙多處；處數與面積逐色各自填，每處可不同。兩處最短距離 ≤ 3cm 算一處。</div>
@@ -135,18 +138,18 @@
       <div class="layout-res" id="layRes"></div>
     </div>
   </div>
-  <label class="chk"><input type="checkbox" id="hotOwn" onchange="calc()"> 客戶自備燙金版（免製版費）</label>
+  <label class="chk"><input type="checkbox" id="hotOwn" onchange="calc()"> 客戶自備燙金版／舊版重用（免製版費）</label>
 </div>
 
 <!-- 打凸 -->
 <div class="card">
-  <h2>③ 打凸　<span class="tag">基本費 400／㎠×8</span></h2>
+  <h2>③ 打凸　<span class="tag">製版費另計</span></h2><!-- 07-25：版費算式（㎠×8）不上頁面 -->
   <label>打凸處數</label>
   <select id="embN" onchange="buildAreas('emb');calc()"></select>
   <div class="hint">※ 兩處打凸最短距離 ≤ 3cm，算一處。</div>
   <label class="chk"><input type="checkbox" id="embSame" checked onchange="buildAreas('emb');calc()"> 每處打凸面積相同</label>
   <div id="embAreas" class="areas"></div>
-  <label class="chk"><input type="checkbox" id="embOwn" onchange="calc()"> 客戶自備打凸版（免製版費）</label>
+  <label class="chk"><input type="checkbox" id="embOwn" onchange="calc()"> 客戶自備打凸版／舊版重用（免製版費）</label>
 </div>
 
 <!-- 結果 -->
@@ -178,9 +181,17 @@
     <div class="form" id="formTrain">
       <div class="hint" style="margin-bottom:8px">把你所有點選的規格＋系統暫估打包成文字，複製後直接貼到對話框給 Jesper（不會傳 LINE）。實際成交的現金／押票價可選填，校準更準。</div>
       <div class="row">
-        <div><label>實際現金價（選填）</label><input type="number" id="t_cash" placeholder="實際現金價"></div>
+        <div><label>實際現金價（選填）</label><input type="number" id="t_cash" placeholder="實際現金價" oninput="trainUnitHint()"></div>
         <div><label>實際押票價（選填）</label><input type="number" id="t_press" placeholder="實際押票價"></div>
       </div>
+      <!-- 2026-07-21 踩過：老闆填「1.5」是想表達「每張 1.5 元」，系統當成整筆 $1.5，
+           算出「讓價 100%、工繳 −0.09」的荒謬結果。加單位選擇，並在明顯不合理時擋下來。 -->
+      <label>上列價格的單位</label>
+      <select id="t_unit" onchange="trainUnitHint()">
+        <option value="total">整筆總額（例：2,000 張共 $3,000）</option>
+        <option value="each">每張單價（例：一張 $1.5）</option>
+      </select>
+      <div class="hint" id="t_unitHint" style="margin-top:4px"></div>
       <!-- 2026-07-20：老闆的實際成交價習慣「不含製版費」，但系統的現金參考含製版。
            基準不同若不註明，日後校準會把定義差誤判成模型誤差。預設＝不含（老闆的習慣）。 -->
       <label class="chk"><input type="checkbox" id="t_incPlate" checked> 上列實際價<b>不含</b>製版費（製版另外收）</label>
@@ -204,8 +215,12 @@
 /* ===== 設定 ===== */
 // 待老闆確認：LINE 官方帳號連結（先放電話 deep link，可改成 @ID）
 const LINE_URL = "https://line.me/R/ti/p/0986990812";
-// 測試階段：訓練區塊（複製訓練資料）常駐顯示；正式給客戶時改 false（之後只有網址加 #boss 才會出現）
-const TESTING_MODE = true;
+// 訓練區塊（複製訓練資料給 Jesper）＝內部工具，會露出「系統暫估」與實際成交價欄位。
+// 2026-07-25 老闆定調「這網頁是給同行客戶自己填的」→ 關掉常駐顯示。
+// 老闆自己要用：網址後面加 #boss（例：…代報價工具.html#boss）就會出現。
+const TESTING_MODE = false;
+// 老闆模式：網址加 #boss 才開。訓練區塊、每張工繳、地板警告等「內部數字」都掛在這個旗標下。
+const BOSS = TESTING_MODE || /boss|jesper/i.test(location.hash + location.search);
 const NT = "$";  // 金額符號（集中一處）
 
 // 印刷尺寸（cm，寬×長），最大菊全。
@@ -214,7 +229,7 @@ const PAPERS = [
   {k:'a4',   n:'A4 (21×29.7)',       w:21,   l:29.7, mc:'auto'},
   {k:'g16',  n:'菊16開 (15.5×22)',   w:15.5, l:22,   mc:'auto'},
   {k:'g8',   n:'菊8開 (22×31)',      w:22,   l:31,   mc:'auto'},
-  {k:'g4',   n:'菊4開 (31×44)',      w:31,   l:44,   mc:'auto'},
+  {k:'g4',   n:'菊4開・A3 (31×44)',  w:31,   l:44,   mc:'auto'},   // 老闆 07-25：菊4開就標成 A3，同業/客戶認這個叫法
   {k:'duo',  n:'菊對開 (44×63.5)',   w:44,   l:63.5, mc:'rotary'},
   {k:'full', n:'菊全 (63.5×88.9)',   w:63.5, l:88.9, mc:'rotary'},
   {k:'s8',   n:'四六8開 (27.3×39.4)', w:27.3, l:39.4, mc:'auto'},
@@ -240,34 +255,93 @@ const AREA_REF = 1200;
 // 目前全域單一值；日後若依紙張大小／難度分級再改成表。地板綁「現金與押票」兩者、且觸底時押票不另加倍率（故兩者同為800）。
 const ORDER_MIN = 800;   // ⚠ 2026-07-20 起改用 MIN_FEE 分級表，此值僅保留為最低一級參考
 
-/* ═══════ 2026-07-20 曲線重建（老闆三輪校準・對照表逐項確認後上線）═══════
-   來源：營運部\曲線重建-新舊對照-20260720.html
-   　　　＋ 報價校準表-第二輪實案/第三輪階梯-20260719.html（老闆親筆開價）
+/* ═══════ 2026-07-21 十輪校準總改版 ═══════════════════════════════════
+   來源：營運部\報價校準\ —— 校準總表.md（主帳）＋各輪原始資料＋引擎改動清單-20260721.md
 
-   新模型：燙金工繳／張 ＝ BASE_LABOUR × f量 × f面積 × f密度 × f處數 × f紙張 × f表面
-   　　　　每一「趟」各算一次（一趟＝一次工繳，見 passGroups）
-   基準情境：菊對開・2,000張・1色1處・500c㎡・一般圖文・亮金・無表面處理
+   ★ 核心轉向：不再用 Jesper 發明的六因素連乘，改用**老闆自己的算法**。
+     老闆原話：「亮金色正常價我通常用 面積 × 0.004 算出來」
+     十輪資料 26 點驗證：600–2,600c㎡ 區間 12 點命中 0–5%。
+     決定性證據：第九輪表上寫「1,800c㎡（約 38×47）」，老闆填 7.144 ＝ 38×47×0.004，
+     用的是印在旁邊的實際尺寸而非整數面積 —— 那是他當場真的在算，不是事後合理化。
 
-   為什麼是 1.64：老闆該情境開 2.1 元/張（含箔材），扣掉亮金箔材 0.46 元/張 ＝ 工繳 1.64。
-   老闆的單價定義含箔材，模型必須拆開，否則箔材會被算兩次。                              */
-const BASE_LABOUR = 1.64;
+   新模型：燙金工繳／張 ＝ 總面積 × 單位工繳(總面積) × f密度 × f表面 × f量
+   　　　　每一「趟」各算一次（第八輪 ② 確認趟數完全線性、無交互作用）
 
-// 面積係數（老闆第三輪①，已除以密度 1.4 換算成「一般圖文」基準）
-// 1,000c㎡＝5 元經老闆 07-20 口頭確認，落在 800(3.0)→1200(7.2) 的插值線上 → 用線性插值、不做階梯
-const F_AREA=[[100,0.82],[200,0.95],[500,1.00],[800,1.07],[1000,1.79],
-              [1200,2.57],[1500,3.26],[2000,3.57],[2500,5.36]];
-// 數量係數（老闆第三輪⑦）。舊 baseFee 對數曲線在大量單超折：10,000 張多折 29%
-const F_QTY =[[1000,1.14],[2000,1.00],[5000,0.864],[10000,0.727],[30000,0.636]];
-// 紙張係數（老闆第三輪⑧）——全新，舊引擎完全沒有這個因素。用紙張面積 c㎡ 內插
-const F_PAPER=[[682,0.90],[1364,0.90],[2794,1.00],[4289,1.05],[5645,1.20]];
-// 圖案密度（老闆第三輪②）——全新。舊引擎只量外框，空心線框與實心色塊同價
-const F_DENS={'細線條':1.00,'一般圖文':1.00,'半色塊':1.25,'大面積色塊':1.40};
-// 下拉只給兩項（2026-07-20 老闆指示：選單簡化成「一般圖文／大面積色塊」）。
-// 細線條與一般圖文係數相同（都 1.00），合併不失真；
-// ⚠ 半色塊（1.25）因此不在選單上 —— 這類單會被當一般圖文計、少收約 25%。老闆要的話加回來即可。
-const DENS_OPTS=['一般圖文','大面積色塊'];
-// 處數係數（老闆第三輪⑥，總面積固定下純粹「拆散」的成本）——全新
-const F_SPOT=[[1,1.00],[3,1.045],[5,1.14],[10,1.18],[20,1.27]];
+   老闆的三點補充（同日）：
+     1.「這個數值通常為報價天花板，沒有一定，只是參考」→ 0.004 是上限，他從那條線往下走
+     2.「這個算法會隨著面積越大工繳越高」→ 工繳絕對值單調上升
+     3.「我的工繳最低通常不會低於 1 元」→ 見 LABOUR_FLOOR                              */
+
+/* ═══ 工繳表 v3（2026-07-23 R11–R13「整單總收」問法重建）═════════════════
+   二維表：「面積 × 總衝壓數 N」直接列工繳（元／張，一般圖文＝大色塊÷1.25，正常月）。
+   為什麼推翻 v2 的一維表＋數量係數：
+   1. R12 揭露「假設題會複誦口訣」—— R9 的 2,475c㎡『9.9／張』四種問法全一致，
+      其實是老闆當場心算 面積×0.004 背給我們；總收問法的真價只有一半（6.0／張）。
+      → v2 的大面積段整段虛高 ~2 倍（引擎在紅區高估 1.3–2.4 倍）。
+   2. 量曲線形狀隨面積變：300 與 2,500c㎡ 前段全平（2千→5千 ×1.00）、後段掉到 0.55；
+      500c㎡ 是緩坡（0.864→0.727→0.636）。一條 F_QTY 蓋不住 → 直接二維。
+   3. 趟數＝數量（老闆 07-23，R12 兩段價總額分毫不差證實）：查表用 N＝張數×趟數。
+   資料：標 ※ 的格子是內插補的，其餘全是老闆實填（R11/R12/R13 總收問法＋錨點＋真實成交）。
+   已知波浪：800c㎡ 列略低於 500 列（老闆湊整 $6,000 所致，±10% 內），照實保留不抹平。
+   老闆 2026-07-23 裁決三條：①箔材照算咬口（寬＋2cm），整單因此比他口報高約 2%，多的是真會耗掉的箔；
+   ②網頁不再顯示口訣算法；③**地板價就是 0.80** → 80c㎡×3萬那格由 0.73 拉到 0.80。
+   ⇒ 拉上來之後，全表最低值＝0.80，正常價工繳在結構上不可能低於地板。 */
+const L2D_N=[2000,5000,10000,30000];   // 總衝壓數軸（張數×趟數）
+const L2D=[
+  [  80, 1.13, 0.99, 0.83, 0.80],  // 80：真實成交 07-21（大色塊1.41）；尾段※，3萬格由老闆定於地板 0.80（07-23）
+  [ 300, 1.92, 1.74, 1.47, 1.29],  // 300：R5/R8/R12② 三度重現 1.92；尾段※
+  [ 500, 2.04, 1.76, 1.48, 1.30],  // 500：錨點七連中＋數量階梯三度實測（唯一保留的舊量階）
+  [ 800, 1.81, 1.56, 1.32, 1.15],  // 800：R13②（$6,000）；尾段※
+  [1200, 2.72, 2.05, 1.90, 1.55],  // 1200：R13①（$9,000）；尾段※
+  [1500, 2.79, 2.10, 1.94, 1.56],  // 1500：R11；2千格※
+  [2500, 2.96, 2.96, 2.16, 1.62],  // 2500：R12①＋R11（2千→5千實測零折扣）
+  [3500, 3.02, 3.02, 2.62, 1.96],  // 3500：R11；2千格※比照2500持平
+  [4980, 4.34, 4.34, 3.54, 2.74]]; // 4980：R11；2千格※比照2500持平
+function labour2D(area,N){
+  area=Math.max(1,area); N=Math.max(1,N||2000);
+  function rowAt(a){
+    if(a<=L2D[0][0])return L2D[0];
+    if(a>=L2D[L2D.length-1][0])return L2D[L2D.length-1];
+    for(var k=0;k<L2D.length-1;k++) if(a<=L2D[k+1][0]){
+      var A=L2D[k],B=L2D[k+1],t=(a-A[0])/(B[0]-A[0]),out=[a];
+      for(var c=1;c<A.length;c++) out.push(A[c]+(B[c]-A[c])*t);
+      return out;
+    }
+  }
+  var row=rowAt(area);
+  if(N<=L2D_N[0])return row[1];
+  if(N>=L2D_N[L2D_N.length-1])return row[L2D_N.length];
+  for(var j=0;j<L2D_N.length-1;j++) if(N<=L2D_N[j+1]){
+    var t=(N-L2D_N[j])/(L2D_N[j+1]-L2D_N[j]);
+    return row[j+1]+(row[j+2]-row[j+1])*t;
+  }
+}
+/* 舊 v2 常數保留註解供對照，勿再啟用：
+   L_LABOUR=[[80,1.13],[200,1.82],[300,1.85],[500,2.04],[600,2.10],[1000,2.46],
+             [1200,2.93],[1500,3.50],[1800,4.44],[2500,6.10],[5000,7.57]]  ← ≥1500 段是口訣複誦，虛高
+   F_QTY  =[[1000,1.14],[2000,1.00],[5000,0.864],[10000,0.727],[30000,0.636]]  ← 已併入 L2D 的 N 軸 */
+// 圖案密度（第十輪③：面積鎖死 500c㎡、四格相鄰、只有一個變數在動，最乾淨的量測）
+// 舊值取自第三輪（半色塊 1.25／大色塊 1.40），第五輪 3×3 量到 1.19，第十輪 1.245 → 採第十輪
+const F_DENS={'細線條':1.00,'一般圖文':1.00,'半色塊':1.15,'大面積色塊':1.25};
+// 2026-07-21：半色塊放回選單。少了它，半色塊的單會被報成低 13%（當一般圖文）或高 9%（當大色塊）
+const DENS_OPTS=['一般圖文','半色塊','大面積色塊'];
+// 工繳地板（老闆 2026-07-21）：「我的工繳最低通常不會低於 1 元，除非他很好做、面積小、且量大」
+// → 跳警告但不擋，例外由老闆自己判斷。與 MIN_FEE 是兩條不同的地板，取大值。
+// 觸底面積：2,000張 325c㎡／10,000張 447c㎡／30,000張 510c㎡，完全對上「面積小、量大」。
+const LABOUR_FLOOR = 1.0;
+// 絕對地板（老闆手繪模型 2026-07-23）：「0.8 元，及大量 30,000 起、小面積」
+// → 兩級警告：低於 1.0 黃字（常規下限）、低於 0.8 紅字（絕對地板，連例外都不該破）
+const LABOUR_FLOOR_ABS = 0.8;
+
+/* ── 2026-07-21 拿掉的兩個係數（保留說明，避免日後有人又加回去）──────────
+   F_SPOT（處數係數）：第十輪④ 每處固定 200c㎡ 只變處數，3／5／10 處全部剛好等於
+     「總面積 × 0.004」，處數完全沒進老闆的算式。第八輪看起來的 U 形，實際是他在
+     「5 處各 200c㎡」那格因為好做而主動讓 18%（他自己註記「小面積好顧且五處組版不困難」）。
+     → 難易度改成畫面提示，不進價格。
+   F_PAPER（紙張係數）：口訣驗證顯示菊全與菊對開在同面積下完全同價
+     （1,000c㎡ 都 4.00、1,200c㎡ 都是 4.80／4.00）。紙張只影響小面積的底價
+     （500c㎡ 菊對開 2.5 vs 菊全 3.2），而那一段已由 MIN_FEE 基本費分級接住。
+     → 拿掉全域乘數，紙張只出現在 MIN_FEE。                                   */
 // 基本費分級（老闆 2026-07-20 定）：依紙張面積四級。
 // ⚠ 與舊 ORDER_MIN 的差異：老闆的定義是「箔材＋工繳」的地板，製版費另計、不納入比較。
 //    舊版是含製版的地板，會讓大版單被製版費頂過門檻而失效。
@@ -286,13 +360,15 @@ function minFeeOf(p){
   for(var i=0;i<MIN_FEE.length;i++) if(a<=MIN_FEE[i][0]) return MIN_FEE[i][1];
   return 2000;
 }
-function paperFactor(p){ return (p&&p.w&&p.l)? tblInterp(F_PAPER,p.w*p.l) : 1; }
+// v3（07-23）：工繳一律走 labour2D(面積, 總衝壓數)。舊 labourOf 已隨 L_LABOUR 作廢移除。
 // 表面處理加成（2026-07-19 老闆定・粗胚待校準）：同業送來的紙已上膜／上金油時，箔咬不牢，
 // 要換箔種或降速 → 只加在「燙金加工費」（＝難度＝工時），製版費與金箔材料不動。
 // 「上膜＋金油」＝1.4，是兩層都有的估值，非 1.1×1.3 的相乘；等實際成交價回來一起校準。
 // 2026-07-20 依老闆第三輪③實填改寫。原本 Jesper 粗胚假設膜的種類有梯度（1.1／1.3／1.4），
 // 老闆實填 1.15／1.15／1.25 → 有沒有上膜是門檻，膜的種類差別不大。以老闆為準。
-const SURFACE = {'亮膜／霧膜':1.15, '金油':1.15, '上膜＋金油':1.18, '觸感膜（絲絨膜）':1.25};
+// 2026-07-21 依第五輪 3×3 交互作用的實測值下修：老闆在三個面積量到的上膜倍率是
+// 1.094／1.054／1.160，擬合 ×1.102（第三輪的 1.15 是單點量測）。其餘依比例同步下調。
+const SURFACE = {'亮膜／霧膜':1.10, '金油':1.10, '上膜＋金油':1.13, '觸感膜（絲絨膜）':1.20};
 // ⚠ 加成不是固定值，隨燙金面積爬升（2026-07-19 老闆指正）：
 //    小圖燙在膜上，難度與純紙幾乎相同 → 不該加價；
 //    面積一大才會掉箔、要降速，工時顯著拉長 → 才吃到滿係數。
@@ -319,10 +395,21 @@ function baseFee(qty){ if(qty<=0)return 0; var b=2.85-1.384*(Math.log10(qty)-Mat
 // ── 季節競爭係數（淡旺季浮動定價）───────────────────────
 // 1.00=常態；淡月<1（壓價衝量搶單）、旺月>1（抬價保毛利）。只乘加工費、不動金箔/製版。
 // 老闆季節：大月 10~隔年2；3月轉淡、4月劇烈下坡、5~8月谷底(最淡)、9月回升。以下數字可自行調整。
-const SEASON = {1:1.10,2:1.06,3:1.00,4:0.90,5:0.85,6:0.83,7:0.82,8:0.84,9:0.95,10:1.06,11:1.12,12:1.12};
+// 2026-07-21 第七輪④ 老闆實填驗證：最淡月 0.83 完全命中，只微調四個月
+//   5月 0.85→0.90、9月 0.95→0.90、11月 1.12→1.06、12月 1.12→1.10。旺淡全幅 33%。
+const SEASON = {1:1.10,2:1.06,3:1.00,4:0.90,5:0.90,6:0.83,7:0.82,8:0.84,9:0.90,10:1.06,11:1.06,12:1.10};
 // 手動蓋台：想不管月份強制某係數就填數字（如缺工急單填 0.85）；平常設 null 走上表。
 const SEASON_OVERRIDE = null;
-function seasonFactor(){ if(SEASON_OVERRIDE!=null) return SEASON_OVERRIDE; var m=(new Date()).getMonth()+1; return SEASON[m]||1; }
+// 當月的季節係數（不管有沒有勾選，供顯示用）
+function seasonOfMonth(){ if(SEASON_OVERRIDE!=null) return SEASON_OVERRIDE; var m=(new Date()).getMonth()+1; return SEASON[m]||1; }
+// 季節係數的兩次轉向，記清楚免得又搞混：
+//   2026-07-21：原本無條件乘進去、畫面完全沒提 → 老闆看到的一直是淡季價（7月 ×0.82），
+//               誤以為引擎報太低。當時改成「預設不套、要打折自己勾」，讓校準看得到正常價。
+//   2026-07-25：老闆定調「直接套用不要勾選，這網頁是給同行客戶自己填的」→ 改回自動套當月係數，
+//               但畫面上不再出現係數或勾選框（同行看到的就是這個月實際能接的價）。
+//   ⚠ 校準基準仍是正常價：要還原正常價就把報價 ÷ 當月係數（訓練資料那段有附原始係數）。
+function useSeason(){ return true; }
+function seasonFactor(){ return seasonOfMonth(); }
 function foilCostTotal(cols,qty){ var sum=0; cols.forEach(function(col){ if(col.n>0){ var ar=0; col.areas.forEach(function(a){ ar+=(a.w+2)*a.l; }); sum += (ar*qty/FOIL_YIELD/768000)*foilPrice(col.color); } }); return sum; }
 const HOT_COLORS = ['金','銀','霧金','霧銀','古銅','蕭光古銅','紅','藍','綠','黑','白','珍珠白','透明箔','其他'];
 function hotColorOptions(saved){
@@ -348,7 +435,7 @@ function onHotColor(ci){
 function init(){
   const ps=document.getElementById('paper');
   PAPERS.forEach(p=>{let o=document.createElement('option');o.value=p.k;o.textContent=p.n;ps.appendChild(o)});
-  ps.value='full';
+  ps.value='duo';   // 老闆 07-25：未選擇時預設菊對開（原本預設菊全，等於幫對方跳一級基本費 $2,000）
   // 打凸處數選單
   const en=document.getElementById('embN');
   { let o0=document.createElement('option');o0.value=0;o0.textContent='無';en.appendChild(o0);
@@ -357,6 +444,7 @@ function init(){
   const hc=document.getElementById('hotColors');
   { let o0=document.createElement('option');o0.value=0;o0.textContent='無';hc.appendChild(o0);
     for(let i=1;i<=8;i++){let o=document.createElement('option');o.value=i;o.textContent=i+' 色';hc.appendChild(o)} }
+  // 07-25：季節係數改為自動套用、畫面不顯示 → 原本填 #seasonNow 標籤的程式已移除
   buildHotBlocks();buildAreas('emb');calc();
 }
 // 2026-07-20 起改為單一下拉，空字串＝無表面處理
@@ -442,7 +530,8 @@ function buildHotBlocks(){
        DENS_OPTS.map(function(k){
          var sv=snap.dn&&snap.dn['hotDens_'+c];
          var sel=(sv?sv===k:k==='一般圖文')?' selected':'';
-         return '<option value="'+k+'"'+sel+'>'+k+'（×'+F_DENS[k].toFixed(2)+'）</option>';
+         // 2026-07-25：倍率不上頁面（同表面處理那條）→ 選項只留名稱，×1.15／×1.25 留在 F_DENS 常數裡
+         return '<option value="'+k+'"'+sel+'>'+k+'</option>';
        }).join('')+'</select>';
     h+='<label>燙金處數</label><select id="hotN_'+c+'" onchange="onHotN('+c+')"></select>';
     h+='<label class="chk"><input type="checkbox" id="hotAreaSame_'+c+'"'+(snap.as['hotAreaSame_'+c]?' checked':'')+
@@ -684,12 +773,23 @@ function plateFee(areas,own,base,rate){
   return Math.round(sum);
 }
 // 燙金製版：每色一塊版，版費＝max(200, 該色各處總面積×4)
+// 2026-07-21 第八輪 Q1／Q3 老闆定：長×寬×4、最低 200（他寫「基本費」）；
+//   ⚠「拼版 3 處以上一處多 50 元」——老闆原話，這裡採最直白的讀法：n≥3 時每一處都 +50。
+//     若他的意思是「超過 2 處的部分才 +50」，改成 (col.n-2)*GANG_FEE 即可。已列在改動清單請他確認。
+const GANG_MIN = 3, GANG_FEE = 50;
 function hotPlateFee(cols,own){
   if(own)return 0;
   let sum=0;
-  cols.forEach(col=>{ if(col.n>0){ let tot=0; col.areas.forEach(a=> tot+=a.w*a.l); sum += Math.max(200, tot*4); } });
+  cols.forEach(col=>{ if(col.n>0){
+    let tot=0; col.areas.forEach(a=> tot+=a.w*a.l);
+    let f = Math.max(200, tot*4);
+    if(col.n>=GANG_MIN) f += col.n*GANG_FEE;      // 拼版加價
+    sum += f;
+  } });
   return Math.round(sum);
 }
+// 這筆單有沒有吃到拼版加價（供畫面提示：建議客人出底片）
+function gangCount(cols){ let n=0; cols.forEach(col=>{ if(col.n>=GANG_MIN) n+=col.n; }); return n; }
 function isBig(areas,p){
   if(!p.w||!p.l)return false;
   let pa=p.w*p.l;
@@ -740,7 +840,7 @@ function calc(){
 
   // 加工費＋金箔成本（市場參考價）
   // 2026-07-19 老闆指示移除「心中預期價（面積×0.01 上限參考）」，改顯示每張單價。
-  let foilMat=0, hotFee=0, embLabor=0, feePerSheet=0, surfEff=1;
+  let foilMat=0, hotFee=0, embLabor=0, feePerSheet=0, feePerSheetBase=0, surfEff=1;
   const groups = passGroups(cols);          // 分趟結果（一趟＝一次工繳）
   const nPass  = groups.length;
   updateLayRes(groups, cols);
@@ -756,30 +856,31 @@ function calc(){
         // ⚠️ 2026-07-19 老闆定：計價單位是「趟」不是「色」——一趟＝一次工繳。
         //    多色若拉箔路徑不重疊可同趟跑完（只收一次）；套準／同直行才分趟。
         //    舊版按色數加總，4 色分散的單會超收 4 倍。趟數判定見 passGroups()。
-        // 2026-07-20 曲線重建：舊式 baseFee(qty)×max(1,面積/1200) 已換成六因素模型。
-        // 舊式在 1200c㎡ 以下完全不看面積、沒有紙張與密度因素、大量單超折。
+        // 2026-07-21 十輪校準總改版：換成老闆自己的算法（總面積 × 單位工繳）。
+        // ⚠ 面積用「淨尺寸 w×l」，不加 +2 餘裕——老闆算的就是淨尺寸
+        //   （第九輪他填 7.144 ＝ 38×47×0.004，用的是圖案本身的長寬）。
+        //   +2 餘裕只屬於金箔「用量」，不屬於工繳，兩者不可混用。
         var perSheet=0, perSheetRaw=0;
+        // R12 定案「趟數＝數量」：量的折扣看總衝壓數 N＝張數×趟數
+        //（老闆實填：2,000張×2趟 與 4,000張×1趟 兩段價總額分毫不差 $8,800／$7,200）
+        var NIMP = qty * Math.max(1, nPass);
         groups.forEach(function(grp){
-          var ca=0, nSpot=0, densW=0;
+          var ca=0, densW=0;
           grp.forEach(function(i){
             var cArea=0;
-            cols[i].areas.forEach(function(a){ cArea+=(a.w+2)*a.l; });
+            cols[i].areas.forEach(function(a){ cArea+=a.w*a.l; });   // 淨面積
             ca    += cArea;
-            nSpot += cols[i].n;
             var ds=document.getElementById('hotDens_'+i);
             densW += cArea*(F_DENS[ds?ds.value:'一般圖文']||1);   // 面積加權，一趟裡各色密度可不同
           });
           var fDens = ca>0 ? densW/ca : 1;
-          var unit = BASE_LABOUR
-                   * tblInterp(F_QTY, qty)
-                   * tblInterp(F_AREA, ca)
-                   * fDens
-                   * tblInterp(F_SPOT, Math.max(1,nSpot))
-                   * paperFactor(p);
+          var unit = labour2D(ca, NIMP)        // 這一趟的淨面積 × 全案總衝壓數
+                   * fDens;
           perSheetRaw += unit;
           perSheet    += unit*surfaceFactorFor(ca);           // 表面處理加成逐趟判定
         });
         surfEff = perSheetRaw>0 ? perSheet/perSheetRaw : 1;    // 全案實際吃到的平均加成（供顯示）
+        feePerSheetBase = perSheet;                            // 正常價（未乘季節）＝校準基準、也是地板 0.80 的比較對象
         feePerSheet = perSheet * seasonFactor();               // ×季節競爭係數（淡月衝量／旺月保毛利）
         hotFee = Math.round(feePerSheet*qty);                 // 燙加工費（多色＝多次加工，分趟計）
       }
@@ -809,29 +910,64 @@ function calc(){
   const L=document.getElementById('lines');
   const f=n=>Math.round(n).toLocaleString();
   let html='';
-  html+=row('燙金製版費'+(hotOwn?'（自備）':''), NT+f(hotPlate));
-  html+=row('打凸製版費'+(document.getElementById('embOwn').checked?'（自備）':''), NT+f(embPlate));
+  html+=row('燙金製版費'+(hotOwn?'（自備／舊版重用）':''), NT+f(hotPlate));
+  html+=row('打凸製版費'+(document.getElementById('embOwn').checked?'（自備／舊版重用）':''), NT+f(embPlate));
+  // 拼版加價提示（第八輪 Q3）
+  const gN = hotOwn?0:gangCount(cols);
+  if(gN>0) html+=row('<span class="est">※ 含拼版加價 '+gN+' 處 × '+NT+GANG_FEE+
+    '　—— 建議請客人直接出底片，可省這筆</span>','');
   if(mc!=='card' && foilMatR>0) html+=row('金箔成本（材料）', NT+f(foilMatR));
   if(hotFee>0){
-    const tag = (mc!=='card'&&feePerSheet)? ' <span class="est">'+feePerSheet.toFixed(2)+'／張</span>':'';
-    const pt  = (mc!=='card'&&nPass>0)? ' <span class="est">'+nPass+' 趟</span>':'';
+    // 2026-07-25 老闆：「1 趟 0.99／張」這串拿掉。每張工繳＝我們的成本結構，同業看到就知道往哪裡砍。
+    // 老闆自己校準要看 → 開 #boss。趟數說明留在落版圖那一區（那是對方需要懂的規則，不是算法）。
+    // #boss 顯示時給「正常價／本月價」兩個數，免得拿當月折扣價去對校準帳本
+    const sf  = seasonFactor();
+    const tag = (BOSS && mc!=='card' && feePerSheet)
+      ? ' <span class="est">工繳 '+feePerSheetBase.toFixed(2)+'／張'+
+        (Math.abs(sf-1)>0.005 ? '（本月 '+feePerSheet.toFixed(2)+'）' : '')+'</span>' : '';
+    const pt  = (BOSS && mc!=='card' && nPass>0)? ' <span class="est">'+nPass+' 趟</span>':'';
     html+=row('燙金加工費'+pt+tag, NT+f(hotFee));
   }
   if(embLabor>0) html+=row('打凸加工費', NT+f(embLabor));
   const floorTag = atFloor ? ' <span class="est">基本費</span>' : ' <span class="est">參考</span>';
   html+=row2('現金價'+floorTag, NT+f(cash));
   html+=row2('押票價'+floorTag, NT+f(press));
+  // 2026-07-25：只講「有基本費」這個規則，不再附上實算金額（那是計算過程，也是被殺價的把柄）
   if(atFloor) html+=row('<span class="est">※ 未達'+p.n.replace(/\s*\(.*/,'')+'的基本費 '+NT+ORDER_FLOOR.toLocaleString()+
-    '（箔材＋工繳，製版另計），以基本費計（實算 '+NT+f(workRaw)+'）</span>','');
+    '（箔材＋工繳，製版另計），以基本費計</span>','');
+  // 季節係數：2026-07-25 起自動套當月、畫面不顯示（老闆：直接套用不要勾選，這頁給同行自己填）
+  // 工繳地板警告 —— 只警告、不改價。老闆 07-23 定案：**地板價就是 0.80**。
+  // 1.0 不再稱「下限」（會跟老闆定的 0.80 打架），改講「地板帶 0.80–1.00＝例外區」。
+  // 2026-07-25 老闆：這兩行也拿掉 → 改成只在 #boss 顯示。
+  //   （寫著「工繳 $0.99／張、已進入地板帶」等於自曝底價還附上「我知道這很低」，同業直接照這個砍）
+  // ⚠ 比較對象是「正常價」feePerSheetBase，不是乘完季節的價。地板 0.80 是在正常價的 L2D 表上定的，
+  //   07-25 季節改成自動套之後若拿當月價去比，7 月（×0.82）每一單都會誤跳「跌破地板」。
+  if(BOSS && mc!=='card' && feePerSheetBase>0 && feePerSheetBase<LABOUR_FLOOR_ABS)
+    html+=row('<span class="est" style="color:#ff5252">⚠⚠ 工繳僅 '+NT+feePerSheetBase.toFixed(2)+
+      '／張，跌破地板 '+NT+LABOUR_FLOOR_ABS.toFixed(2)+
+      '　—— 地板連例外都不該破，再低是做白工</span>','');
+  else if(BOSS && mc!=='card' && feePerSheetBase>0 && feePerSheetBase<LABOUR_FLOOR)
+    html+=row('<span class="est" style="color:#ff9a6b">※ 工繳 '+NT+feePerSheetBase.toFixed(2)+
+      '／張，已進入地板帶（'+NT+LABOUR_FLOOR_ABS.toFixed(2)+'–'+NT+LABOUR_FLOOR.toFixed(2)+
+      '）—— 這一帶只留給「30,000 張起、面積小、很好做」的單</span>','');
   // 每張單價：同業最常拿來比價的就是這個數字，直接算好、不必自己除
   if(qty>0) html+=row('每張單價 <span class="est">現金／押票</span>',
                       NT+(cash/qty).toFixed(2)+'　／　'+NT+(press/qty).toFixed(2));
+  // 2026-07-21：老闆與同業互報的「每張多少」一律不含製版費（校準十輪都是這個定義）。
+  // 上面那行含製版，拿去跟同業比會虛高，所以另外列一行同基準的。
+  if(qty>0 && plate>0) html+=row('每張單價 <span class="est">不含製版・同業比價用</span>',
+                      NT+((cash-plate)/qty).toFixed(2));
+  // 口訣天花板（面積×0.004）曾在此顯示一行「本報價為口訣的 XX%」。
+  // 2026-07-23 老闆指示「網頁裡標示的算法直接拿掉」→ 移除。
+  // 理由：這頁是同業自助報價用的，不該把我們心算的算法印在客戶看得到的地方；
+  //       小面積還會誤報「超過天花板」（口訣只在 ≥500c㎡ 驗證過）。
+  // 口訣仍是 Jesper 分析用的參考線，只留在校準文件，不上頁面。
+  // 2026-07-25：只說有沒有加價、不說加成倍率（老闆：不要顯示計算過程）
   const surf=surfaceText();
   if(surf){
-    const full=SURFACE[surf];
     const tail = surfEff<1.005
       ? '燙金面積小，難度與純紙相當 → 未加價'
-      : ('燙金加工費 ×'+surfEff.toFixed(2)+(surfEff<full-0.005?'（面積未達滿檔，上限 ×'+full+'）':'（已達滿檔）'));
+      : '已計入燙金加工費（製版費與金箔材料不變）';
     html+=row('<span class="est">※ 表面處理（'+surf+'）：'+tail+'</span>','');
   }
   L.innerHTML=html;
@@ -876,6 +1012,16 @@ function sendLine(type){
   alert('正開啟 LINE，選「喜成印刷」送出即可 ✦（訂單內容已幫你打好、也已複製備份）');
 }
 function v(id){return document.getElementById(id).value||'—'}
+// 訓練資料的單位提示：即時換算給老闆看，避免又把「每張」當成「整筆」
+function trainUnitHint(){
+  const h=document.getElementById('t_unitHint'); if(!h)return;
+  const q=window.__quote, per=document.getElementById('t_unit').value==='each';
+  const c=+document.getElementById('t_cash').value;
+  if(!q||!q.qty||!c){ h.textContent = per?'※ 填一張多少錢，系統會自己乘上張數。':'※ 填整筆總金額。'; return; }
+  h.innerHTML = per
+    ? '※ 每張 '+NT+c.toFixed(2)+' × '+q.qty+' 張 ＝ <b>'+NT+Math.round(c*q.qty).toLocaleString()+'</b>'
+    : '※ 整筆 '+NT+Math.round(c).toLocaleString()+' ÷ '+q.qty+' 張 ＝ <b>'+NT+(c/q.qty).toFixed(2)+'／張</b>';
+}
 function trainText(){
   const q=window.__quote, p=q.paper;
   const fa=a=>a.map((x,i)=>'  '+(i+1)+'. '+x.w+'×'+x.l+'cm').join('\n');
@@ -903,24 +1049,35 @@ function trainText(){
   if(q.embLabor)s+='打凸加工費：'+NT+q.embLabor.toLocaleString()+'\n';
   s+='現金參考：'+NT+q.cash.toLocaleString()+'／押票參考：'+NT+q.press.toLocaleString()+'\n';
   if(q.qty>0)s+='每張單價：現金 '+NT+q.unitCash.toFixed(2)+'／押票 '+NT+q.unitPress.toFixed(2)+'\n';
-  const tc=document.getElementById('t_cash').value;
-  const tp=document.getElementById('t_press').value;
+  // 2026-07-21：加單位換算。老闆填「1.5」意思是「每張 1.5 元」，舊版當成整筆 $1.5，
+  // 算出「讓價 100%、工繳 −0.09」的荒謬結果，那種資料拿去校準會把曲線帶歪。
+  const perEach = (document.getElementById('t_unit')||{}).value === 'each';
+  const toTotal = function(x){ return perEach ? (+x)*q.qty : (+x); };
+  const tcRaw=document.getElementById('t_cash').value;
+  const tpRaw=document.getElementById('t_press').value;
+  const tc = tcRaw!=='' ? toTotal(tcRaw) : '';
+  const tp = tpRaw!=='' ? toTotal(tpRaw) : '';
   // 基準對齊：實際成交價若不含製版，就把系統參考也扣掉製版再比，否則差額裡混著定義差
   const exPlate=document.getElementById('t_incPlate').checked;
-  if(tc||tp){
-    s+='★實際成交（'+(exPlate?'不含製版費':'已含製版費')+'）\n';
-    if(tc)s+='　現金：'+NT+(+tc).toLocaleString()+'\n';
-    if(tp)s+='　押票：'+NT+(+tp).toLocaleString()+'\n';
+  if(tc!==''||tp!==''){
+    s+='★實際成交（'+(exPlate?'不含製版費':'已含製版費')+
+       (perEach?'　※輸入的是「每張單價」，已換算成整筆':'')+'）\n';
+    if(tc!=='')s+='　現金：'+NT+Math.round(tc).toLocaleString()+(q.qty>0?'（'+NT+(tc/q.qty).toFixed(2)+'／張）':'')+'\n';
+    if(tp!=='')s+='　押票：'+NT+Math.round(tp).toLocaleString()+(q.qty>0?'（'+NT+(tp/q.qty).toFixed(2)+'／張）':'')+'\n';
     const refCash = exPlate ? (q.cash-q.plate) : q.cash;
     s+='　↔ 同基準的系統參考現金：'+NT+Math.round(refCash).toLocaleString();
-    if(tc&&refCash>0){
-      const gap=(+tc)/refCash;
+    if(tc!==''&&refCash>0){
+      const gap=tc/refCash;
       s+='　→ 實際是參考的 '+(gap*100).toFixed(0)+'%'+
-         (gap<0.9?'（讓價 '+((1-gap)*100).toFixed(0)+'%）':gap>1.1?'（高於參考）':'（接近參考）');
+         (gap<0.9?'（讓價 '+((1-gap)*100).toFixed(0)+'%）':gap>1.1?'（高於參考 '+((gap-1)*100).toFixed(0)+'%）':'（接近參考）');
     }
     s+='\n';
-    if(q.qty>0&&tc)s+='　實際工繳／張（扣掉箔材）：'+NT+
-      (((+tc)-(exPlate?0:q.plate)-q.foilMat)/q.qty).toFixed(2)+'\n';
+    if(q.qty>0&&tc!==''){
+      const realLab=(tc-(exPlate?0:q.plate)-q.foilMat)/q.qty;
+      s+='　實際工繳／張（扣掉箔材）：'+NT+realLab.toFixed(2)+'\n';
+      // 荒謬值攔截：工繳為負代表單位填錯或打錯，這種資料不能拿去校準
+      if(realLab<0) s+='　⚠⚠ 工繳算出負數 —— 單位選錯或數字打錯了，這筆先別拿來校準！\n';
+    }
   }
   const tn=document.getElementById('t_note').value; if(tn)s+='備註：'+tn+'\n';
   s+='─ Jesper 解析（系統內部・勿手改）─\n';
@@ -961,8 +1118,8 @@ function sendTrain(){
 }
 
 init();
-// 測試階段(TESTING_MODE) 或 網址加 #boss → 顯示訓練工具；正式上線把 TESTING_MODE 改 false
-if(TESTING_MODE||/boss|jesper/i.test(location.hash+location.search)){var _bt=document.getElementById('bossTools');if(_bt)_bt.style.display='';}
+// 網址加 #boss（BOSS 旗標）→ 顯示訓練工具＋每張工繳＋地板警告；同業看到的是乾淨的報價單
+if(BOSS){var _bt=document.getElementById('bossTools');if(_bt)_bt.style.display='';}
 </script>
 </body>
 </html>
