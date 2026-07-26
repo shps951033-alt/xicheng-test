@@ -85,10 +85,25 @@ select{
 .res.best{border-color:var(--good); box-shadow:inset 0 0 0 1px var(--good)}
 .res .tag{font-size:12px; color:var(--muted); letter-spacing:.08em}
 .res .qty{font-size:13px; color:var(--muted); margin-top:2px}
-.res .sum{font-size:26px; font-weight:800; font-variant-numeric:tabular-nums; margin-top:6px; letter-spacing:-.01em}
-.res .sum span{font-size:14px; font-weight:600; color:var(--muted); margin-right:3px}
-.res .each{font-size:14px; margin-top:4px; font-variant-numeric:tabular-nums}
-.res .each b{color:var(--accent); font-size:17px}
+.res .each.big{
+  margin-top:8px; font-size:14px; color:var(--muted); font-variant-numeric:tabular-nums;
+  display:flex; align-items:baseline; gap:5px; flex-wrap:wrap;
+}
+.res .each.big b{color:var(--accent); font-size:30px; font-weight:800; letter-spacing:-.01em}
+.res .each.big small{font-size:11.5px; color:var(--muted); margin-left:auto}
+.res .line{
+  display:flex; justify-content:space-between; gap:10px; font-size:13px; color:var(--muted);
+  font-variant-numeric:tabular-nums; margin-top:6px;
+}
+.res .line b{color:var(--ink); font-weight:700}
+.res .line.tool b{color:var(--accent)}
+.res .sum{
+  display:flex; justify-content:space-between; gap:10px; font-size:13px; color:var(--muted);
+  font-variant-numeric:tabular-nums; margin-top:6px; padding-top:6px; border-top:1px solid var(--line);
+  font-weight:700;
+}
+.res li.tl{opacity:.85}
+.res li em{font-style:normal; font-size:10.5px; color:var(--accent); border:1px solid var(--accent); border-radius:4px; padding:0 4px; margin-left:3px}
 .res .diff{font-size:12.5px; color:var(--muted); margin-top:6px; font-variant-numeric:tabular-nums}
 .res .diff.win{color:var(--good); font-weight:700}
 .res ul{list-style:none; margin:10px 0 0; padding:10px 0 0; border-top:1px dashed var(--line); font-size:12.5px}
@@ -151,7 +166,8 @@ button.primary:hover{opacity:.9; color:#fff}
   <div class="hint">
     計價方式四選一：<b>分欄單價 ×數量</b>（預設）＝三欄各填各的單價，各自乘上該欄數量，格子下面直接顯示小計｜
     <b>分欄總價</b>＝三欄各填一筆總價，不乘數量｜<b>單價 ×數量（共用）</b>＝三欄共用一個單價｜<b>總價（共用）</b>＝整批一筆、三欄同一個數字。
-    版費類（印刷版費、燙金版費、刀膜、打凸版費）是一次性費用，不隨數量變。輸入會自動記住，下次打開還在。
+    <b>每張成本不含模具</b>：燙金版費、打凸版費、刀膜是模具（再版還能用），在卡片上獨立列為「模具費（另記）」，不攤進每張單價。
+    印刷版費有算進去 —— CTP 版每次開印都要重出，是跟著這一批走的成本。輸入會自動記住，下次打開還在。
   </div>
 </div>
 
@@ -171,12 +187,12 @@ const ROWS = [
   {k:'paper', n:'紙張費用',  def:'unitsplit', modes:ALL},
   {k:'plate', n:'印刷版費',  def:'shared',    modes:['shared','split'], note:'一次性'},
   {k:'print', n:'印刷費用',  def:'unitsplit', modes:ALL},
-  {k:'foilP', n:'燙金版費',  type:'formula', mult:4, note:'長 × 寬 × 4'},
+  {k:'foilP', n:'燙金版費',  type:'formula', mult:4, note:'長 × 寬 × 4', tool:true},
   {k:'foil',  n:'燙金費用',  def:'unitsplit', modes:ALL},
   {k:'gloss', n:'上光單價',  def:'unitsplit', modes:ALL},
-  {k:'embP',  n:'打凸版費',  type:'formula', mult:8, note:'長 × 寬 × 8'},
+  {k:'embP',  n:'打凸版費',  type:'formula', mult:8, note:'長 × 寬 × 8', tool:true},
   {k:'emb',   n:'打凸費用',  def:'unitsplit', modes:ALL},
-  {k:'die',   n:'刀膜',      def:'shared',    modes:['shared','split'], note:'一次性'},
+  {k:'die',   n:'刀膜',      def:'shared',    modes:['shared','split'], note:'模具・另記', tool:true},
   {k:'cut',   n:'軋型費用',  def:'unitsplit', modes:ALL},
   {k:'glue',  n:'糊工單價',  def:'unitsplit', modes:ALL},
 ];
@@ -258,18 +274,24 @@ function calc(){
       else if (mode === 'unit')  { const u = num($(r.k+'_s').value); amounts = COLS.map(c => u * qty[c]); }
       else                       { const v = num($(r.k+'_s').value); amounts = COLS.map(() => v); }
     }
-    lines.push({name:r.n, amounts});
+    lines.push({name:r.n, amounts, tool:!!r.tool});
   });
 
+  // 2026-07-27 老闆：「每張單價不記入 刀膜／燙金版／打凸版，另記」
+  //   這三樣是模具，客戶再版還能用，攤進每張成本會把小量的單價灌得很難看，也不是真實加工成本。
+  //   → 每張成本＝（總成本 − 模具費）÷ 數量；模具費在卡片上獨立一行「另記」。
+  //   印刷版費不算模具：CTP 版每次開印都要重出，是真的跟著這一批走的成本。
   const totals = COLS.map(c => lines.reduce((s,l) => s + l.amounts[c], 0));
-  const each   = COLS.map(c => qty[c] > 0 ? totals[c] / qty[c] : null);
+  const tools  = COLS.map(c => lines.filter(l => l.tool).reduce((s,l) => s + l.amounts[c], 0));
+  const makes  = COLS.map(c => totals[c] - tools[c]);
+  const each   = COLS.map(c => qty[c] > 0 ? makes[c] / qty[c] : null);
 
   const valid = COLS.filter(c => qty[c] > 0 && each[c] !== null);
   const best  = valid.length ? valid.reduce((a,b) => each[a] <= each[b] ? a : b) : -1;
 
   $('results').innerHTML = COLS.map(c => {
     const items = lines.filter(l => l.amounts[c] > 0)
-      .map(l => '<li><span>'+l.name+'</span><b>'+fmt(l.amounts[c])+'</b></li>').join('');
+      .map(l => '<li'+(l.tool?' class="tl"':'')+'><span>'+l.name+(l.tool?' <em>另記</em>':'')+'</span><b>'+fmt(l.amounts[c])+'</b></li>').join('');
     let diff = '';
     if (best >= 0 && each[c] !== null) {
       if (c === best) diff = '<div class="diff win">◎ 每張成本最低</div>';
@@ -282,15 +304,17 @@ function calc(){
     return '<div class="res'+(c===best?' best':'')+'">'
       + '<div class="tag">'+COLNAME[c]+'</div>'
       + '<div class="qty">製作數量 '+(qty[c]?fmt(qty[c]):'—')+'</div>'
-      + '<div class="sum"><span>總成本</span>'+fmt(totals[c])+'</div>'
-      + '<div class="each">每張 <b>'+(each[c]===null?'—':fmt(each[c]))+'</b> 元</div>'
+      + '<div class="each big">每張 <b>'+(each[c]===null?'—':fmt(each[c]))+'</b> 元<small>不含模具</small></div>'
+      + '<div class="line"><span>製作成本</span><b>'+fmt(makes[c])+'</b></div>'
+      + '<div class="line tool"><span>模具費（另記）</span><b>'+fmt(tools[c])+'</b></div>'
+      + '<div class="sum"><span>合計</span><b>'+fmt(totals[c])+'</b></div>'
       + diff
       + (items ? '<ul>'+items+'</ul>' : '')
       + '</div>';
   }).join('');
 
   save();
-  return {qty, lines, totals, each};
+  return {qty, lines, totals, tools, makes, each};
 }
 
 /* ---------- 事件 ---------- */
@@ -338,14 +362,19 @@ function clearAll(){
 
 /* ---------- 複製報表 ---------- */
 function copyReport(){
-  const {qty, lines, totals, each} = calc();
-  const pad = s => String(s);
+  const {qty, lines, totals, tools, makes, each} = calc();
   let t = '喜成印刷｜成本比價\n';
   COLS.forEach(c => {
     if (!qty[c] && !totals[c]) return;
     t += '\n【'+COLNAME[c]+'】製作數量 '+fmt(qty[c])+'\n';
-    lines.filter(l => l.amounts[c] > 0).forEach(l => { t += '  '+pad(l.name)+'：'+fmt(l.amounts[c])+'\n'; });
-    t += '  ── 總成本：'+fmt(totals[c])+'　每張：'+(each[c]===null?'—':fmt(each[c]))+' 元\n';
+    lines.filter(l => l.amounts[c] > 0 && !l.tool).forEach(l => { t += '  '+l.name+'：'+fmt(l.amounts[c])+'\n'; });
+    t += '  ── 製作成本：'+fmt(makes[c])+'　每張：'+(each[c]===null?'—':fmt(each[c]))+' 元（不含模具）\n';
+    const tl = lines.filter(l => l.amounts[c] > 0 && l.tool);
+    if (tl.length) {
+      t += '  ── 模具費（另記）：'+fmt(tools[c])+'\n';
+      tl.forEach(l => { t += '       '+l.name+'：'+fmt(l.amounts[c])+'\n'; });
+    }
+    t += '  ── 合計：'+fmt(totals[c])+'\n';
   });
   navigator.clipboard.writeText(t).then(() => toast('報表已複製')).catch(() => toast('複製失敗，請手動選取'));
 }
