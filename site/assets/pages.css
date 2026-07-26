@@ -136,8 +136,14 @@ footer{background:#0d0b08;color:#8a7f6b;padding:56px 0 28px;border-top:1px solid
 .foot-bot .latin{font-family:var(--latin);font-style:italic;color:var(--gold);letter-spacing:.2em}
 
 @media(max-width:760px){
-  .menu{position:fixed;inset:0 0 0 auto;width:min(78vw,320px);flex-direction:column;justify-content:center;gap:26px;background:rgba(20,17,13,.98);backdrop-filter:blur(16px);transform:translateX(100%);transition:.45s;padding:40px;border-left:1px solid var(--line)}
+  /* 手機抽屜選單 — 2026-07-27 修「背景半透明、字看不清楚」（與 官網\index.html 同一修法，兩邊要一致）
+     舊寫法 rgba(20,17,13,.98) + backdrop-filter:blur(16px)：backdrop-filter 在部分手機瀏覽器
+     碰上 transform 動畫會整層失效 → 背景沒畫出來、頁面透上來。
+     改：①背景全不透明 ②補 z-index（原本 auto）③加遮罩壓暗後面頁面。
+     header 是 z-index:100 的堆疊環境，以下數字只在 header 內比：遮罩 1 ＜ 抽屜 110 ＜ 漢堡鈕 120。 */
+  .menu{position:fixed;inset:0 0 0 auto;width:min(78vw,320px);z-index:110;flex-direction:column;justify-content:center;gap:26px;background:var(--ink);overflow-y:auto;overscroll-behavior:contain;transform:translateX(100%);transition:transform .45s;padding:40px;border-left:1px solid var(--line);box-shadow:-24px 0 60px rgba(0,0,0,.6)}
   .menu.open{transform:none}
+  header:has(.menu.open)::before{content:"";position:fixed;inset:0;z-index:1;background:rgba(8,6,4,.66)}
   .menu a{font-size:1.1rem}
   .burger{display:flex}
   .page-hero{padding:120px 0 48px}

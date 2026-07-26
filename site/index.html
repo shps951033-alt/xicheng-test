@@ -448,14 +448,28 @@ footer{background:#0d0b08;color:#8a7f6b;padding:64px 0 30px;border-top:1px solid
 }
 @media(max-width:640px){
   .wrap{padding:0 20px}
+  /* 手機抽屜選單 — 2026-07-27 修「背景半透明、字看不清楚」
+     舊寫法 background:rgba(20,17,13,.98) + backdrop-filter:blur(16px)：
+       backdrop-filter 在部分手機瀏覽器碰上 transform 動畫會整層失效，
+       背景等於沒畫出來 → 頁面內容直接透上來、選單字變鬼影。
+     三個修法：①背景改全不透明 ②補 z-index（原本是 auto，只靠 DOM 順序疊、很脆弱）
+              ③加全螢幕遮罩把後面頁面壓暗，抽屜邊界一眼看得出來。
+     z-index 說明：header 是 z-index:100 的堆疊環境，底下這些數字只在 header 內部比大小
+                   → 遮罩 1 ＜ 抽屜 110 ＜ 漢堡鈕 120（漢堡鈕要壓在抽屜上才點得到關閉）。 */
   .menu{
-    position:fixed;inset:0 0 0 auto;width:min(78vw,320px);
+    position:fixed;inset:0 0 0 auto;width:min(78vw,320px);z-index:110;
     flex-direction:column;justify-content:center;gap:30px;
-    background:rgba(20,17,13,.98);backdrop-filter:blur(16px);
-    transform:translateX(100%);transition:.45s;padding:40px;
+    background:var(--ink);
+    overflow-y:auto;overscroll-behavior:contain;
+    transform:translateX(100%);transition:transform .45s;padding:40px;
     border-left:1px solid var(--line);
+    box-shadow:-24px 0 60px rgba(0,0,0,.6);
   }
   .menu.open{transform:none}
+  header:has(.menu.open)::before{
+    content:"";position:fixed;inset:0;z-index:1;
+    background:rgba(8,6,4,.66);
+  }
   .menu a{font-size:1.15rem}
   .menu .btn{width:100%;justify-content:center}
   .burger{display:flex}
