@@ -312,10 +312,12 @@ let store = {};
 try { store = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch(e) { store = {}; }
 
 function save(){
+  // ⚠ 要「合併」不能「整包蓋掉」：切換計價方式時，另一種模式的輸入格會從 DOM 消失，
+  //    整包蓋掉等於把它們的值刪光 → 切回去就變空白（2026-07-27 測出來的）。
   const d = {};
   document.querySelectorAll('input,select').forEach(el => { if (el.id) d[el.id] = el.value; });
-  store = d;
-  try { localStorage.setItem(KEY, JSON.stringify(d)); } catch(e) {}
+  store = Object.assign({}, store, d);
+  try { localStorage.setItem(KEY, JSON.stringify(store)); } catch(e) {}
 }
 function restoreRow(r){
   ['_s','_0','_1','_2','_u0','_u1','_u2'].forEach(sfx => { const el = $(r.k+sfx); if (el && store[r.k+sfx] !== undefined) el.value = store[r.k+sfx]; });
@@ -329,6 +331,7 @@ function restoreRow(r){
 })();
 
 function clearAll(){
+  store = {};   // save() 改成合併後，這裡要先把底稿倒掉，否則隱藏欄位的舊值會被留下來
   document.querySelectorAll('input').forEach(el => el.value = '');
   calc(); toast('已清空');
 }
