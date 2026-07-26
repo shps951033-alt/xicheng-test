@@ -38,7 +38,7 @@
   "@type": "LocalBusiness",
   "@id": "https://xicheng-print.com/#business",
   "name": "喜成燙金印刷",
-  "alternateName": ["喜成企業社", "喜成燙金印刷軋型", "C Cheng Enterprise"],
+  "alternateName": ["喜成印刷", "喜成企業社", "喜成燙金印刷軋型", "C Cheng Enterprise"],
   "description": "高雄阿蓮的一條龍燙金印刷工廠。從印刷、燙金、打凸到軋型成型一站完成，為設計師與品牌主製作名片、紙袋、紙盒與客製禮盒，小量彈性、職人品質。",
   "url": "https://xicheng-print.com/",
   "logo": "https://xicheng-print.com/assets/logo-horiz-gold.png",
@@ -49,17 +49,32 @@
   "taxID": "92100012",
   "address": {
     "@type": "PostalAddress",
-    "streetAddress": "峰園路58號",
+    "streetAddress": "峰山里峰園路58號",
     "addressLocality": "阿蓮區",
     "addressRegion": "高雄市",
     "postalCode": "822009",
     "addressCountry": "TW"
   },
+  "geo": {
+    "@type": "GeoCoordinates",
+    "latitude": 22.8739334,
+    "longitude": 120.3541552
+  },
+  "hasMap": "https://maps.google.com/?cid=15588389490449613642",
+  "openingHoursSpecification": [
+    {
+      "@type": "OpeningHoursSpecification",
+      "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+      "opens": "08:00",
+      "closes": "19:00"
+    }
+  ],
   "areaServed": [
     {"@type": "AdministrativeArea", "name": "高雄市"},
     {"@type": "Country", "name": "台灣"}
   ],
   "sameAs": [
+    "https://maps.google.com/?cid=15588389490449613642",
     "https://www.facebook.com/share/1DKMsTDwU8/?mibextid=wwXIfr",
     "https://instagram.com/c_cheng_c888"
   ],
@@ -815,16 +830,28 @@ footer{background:#0d0b08;color:#8a7f6b;padding:64px 0 30px;border-top:1px solid
             <div class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M14 8h-1.4A1.6 1.6 0 0 0 11 9.6V12m-2 0h5m-3 0v6"/></svg></div>
             <div><div class="lbl">Facebook</div><div class="val"><a href="https://www.facebook.com/share/1DKMsTDwU8/?mibextid=wwXIfr" target="_blank" rel="noopener">喜成印刷</a></div></div>
           </div>
+          <div class="cline">
+            <div class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg></div>
+            <div><div class="lbl">營業時間 · Hours</div><div class="val">週一～週六 08:00–19:00<br><span style="font-size:.86rem;color:#a99e86">週日公休</span></div></div>
+          </div>
+          <div class="cline">
+            <div class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 21s-7-6.2-7-11a7 7 0 0114 0c0 4.8-7 11-7 11z"/><path d="M12 6.5l1.2 2.4 2.6.4-1.9 1.8.5 2.6-2.4-1.3-2.4 1.3.5-2.6-1.9-1.8 2.6-.4z"/></svg></div>
+            <div><div class="lbl">Google 商家 · Reviews</div><div class="val"><a href="https://maps.google.com/?cid=15588389490449613642" target="_blank" rel="noopener">查看評價與導航</a></div></div>
+          </div>
         </div>
         <div class="contact-cta">
           <a href="tel:+886986990812" class="btn">撥打電話</a>
           <a href="https://line.me/R/ti/p/%40623bfkyg" target="_blank" rel="noopener" class="btn ghost">加入官方 LINE →</a>
+          <a href="https://maps.google.com/?cid=15588389490449613642" target="_blank" rel="noopener" class="btn ghost">Google 導航 →</a>
           <a href="https://instagram.com/c_cheng_c888" target="_blank" rel="noopener" class="btn ghost">追蹤 IG →</a>
         </div>
       </div>
       <div class="cmap reveal d2">
-        <iframe title="喜成燙金印刷 地圖" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
-          src="https://maps.google.com/maps?q=%E9%AB%98%E9%9B%84%E5%B8%82%E9%98%BF%E8%93%AE%E5%8D%80%E5%B3%B0%E5%9C%92%E8%B7%AF58%E8%99%9F&t=&z=15&ie=UTF8&iwloc=&output=embed"></iframe>
+        <!-- 2026-07-27：原本只帶地址去搜（會落在一個沒有商家的座標點），
+             改成帶「商家名稱＋地址」→ 地圖上釘的是喜成印刷這個商家本身，點下去進得了商家檔案。
+             商家 CID＝15588389490449613642（maps.google.com/?cid=…），JSON-LD 的 hasMap／sameAs 用同一個。 -->
+        <iframe title="喜成印刷 地圖" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
+          src="https://maps.google.com/maps?q=%E5%96%9C%E6%88%90%E5%8D%B0%E5%88%B7%20%E9%AB%98%E9%9B%84%E5%B8%82%E9%98%BF%E8%93%AE%E5%8D%80%E5%B3%B0%E5%9C%92%E8%B7%AF58%E8%99%9F&t=&z=16&ie=UTF8&iwloc=&output=embed"></iframe>
       </div>
     </div>
   </div>

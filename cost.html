@@ -67,6 +67,11 @@ select{
 }
 .qty input{font-size:17px; font-weight:700; text-align:center}
 .three{display:grid; grid-template-columns:repeat(3,1fr); gap:8px}
+.ucell{display:flex; flex-direction:column; gap:2px}
+.ucell .ures{
+  font-size:11.5px; color:var(--muted); text-align:right; padding-right:3px;
+  font-variant-numeric:tabular-nums; white-space:nowrap;
+}
 .formula{display:flex; align-items:center; gap:8px; flex-wrap:wrap}
 .formula input{max-width:96px}
 .formula .x{color:var(--muted); font-size:13px}
@@ -144,8 +149,9 @@ button.primary:hover{opacity:.9; color:#fff}
     <button onclick="clearAll()">全部清空</button>
   </div>
   <div class="hint">
-    計價方式：<b>總價（共用）</b>＝整批一筆，三欄共用同一個數字｜<b>單價 ×數量</b>＝自動乘上該欄製作數量｜<b>分欄輸入</b>＝三欄各填各的。
-    版費類（印刷版費、燙金版費、刀膜、打凸版費）本來就是一次性費用，不隨數量變。輸入會自動記住，下次打開還在。
+    計價方式四選一：<b>分欄單價 ×數量</b>（預設）＝三欄各填各的單價，各自乘上該欄數量，格子下面直接顯示小計｜
+    <b>分欄總價</b>＝三欄各填一筆總價，不乘數量｜<b>單價 ×數量（共用）</b>＝三欄共用一個單價｜<b>總價（共用）</b>＝整批一筆、三欄同一個數字。
+    版費類（印刷版費、燙金版費、刀膜、打凸版費）是一次性費用，不隨數量變。輸入會自動記住，下次打開還在。
   </div>
 </div>
 
@@ -157,20 +163,29 @@ const COLS = [0,1,2];
 const COLNAME = ['A 案','B 案','C 案'];
 
 // type: 'input' 一般費用｜'formula' 版費（長 × 寬 × 倍率）
+// 2026-07-27 老闆：「都改成分欄輸入單價」→ 會隨數量變的費用一律預設 unitsplit
+//   （三欄各填各的單價，各自 × 該欄數量）。量大單價本來就會降，共用一個單價比不出東西。
+//   版費類（印刷版費、刀膜、兩個版費公式）是一次性費用，維持不隨數量變。
+const ALL = ['unitsplit','split','unit','shared'];
 const ROWS = [
-  {k:'paper', n:'紙張費用',  def:'shared', modes:['shared','unit','split']},
-  {k:'plate', n:'印刷版費',  def:'shared', modes:['shared','split'], note:'一次性'},
-  {k:'print', n:'印刷費用',  def:'split',  modes:['split','shared','unit']},
+  {k:'paper', n:'紙張費用',  def:'unitsplit', modes:ALL},
+  {k:'plate', n:'印刷版費',  def:'shared',    modes:['shared','split'], note:'一次性'},
+  {k:'print', n:'印刷費用',  def:'unitsplit', modes:ALL},
   {k:'foilP', n:'燙金版費',  type:'formula', mult:4, note:'長 × 寬 × 4'},
-  {k:'foil',  n:'燙金費用',  def:'shared', modes:['shared','unit','split']},
-  {k:'gloss', n:'上光單價',  def:'unit',   modes:['unit','shared','split'], note:'自動 × 數量'},
+  {k:'foil',  n:'燙金費用',  def:'unitsplit', modes:ALL},
+  {k:'gloss', n:'上光單價',  def:'unitsplit', modes:ALL},
   {k:'embP',  n:'打凸版費',  type:'formula', mult:8, note:'長 × 寬 × 8'},
-  {k:'emb',   n:'打凸費用',  def:'shared', modes:['shared','unit','split']},
-  {k:'die',   n:'刀膜',      def:'shared', modes:['shared','split'], note:'一次性'},
-  {k:'cut',   n:'軋型費用',  def:'shared', modes:['shared','unit','split']},
-  {k:'glue',  n:'糊工單價',  def:'unit',   modes:['unit','shared','split'], note:'自動 × 數量'},
+  {k:'emb',   n:'打凸費用',  def:'unitsplit', modes:ALL},
+  {k:'die',   n:'刀膜',      def:'shared',    modes:['shared','split'], note:'一次性'},
+  {k:'cut',   n:'軋型費用',  def:'unitsplit', modes:ALL},
+  {k:'glue',  n:'糊工單價',  def:'unitsplit', modes:ALL},
 ];
-const MODE_LABEL = {shared:'總價（共用）', unit:'單價 ×數量', split:'分欄輸入'};
+const MODE_LABEL = {
+  unitsplit:'分欄單價 ×數量',   // 三欄各一個單價，各自 × 該欄數量
+  split    :'分欄總價',         // 三欄各一個總價，不乘數量
+  unit     :'單價 ×數量（共用）',
+  shared   :'總價（共用）',
+};
 
 const num = v => { const n = parseFloat(String(v).replace(/,/g,'')); return isFinite(n) ? n : 0; };
 const fmt = n => (Math.round(n*100)/100).toLocaleString('zh-TW',{maximumFractionDigits:2});
@@ -205,9 +220,16 @@ $('body').innerHTML = html;
 function renderCell(r){
   const mode = $(r.k+'_m').value;
   const box = $(r.k+'_cell');
-  if (mode === 'split') {
+  if (mode === 'unitsplit') {
     box.className = 'three';
-    box.innerHTML = COLS.map(c => '<input type="number" inputmode="decimal" min="0" step="0.01" id="'+r.k+'_'+c+'" placeholder="'+COLNAME[c]+'">').join('');
+    box.innerHTML = COLS.map(c =>
+      '<div class="ucell">'
+      + '<input type="number" inputmode="decimal" min="0" step="0.001" id="'+r.k+'_u'+c+'" placeholder="'+COLNAME[c].charAt(0)+' 單價">'
+      + '<span class="ures" id="'+r.k+'_ur'+c+'">= 0</span>'
+      + '</div>').join('');
+  } else if (mode === 'split') {
+    box.className = 'three';
+    box.innerHTML = COLS.map(c => '<input type="number" inputmode="decimal" min="0" step="0.01" id="'+r.k+'_'+c+'" placeholder="'+COLNAME[c]+' 總價">').join('');
   } else {
     box.className = '';
     box.innerHTML = '<input type="number" inputmode="decimal" min="0" step="0.01" id="'+r.k+'_s" placeholder="'+(mode==='unit'?'單價':'總價')+'">';
@@ -228,7 +250,11 @@ function calc(){
       amounts = COLS.map(() => v);
     } else {
       const mode = $(r.k+'_m').value;
-      if (mode === 'split')      amounts = COLS.map(c => num(($(r.k+'_'+c)||{}).value));
+      if (mode === 'unitsplit') {
+        amounts = COLS.map(c => num(($(r.k+'_u'+c)||{}).value) * qty[c]);
+        COLS.forEach(c => { const o = $(r.k+'_ur'+c); if (o) o.textContent = '= ' + fmt(amounts[c]); });
+      }
+      else if (mode === 'split') amounts = COLS.map(c => num(($(r.k+'_'+c)||{}).value));
       else if (mode === 'unit')  { const u = num($(r.k+'_s').value); amounts = COLS.map(c => u * qty[c]); }
       else                       { const v = num($(r.k+'_s').value); amounts = COLS.map(() => v); }
     }
@@ -279,7 +305,9 @@ document.addEventListener('change', e => {
 });
 
 /* ---------- 記憶（localStorage） ---------- */
-const KEY = 'xicheng-cost-compare-v1';
+// ⚠ 改預設計價方式時要一起改版號：舊瀏覽器存過的 mode 會蓋掉新預設，
+//    換 KEY 等於作廢舊紀錄，老闆打開才會看到新的預設（2026-07-27 改 unitsplit 時踩到）。
+const KEY = 'xicheng-cost-compare-v2';
 let store = {};
 try { store = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch(e) { store = {}; }
 
@@ -290,7 +318,7 @@ function save(){
   try { localStorage.setItem(KEY, JSON.stringify(d)); } catch(e) {}
 }
 function restoreRow(r){
-  ['_s','_0','_1','_2'].forEach(sfx => { const el = $(r.k+sfx); if (el && store[r.k+sfx] !== undefined) el.value = store[r.k+sfx]; });
+  ['_s','_0','_1','_2','_u0','_u1','_u2'].forEach(sfx => { const el = $(r.k+sfx); if (el && store[r.k+sfx] !== undefined) el.value = store[r.k+sfx]; });
 }
 (function restoreAll(){
   ROWS.filter(r => r.type !== 'formula').forEach(r => {
