@@ -15,6 +15,64 @@
 <meta property="og:site_name" content="喜成燙金印刷" />
 <meta property="og:locale" content="zh_TW" />
 <meta name="geo.region" content="TW-KHH" />
+<!-- 2026-07-27 補 og:image：刻意用「北境晨光」（25005，自有風景款）而不是米奇／航海王那類
+     授權 IP 封面 —— IP 款還在審核、不可下單，拿來當對外分享預覽不妥。 -->
+<meta property="og:image" content="https://xicheng-print.com/shop/calendar/img/25005/cover.jpg" />
+<meta name="twitter:card" content="summary_large_image" />
+<!-- 2026-07-27 補結構化資料：這頁原本完全沒有 JSON-LD。
+     ⚠️ 只有姓名貼標價格（頁面明寫每張 150 元，標記與頁面一致才合規）。
+     桌曆刻意不標價：單價 40～65 元／本且頁面標示「未稅」，部分 IP 款尚在審核不可下單，
+     標了會與實際結帳金額對不上 —— Google 要求結構化資料的價格必須與頁面顯示一致。 -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {"@type": "ListItem", "position": 1, "name": "首頁", "item": "https://xicheng-print.com/"},
+        {"@type": "ListItem", "position": 2, "name": "公版商品購買", "item": "https://xicheng-print.com/shop/"}
+      ]
+    },
+    {
+      "@type": "ItemList",
+      "name": "喜成公版商品",
+      "itemListElement": [
+        {
+          "@type": "ListItem", "position": 1,
+          "item": {
+            "@type": "Product",
+            "name": "2027 三角桌曆（25K）",
+            "description": "十二款現成設計直接挑，可翻閱整本內頁；底板可加印公司名與 LOGO 燙金。免開版、免設計檔。",
+            "url": "https://xicheng-print.com/shop/calendar/",
+            "image": "https://xicheng-print.com/shop/calendar/img/25005/cover.jpg",
+            "brand": {"@type": "Brand", "name": "喜成燙金印刷"}
+          }
+        },
+        {
+          "@type": "ListItem", "position": 2,
+          "item": {
+            "@type": "Product",
+            "name": "水晶轉印姓名貼",
+            "description": "三款現成設計，打上名字馬上預覽。撕開即貼、服貼無白邊，水壺便當盒都適用。",
+            "url": "https://xicheng-print.com/shop/sticker/",
+            "image": "https://xicheng-print.com/shop/sticker/assets/img01.jpg",
+            "brand": {"@type": "Brand", "name": "喜成燙金印刷"},
+            "offers": {
+              "@type": "Offer",
+              "price": "150",
+              "priceCurrency": "TWD",
+              "availability": "https://schema.org/InStock",
+              "url": "https://xicheng-print.com/shop/sticker/",
+              "seller": {"@id": "https://xicheng-print.com/#business"}
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
+</script>
 <link rel="icon" href="../favicon.ico" sizes="48x48" />
 <link rel="icon" type="image/png" sizes="192x192" href="../favicon-192.png" />
 <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png" />
