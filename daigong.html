@@ -1013,8 +1013,15 @@ function calc(){
   if(BOSS && gangFee>0) html+=row('<span class="est">※ 含拼版加價 '+gN+' 處 × '+NT+GANG_FEE+
     ' × '+gangSteps(qty)+' 個 '+GANG_QTY_STEP.toLocaleString()+' 張 ＝ '+NT+f(gangFee)+
     '　—— 建議請客人直接出底片，可省這筆</span>','');
-  if(mc!=='card' && foilMatR>0) html+=row('金箔成本（材料）', NT+f(foilMatR));
-  if(hotFee>0){
+  /* ═══ 2026-07-26 老闆：成本明細全部不要顯示 ═══════════════════════════
+     指名三行：「金箔成本（材料）」「燙金加工費」「每張單價 不含製版・同業比價用」。
+     理由與 07-25 撤掉每張工繳同一條：把箔材／工繳拆開列，等於告訴同行
+     「材料多少、工錢多少」，他就知道該砍哪一塊、砍到哪裡還有肉。
+     ⇒ 同行只看到：製版費 ＋ 現金／押票總價 ＋ 每張單價。明細全掛 #boss。
+     「打凸加工費」老闆沒點名（這張單沒打凸所以畫面上沒出現），但性質與燙金加工費
+     完全相同 —— 一併隱藏，才不會變成「有打凸的單就洩漏、沒打凸的單就不洩漏」。 */
+  if(BOSS && mc!=='card' && foilMatR>0) html+=row('金箔成本（材料）', NT+f(foilMatR));
+  if(BOSS && hotFee>0){
     // 2026-07-25 老闆：「1 趟 0.99／張」這串拿掉。每張工繳＝我們的成本結構，同業看到就知道往哪裡砍。
     // 老闆自己校準要看 → 開 #boss。趟數說明留在落版圖那一區（那是對方需要懂的規則，不是算法）。
     // #boss 顯示時給「正常價／本月價」兩個數，免得拿當月折扣價去對校準帳本
@@ -1032,7 +1039,7 @@ function calc(){
   // 理論上 embLabor>0 時 gangEmb 才可能>0，但顯示層不賭這個前提，免得未來改地板時漏顯示。
   // #boss 才顯示每張凸工繳（比照燙金：同業看到的是乾淨數字，老闆對帳看得到單價）
   const embTag = (BOSS && embPerSheet>0) ? ' <span class="est">凸工繳 '+embPerSheet.toFixed(2)+'／張</span>' : '';
-  if(embLabor>0||gangEmb>0) html+=row('打凸加工費'+embTag, NT+f(embLabor+gangEmb));
+  if(BOSS && (embLabor>0||gangEmb>0)) html+=row('打凸加工費'+embTag, NT+f(embLabor+gangEmb));
   const floorTag = atFloor ? ' <span class="est">基本費</span>' : ' <span class="est">參考</span>';
   html+=row2('現金價'+floorTag, NT+f(cash));
   html+=row2('押票價'+floorTag, NT+f(press));
@@ -1063,7 +1070,9 @@ function calc(){
   //   → 這行必須連拼版加價一起扣，否則標著「同業比價用」卻不等於老闆嘴巴報的數（R14 差 14%）。
   //   ⚠ 只是這一行的算法；總價照樣含拼版加價，一毛沒少收。
   //   條件補 gangFee>0：自備版時 plate=0，但只要有拼版加價，這行就與上一行不同、必須出現。
-  if(qty>0 && (plate>0 || gangFee>0)) html+=row('每張單價 <span class="est">不含製版・同業比價用</span>',
+  //   2026-07-26 老闆點名這行也不要顯示 → 改 #boss 限定。它揭露「總價裡有多少是版側」，
+  //   同行拿它跟上一行相減就反推出製版＋拼版加價，等於把報價拆給對方看。
+  if(BOSS && qty>0 && (plate>0 || gangFee>0)) html+=row('每張單價 <span class="est">不含製版・同業比價用</span>',
                       NT+((cash-plate-gangFee)/qty).toFixed(2));
   // 口訣天花板（面積×0.004）曾在此顯示一行「本報價為口訣的 XX%」。
   // 2026-07-23 老闆指示「網頁裡標示的算法直接拿掉」→ 移除。
