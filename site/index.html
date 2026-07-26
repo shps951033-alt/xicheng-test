@@ -438,7 +438,8 @@ section{position:relative}
 /* FOOTER */
 footer{background:#0d0b08;color:#8a7f6b;padding:64px 0 30px;border-top:1px solid var(--line)}
 .foot-top{display:flex;justify-content:space-between;align-items:flex-start;gap:40px;flex-wrap:wrap;padding-bottom:40px;border-bottom:1px solid rgba(198,161,91,.14)}
-.foot-brand img{height:56px;margin-bottom:18px}
+/* width:auto 與 .brand img 一致：這裡只鎖高度，寬度交給圖片的長寬比自己算。 */
+.foot-brand img{height:56px;width:auto;margin-bottom:18px}
 .foot-brand p{max-width:34ch;font-size:.9rem;font-weight:300;line-height:1.9}
 .foot-links{display:flex;gap:60px;flex-wrap:wrap}
 .foot-col h5{font-family:var(--serif);color:var(--gold-lt);font-size:.95rem;letter-spacing:.16em;margin-bottom:16px;font-weight:500}

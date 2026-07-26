@@ -128,7 +128,8 @@ header{position:fixed;inset:0 0 auto 0;z-index:100;padding:14px 0;background:rgb
 footer{background:#0d0b08;color:#8a7f6b;padding:56px 0 28px;border-top:1px solid var(--line)}
 .foot-inner{max-width:1160px;margin:0 auto;padding:0 24px}
 .foot-top{display:flex;justify-content:space-between;align-items:flex-start;gap:40px;flex-wrap:wrap;padding-bottom:36px;border-bottom:1px solid rgba(198,161,91,.14)}
-.foot-brand img{height:52px;margin-bottom:16px}
+/* width:auto 不可省，理由同 官網\index.html 的 .foot-brand img（只鎖高度會被 width 屬性撐扁）。 */
+.foot-brand img{height:52px;width:auto;margin-bottom:16px}
 .foot-brand p{max-width:34ch;font-size:.88rem;font-weight:300;line-height:1.9}
 .foot-links{display:flex;gap:56px;flex-wrap:wrap}
 .foot-col h5{font-family:var(--serif);color:var(--gold-lt);font-size:.95rem;letter-spacing:.16em;margin-bottom:14px;font-weight:500}
