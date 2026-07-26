@@ -1061,9 +1061,16 @@ function calc(){
     html+=row('<span class="est" style="color:#ff9a6b">※ 工繳 '+NT+feePerSheetBase.toFixed(2)+
       '／張，已進入地板帶（'+NT+LABOUR_FLOOR_ABS.toFixed(2)+'–'+NT+LABOUR_FLOOR.toFixed(2)+
       '）—— 這一帶只留給「30,000 張起、面積小、很好做」的單</span>','');
-  // 每張單價：同業最常拿來比價的就是這個數字，直接算好、不必自己除
-  if(qty>0) html+=row('每張單價 <span class="est">現金／押票</span>',
-                      NT+(cash/qty).toFixed(2)+'　／　'+NT+(press/qty).toFixed(2));
+  /* 每張單價：同業最常拿來比價的就是這個數字，直接算好、不必自己除。
+     2026-07-26 老闆：「每張單價不要把版費也算入，這樣會誤導」——製版費是**一次性**的，
+     攤進每張會讓小量單的單價看起來高得離譜（同一支版，300 張與 3,000 張的每張單價差十倍），
+     而且同業互報的「一張多少」本來就是不含版的定義（校準十輪都是這個基準）。
+     ⇒ 改成 (現金－製版) ÷ 張數，並在標籤直接寫明「不含製版」。
+     ⚠ 刻意**只扣製版費、不扣拼版加價**：這樣「每張單價 × 張數 ＋ 製版費 ＝ 現金價」
+       完全對得起來，同行自己驗算不會出現對不上的差額。再扣拼版加價雖然更貼近老闆
+       口報的數，卻會讓這條算式破掉 —— 那是另一種誤導。老闆對帳用的純工繳單價在下面 #boss 那行。 */
+  if(qty>0) html+=row('每張單價 <span class="est">不含製版・現金／押票</span>',
+                      NT+((cash-plate)/qty).toFixed(2)+'　／　'+NT+((press-plate)/qty).toFixed(2));
   // 2026-07-21：老闆與同業互報的「每張多少」一律不含製版費（校準十輪都是這個定義）。
   // 上面那行含製版，拿去跟同業比會虛高，所以另外列一行同基準的。
   // 2026-07-26 老闆確認：拼版加價屬「版」那一側、是另外加的，不含在他口報的每張單價裡
@@ -1096,6 +1103,9 @@ function calc(){
     gangHot:gangHot, gangEmb:gangEmb, gangHotN:gangHotN, gangEmbN:gangEmbN,  // 燙／凸分開，對帳才拆得開
     labor:hotFee+gangFee+embLabor, cash:cash, press:press,
     unitCash:(qty>0?cash/qty:0), unitPress:(qty>0?press/qty:0), surface:surf, surfaceF:surfEff,
+    // 2026-07-26 老闆：對外的每張單價一律不含製版費（版費是一次性的，攤進每張會誤導）。
+    // unitCash／unitPress（含版）保留給 #boss 訓練資料與內部分析，兩個基準都在、標籤各自寫清楚。
+    unitCashExPlate:(qty>0?(cash-plate)/qty:0), unitPressExPlate:(qty>0?(press-plate)/qty:0),
     nPass:nPass, layout:useLayout(),
     mc:mc,ratio:ratio,sf:seasonFactor(),
     hotOwn:hotOwn, embOwn:document.getElementById('embOwn').checked,
@@ -1116,7 +1126,8 @@ function specText(){
   if(q.hotCols&&q.hotCols.length){ const cc=q.hotCols.map(x=>x.color).filter(Boolean).join('、'); if(cc)s+='燙金色：'+cc+'\n'; }
   s+='製版費：'+NT+q.plate.toLocaleString()+'\n';
   s+='系統參考價 現金：'+NT+q.cash.toLocaleString()+'／押票：'+NT+q.press.toLocaleString()+'\n';
-  if(q.qty>0)s+='每張單價 現金：'+NT+q.unitCash.toFixed(2)+'／押票：'+NT+q.unitPress.toFixed(2)+'\n';
+  // 2026-07-26：跟畫面同基準——每張單價一律不含製版費（製版費上面已單獨列一行）
+  if(q.qty>0)s+='每張單價（不含製版）現金：'+NT+q.unitCashExPlate.toFixed(2)+'／押票：'+NT+q.unitPressExPlate.toFixed(2)+'\n';
   s+='※ 此為參考價，實際以確認檔案後報價為主\n';
   return s;
 }
@@ -1172,7 +1183,9 @@ function trainText(){
     (q.gangHot&&q.gangEmb ? '；燙 '+q.gangHotN+' 處 '+NT+q.gangHot.toLocaleString()+'／凸 '+q.gangEmbN+' 處 '+NT+q.gangEmb.toLocaleString() : '')+'）\n';
   if(q.embLabor)s+='打凸加工費：'+NT+q.embLabor.toLocaleString()+'\n';
   s+='現金參考：'+NT+q.cash.toLocaleString()+'／押票參考：'+NT+q.press.toLocaleString()+'\n';
-  if(q.qty>0)s+='每張單價：現金 '+NT+q.unitCash.toFixed(2)+'／押票 '+NT+q.unitPress.toFixed(2)+'\n';
+  // 訓練資料兩個基準都給，標籤寫清楚 —— 校準用的是不含版那個，含版只作對照
+  if(q.qty>0)s+='每張單價：**不含製版** 現金 '+NT+q.unitCashExPlate.toFixed(2)+'／押票 '+NT+q.unitPressExPlate.toFixed(2)+
+    '　（含製版對照：現金 '+NT+q.unitCash.toFixed(2)+'／押票 '+NT+q.unitPress.toFixed(2)+'）\n';
   // 2026-07-21：加單位換算。老闆填「1.5」意思是「每張 1.5 元」，舊版當成整筆 $1.5，
   // 算出「讓價 100%、工繳 −0.09」的荒謬結果，那種資料拿去校準會把曲線帶歪。
   const perEach = (document.getElementById('t_unit')||{}).value === 'each';
