@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- 內部自用工具：會露出成本結構，一律不給搜尋引擎收錄。
+     noindex 只給內測站用；deploy-xicheng-print.ps1 推正式站時會自動移除這行（本工具不上正式站）。 -->
+<meta name="robots" content="noindex" />
+<title>喜成｜成本比價計算機</title>
+<style>
+:root{
+  --bg:#faf7f2; --card:#ffffff; --ink:#2b2622; --muted:#8a7f74;
+  --line:#e7ded1; --accent:#b3352c; --accent-soft:#fbeeec;
+  --good:#2f7d5d; --shadow:0 1px 2px rgba(60,45,30,.06),0 8px 24px rgba(60,45,30,.06);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#17140f; --card:#211d18; --ink:#f0e9df; --muted:#a2968a;
+    --line:#332c24; --accent:#e8695e; --accent-soft:#2c1f1c;
+    --good:#63c79a; --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:"Noto Sans TC","Microsoft JhengHei",system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:15px; line-height:1.6; -webkit-text-size-adjust:100%;
+}
+.wrap{max-width:1080px; margin:0 auto; padding:20px 16px 64px}
+header{display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; margin-bottom:4px}
+h1{font-size:20px; margin:0; letter-spacing:.02em}
+h1 .mark{
+  display:inline-block; background:var(--accent); color:#fff; border-radius:6px;
+  padding:2px 8px; margin-right:8px; font-size:15px; letter-spacing:.08em;
+}
+.sub{color:var(--muted); font-size:13px}
+.card{
+  background:var(--card); border:1px solid var(--line); border-radius:14px;
+  box-shadow:var(--shadow); margin-top:16px; overflow:hidden;
+}
+.card h2{
+  font-size:14px; margin:0; padding:12px 16px; border-bottom:1px solid var(--line);
+  color:var(--muted); font-weight:700; letter-spacing:.06em;
+}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse; width:100%; min-width:640px}
+th,td{border-bottom:1px solid var(--line); padding:8px 10px; text-align:left; vertical-align:middle}
+thead th{
+  font-size:13px; color:var(--muted); font-weight:700; background:transparent;
+  position:sticky; top:0; background:var(--card); z-index:2;
+}
+thead th.col{text-align:center; color:var(--ink)}
+tbody tr:hover{background:rgba(179,53,44,.035)}
+td.name{white-space:nowrap}
+td.name b{font-weight:600}
+td.name small{display:block; color:var(--muted); font-size:11.5px; line-height:1.4}
+input[type=number],input[type=text]{
+  width:100%; min-width:78px; padding:7px 9px; font-size:15px; color:var(--ink);
+  background:var(--bg); border:1px solid var(--line); border-radius:8px;
+  font-family:inherit; text-align:right; -moz-appearance:textfield;
+}
+input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none; margin:0}
+input:focus{outline:2px solid var(--accent); outline-offset:-1px; background:var(--card)}
+select{
+  font-family:inherit; font-size:12.5px; padding:5px 6px; color:var(--ink);
+  background:var(--bg); border:1px solid var(--line); border-radius:7px; max-width:118px;
+}
+.qty input{font-size:17px; font-weight:700; text-align:center}
+.three{display:grid; grid-template-columns:repeat(3,1fr); gap:8px}
+.formula{display:flex; align-items:center; gap:8px; flex-wrap:wrap}
+.formula input{max-width:96px}
+.formula .x{color:var(--muted); font-size:13px}
+.formula .out{
+  margin-left:auto; font-weight:700; font-variant-numeric:tabular-nums;
+  background:var(--accent-soft); color:var(--accent); padding:4px 10px; border-radius:7px; white-space:nowrap;
+}
+.results{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; padding:14px 16px}
+@media (max-width:640px){.results{grid-template-columns:1fr}}
+.res{border:1px solid var(--line); border-radius:12px; padding:12px 14px; background:var(--bg)}
+.res.best{border-color:var(--good); box-shadow:inset 0 0 0 1px var(--good)}
+.res .tag{font-size:12px; color:var(--muted); letter-spacing:.08em}
+.res .qty{font-size:13px; color:var(--muted); margin-top:2px}
+.res .sum{font-size:26px; font-weight:800; font-variant-numeric:tabular-nums; margin-top:6px; letter-spacing:-.01em}
+.res .sum span{font-size:14px; font-weight:600; color:var(--muted); margin-right:3px}
+.res .each{font-size:14px; margin-top:4px; font-variant-numeric:tabular-nums}
+.res .each b{color:var(--accent); font-size:17px}
+.res .diff{font-size:12.5px; color:var(--muted); margin-top:6px; font-variant-numeric:tabular-nums}
+.res .diff.win{color:var(--good); font-weight:700}
+.res ul{list-style:none; margin:10px 0 0; padding:10px 0 0; border-top:1px dashed var(--line); font-size:12.5px}
+.res li{display:flex; justify-content:space-between; gap:10px; color:var(--muted); font-variant-numeric:tabular-nums}
+.res li b{color:var(--ink); font-weight:600}
+.bar{display:flex; gap:8px; flex-wrap:wrap; padding:12px 16px; border-top:1px solid var(--line)}
+button{
+  font-family:inherit; font-size:14px; padding:8px 16px; border-radius:9px; cursor:pointer;
+  border:1px solid var(--line); background:var(--card); color:var(--ink);
+}
+button:hover{border-color:var(--accent); color:var(--accent)}
+button.primary{background:var(--accent); border-color:var(--accent); color:#fff}
+button.primary:hover{opacity:.9; color:#fff}
+.hint{color:var(--muted); font-size:12.5px; padding:0 16px 14px}
+.toast{
+  position:fixed; left:50%; bottom:28px; transform:translateX(-50%) translateY(20px);
+  background:var(--ink); color:var(--bg); padding:9px 18px; border-radius:99px; font-size:13px;
+  opacity:0; pointer-events:none; transition:.25s;
+}
+.toast.on{opacity:1; transform:translateX(-50%) translateY(0)}
+@media print{
+  body{background:#fff} .bar,.hint,.sub{display:none} .card{box-shadow:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1><span class="mark">喜成</span>成本比價計算機</h1>
+  <div class="sub">同一張單、三種數量一起算，直接比每張成本</div>
+</header>
+
+<div class="card">
+  <h2>成本項目</h2>
+  <div class="scroll">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:130px">項目</th>
+          <th style="width:126px">計價方式</th>
+          <th class="col">A 案</th>
+          <th class="col">B 案</th>
+          <th class="col">C 案</th>
+        </tr>
+      </thead>
+      <tbody id="body"></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card">
+  <h2>比價結果</h2>
+  <div class="results" id="results"></div>
+  <div class="bar">
+    <button class="primary" onclick="copyReport()">複製報表</button>
+    <button onclick="window.print()">列印 / 存 PDF</button>
+    <button onclick="clearAll()">全部清空</button>
+  </div>
+  <div class="hint">
+    計價方式：<b>總價（共用）</b>＝整批一筆，三欄共用同一個數字｜<b>單價 ×數量</b>＝自動乘上該欄製作數量｜<b>分欄輸入</b>＝三欄各填各的。
+    版費類（印刷版費、燙金版費、刀膜、打凸版費）本來就是一次性費用，不隨數量變。輸入會自動記住，下次打開還在。
+  </div>
+</div>
+
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const COLS = [0,1,2];
+const COLNAME = ['A 案','B 案','C 案'];
+
+// type: 'input' 一般費用｜'formula' 版費（長 × 寬 × 倍率）
+const ROWS = [
+  {k:'paper', n:'紙張費用',  def:'shared', modes:['shared','unit','split']},
+  {k:'plate', n:'印刷版費',  def:'shared', modes:['shared','split'], note:'一次性'},
+  {k:'print', n:'印刷費用',  def:'split',  modes:['split','shared','unit']},
+  {k:'foilP', n:'燙金版費',  type:'formula', mult:4, note:'長 × 寬 × 4'},
+  {k:'foil',  n:'燙金費用',  def:'shared', modes:['shared','unit','split']},
+  {k:'gloss', n:'上光單價',  def:'unit',   modes:['unit','shared','split'], note:'自動 × 數量'},
+  {k:'embP',  n:'打凸版費',  type:'formula', mult:8, note:'長 × 寬 × 8'},
+  {k:'emb',   n:'打凸費用',  def:'shared', modes:['shared','unit','split']},
+  {k:'die',   n:'刀膜',      def:'shared', modes:['shared','split'], note:'一次性'},
+  {k:'cut',   n:'軋型費用',  def:'shared', modes:['shared','unit','split']},
+  {k:'glue',  n:'糊工單價',  def:'unit',   modes:['unit','shared','split'], note:'自動 × 數量'},
+];
+const MODE_LABEL = {shared:'總價（共用）', unit:'單價 ×數量', split:'分欄輸入'};
+
+const num = v => { const n = parseFloat(String(v).replace(/,/g,'')); return isFinite(n) ? n : 0; };
+const fmt = n => (Math.round(n*100)/100).toLocaleString('zh-TW',{maximumFractionDigits:2});
+const $ = id => document.getElementById(id);
+
+/* ---------- 建表 ---------- */
+let html = '<tr><td class="name"><b>製作數量</b><small>張 / 個</small></td><td></td>';
+COLS.forEach(c => html += '<td class="qty"><input type="number" inputmode="numeric" min="0" step="1" id="qty'+c+'" placeholder="0"></td>');
+html += '</tr>';
+
+ROWS.forEach(r => {
+  html += '<tr><td class="name"><b>'+r.n+'</b>'+(r.note?'<small>'+r.note+'</small>':'')+'</td>';
+  if (r.type === 'formula') {
+    html += '<td><span class="sub" style="font-size:12.5px;color:var(--muted)">版費公式</span></td>';
+    html += '<td colspan="3"><div class="formula">'
+          +   '<input type="number" inputmode="decimal" min="0" step="0.1" id="'+r.k+'_L" placeholder="長">'
+          +   '<span class="x">×</span>'
+          +   '<input type="number" inputmode="decimal" min="0" step="0.1" id="'+r.k+'_W" placeholder="寬">'
+          +   '<span class="x">× '+r.mult+' =</span>'
+          +   '<span class="out" id="'+r.k+'_out">0</span>'
+          + '</div></td>';
+  } else {
+    html += '<td><select id="'+r.k+'_m">'
+          + r.modes.map(m => '<option value="'+m+'"'+(m===r.def?' selected':'')+'>'+MODE_LABEL[m]+'</option>').join('')
+          + '</select></td>';
+    html += '<td colspan="3"><div id="'+r.k+'_cell"></div></td>';
+  }
+  html += '</tr>';
+});
+$('body').innerHTML = html;
+
+function renderCell(r){
+  const mode = $(r.k+'_m').value;
+  const box = $(r.k+'_cell');
+  if (mode === 'split') {
+    box.className = 'three';
+    box.innerHTML = COLS.map(c => '<input type="number" inputmode="decimal" min="0" step="0.01" id="'+r.k+'_'+c+'" placeholder="'+COLNAME[c]+'">').join('');
+  } else {
+    box.className = '';
+    box.innerHTML = '<input type="number" inputmode="decimal" min="0" step="0.01" id="'+r.k+'_s" placeholder="'+(mode==='unit'?'單價':'總價')+'">';
+  }
+}
+ROWS.filter(r => r.type !== 'formula').forEach(renderCell);
+
+/* ---------- 計算 ---------- */
+function calc(){
+  const qty = COLS.map(c => num($('qty'+c).value));
+  const lines = [];   // {name, amounts:[a,b,c]}
+
+  ROWS.forEach(r => {
+    let amounts;
+    if (r.type === 'formula') {
+      const v = num($(r.k+'_L').value) * num($(r.k+'_W').value) * r.mult;
+      $(r.k+'_out').textContent = fmt(v);
+      amounts = COLS.map(() => v);
+    } else {
+      const mode = $(r.k+'_m').value;
+      if (mode === 'split')      amounts = COLS.map(c => num(($(r.k+'_'+c)||{}).value));
+      else if (mode === 'unit')  { const u = num($(r.k+'_s').value); amounts = COLS.map(c => u * qty[c]); }
+      else                       { const v = num($(r.k+'_s').value); amounts = COLS.map(() => v); }
+    }
+    lines.push({name:r.n, amounts});
+  });
+
+  const totals = COLS.map(c => lines.reduce((s,l) => s + l.amounts[c], 0));
+  const each   = COLS.map(c => qty[c] > 0 ? totals[c] / qty[c] : null);
+
+  const valid = COLS.filter(c => qty[c] > 0 && each[c] !== null);
+  const best  = valid.length ? valid.reduce((a,b) => each[a] <= each[b] ? a : b) : -1;
+
+  $('results').innerHTML = COLS.map(c => {
+    const items = lines.filter(l => l.amounts[c] > 0)
+      .map(l => '<li><span>'+l.name+'</span><b>'+fmt(l.amounts[c])+'</b></li>').join('');
+    let diff = '';
+    if (best >= 0 && each[c] !== null) {
+      if (c === best) diff = '<div class="diff win">◎ 每張成本最低</div>';
+      else {
+        const d = each[c] - each[best];
+        const p = each[best] > 0 ? (d / each[best] * 100) : 0;
+        diff = '<div class="diff">每張比最低者貴 '+fmt(d)+' 元（+'+fmt(p)+'%）</div>';
+      }
+    }
+    return '<div class="res'+(c===best?' best':'')+'">'
+      + '<div class="tag">'+COLNAME[c]+'</div>'
+      + '<div class="qty">製作數量 '+(qty[c]?fmt(qty[c]):'—')+'</div>'
+      + '<div class="sum"><span>總成本</span>'+fmt(totals[c])+'</div>'
+      + '<div class="each">每張 <b>'+(each[c]===null?'—':fmt(each[c]))+'</b> 元</div>'
+      + diff
+      + (items ? '<ul>'+items+'</ul>' : '')
+      + '</div>';
+  }).join('');
+
+  save();
+  return {qty, lines, totals, each};
+}
+
+/* ---------- 事件 ---------- */
+document.addEventListener('input', e => {
+  if (e.target.matches('input')) calc();
+});
+document.addEventListener('change', e => {
+  if (e.target.matches('select')) {
+    const r = ROWS.find(x => x.k+'_m' === e.target.id);
+    if (r) { renderCell(r); restoreRow(r); calc(); }
+  }
+});
+
+/* ---------- 記憶（localStorage） ---------- */
+const KEY = 'xicheng-cost-compare-v1';
+let store = {};
+try { store = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch(e) { store = {}; }
+
+function save(){
+  const d = {};
+  document.querySelectorAll('input,select').forEach(el => { if (el.id) d[el.id] = el.value; });
+  store = d;
+  try { localStorage.setItem(KEY, JSON.stringify(d)); } catch(e) {}
+}
+function restoreRow(r){
+  ['_s','_0','_1','_2'].forEach(sfx => { const el = $(r.k+sfx); if (el && store[r.k+sfx] !== undefined) el.value = store[r.k+sfx]; });
+}
+(function restoreAll(){
+  ROWS.filter(r => r.type !== 'formula').forEach(r => {
+    const sel = $(r.k+'_m');
+    if (store[r.k+'_m'] && r.modes.includes(store[r.k+'_m'])) { sel.value = store[r.k+'_m']; renderCell(r); }
+  });
+  document.querySelectorAll('input').forEach(el => { if (el.id && store[el.id] !== undefined) el.value = store[el.id]; });
+})();
+
+function clearAll(){
+  document.querySelectorAll('input').forEach(el => el.value = '');
+  calc(); toast('已清空');
+}
+
+/* ---------- 複製報表 ---------- */
+function copyReport(){
+  const {qty, lines, totals, each} = calc();
+  const pad = s => String(s);
+  let t = '喜成印刷｜成本比價\n';
+  COLS.forEach(c => {
+    if (!qty[c] && !totals[c]) return;
+    t += '\n【'+COLNAME[c]+'】製作數量 '+fmt(qty[c])+'\n';
+    lines.filter(l => l.amounts[c] > 0).forEach(l => { t += '  '+pad(l.name)+'：'+fmt(l.amounts[c])+'\n'; });
+    t += '  ── 總成本：'+fmt(totals[c])+'　每張：'+(each[c]===null?'—':fmt(each[c]))+' 元\n';
+  });
+  navigator.clipboard.writeText(t).then(() => toast('報表已複製')).catch(() => toast('複製失敗，請手動選取'));
+}
+function toast(msg){
+  const el = $('toast'); el.textContent = msg; el.classList.add('on');
+  clearTimeout(toast._t); toast._t = setTimeout(() => el.classList.remove('on'), 1600);
+}
+
+calc();
+</script>
+</body>
+</html>

@@ -141,9 +141,16 @@ footer{background:#0d0b08;color:#8a7f6b;padding:56px 0 28px;border-top:1px solid
      碰上 transform 動畫會整層失效 → 背景沒畫出來、頁面透上來。
      改：①背景全不透明 ②補 z-index（原本 auto）③加遮罩壓暗後面頁面。
      header 是 z-index:100 的堆疊環境，以下數字只在 header 內比：遮罩 1 ＜ 抽屜 110 ＜ 漢堡鈕 120。 */
-  .menu{position:fixed;inset:0 0 0 auto;width:min(78vw,320px);z-index:110;flex-direction:column;justify-content:center;gap:26px;background:var(--ink);overflow-y:auto;overscroll-behavior:contain;transform:translateX(100%);transition:transform .45s;padding:40px;border-left:1px solid var(--line);box-shadow:-24px 0 60px rgba(0,0,0,.6)}
+  /* ⚠️⚠️ 真正的病根：帶 backdrop-filter 的元素會變成它底下 position:fixed 子元素的「包含區塊」。
+     這支的 header（第 39 行）是「無條件」掛 backdrop-filter:blur(14px)，比首頁更慘 ——
+     首頁要捲動才發作，子頁一進來就發作：抽屜的 inset:0 對齊的是 header 那條橫條而不是視窗，
+     底色只畫出一條，選單項目整排溢到框外沒有底色 ＝「選單半透明、字看不清楚」。
+     手機版一律關掉 header 的 backdrop-filter，改用夠不透明的底色。
+     ⚠️ header 日後要加 backdrop-filter / filter / transform / perspective 前先想這條，四個都會製造包含區塊。 */
+  header{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(20,17,13,.96)}
+  .menu{position:fixed;top:0;right:0;bottom:auto;left:auto;width:min(78vw,320px);height:100vh;height:100svh;z-index:110;flex-direction:column;justify-content:center;gap:26px;background:var(--ink);overflow-y:auto;overscroll-behavior:contain;transform:translateX(100%);transition:transform .45s;padding:40px;border-left:1px solid var(--line);box-shadow:-24px 0 60px rgba(0,0,0,.6)}
   .menu.open{transform:none}
-  header:has(.menu.open)::before{content:"";position:fixed;inset:0;z-index:1;background:rgba(8,6,4,.66)}
+  header:has(.menu.open)::before{content:"";position:fixed;top:0;left:0;width:100vw;height:100vh;height:100svh;z-index:1;background:rgba(8,6,4,.66)}
   .menu a{font-size:1.1rem}
   .burger{display:flex}
   .page-hero{padding:120px 0 48px}

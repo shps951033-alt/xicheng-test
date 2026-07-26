@@ -456,8 +456,22 @@ footer{background:#0d0b08;color:#8a7f6b;padding:64px 0 30px;border-top:1px solid
               ③加全螢幕遮罩把後面頁面壓暗，抽屜邊界一眼看得出來。
      z-index 說明：header 是 z-index:100 的堆疊環境，底下這些數字只在 header 內部比大小
                    → 遮罩 1 ＜ 抽屜 110 ＜ 漢堡鈕 120（漢堡鈕要壓在抽屜上才點得到關閉）。 */
+  /* ⚠️⚠️ 真正的病根（2026-07-27 第二次修才抓到，第一次只治到皮）：
+     帶 backdrop-filter 的元素，會變成它底下 position:fixed 子元素的「包含區塊」。
+     header 一捲動就掛上 .scrolled 的 backdrop-filter:blur(14px)，
+     抽屜的 inset:0 從此不是對齊「整個視窗」，而是對齊「header 那條 80px 高的橫條」
+     → 底色只畫 80px，九個選單項目全部溢到框外（實測 y = -262 ～ 300）、
+       底下沒有任何底色 ＝ 老闆看到的「選單半透明、字看不清楚」。
+     所以手機版一律不准 header 有 backdrop-filter，改用夠不透明的底色補視覺。
+     ⚠️ 以後要在 header 加 backdrop-filter / filter / transform / perspective 之前，
+        先想一下這條 —— 這四個屬性都會製造包含區塊，都會再犯一次同樣的病。 */
+  header,header.scrolled{backdrop-filter:none;-webkit-backdrop-filter:none}
+  header.scrolled{background:rgba(20,17,13,.96)}
   .menu{
-    position:fixed;inset:0 0 0 auto;width:min(78vw,320px);z-index:110;
+    position:fixed;top:0;right:0;bottom:auto;left:auto;
+    width:min(78vw,320px);
+    height:100vh;height:100svh;      /* 寫死滿版：雙保險，就算日後又被誰變成包含區塊也不會縮成一條 */
+    z-index:110;
     flex-direction:column;justify-content:center;gap:30px;
     background:var(--ink);
     overflow-y:auto;overscroll-behavior:contain;
@@ -467,7 +481,8 @@ footer{background:#0d0b08;color:#8a7f6b;padding:64px 0 30px;border-top:1px solid
   }
   .menu.open{transform:none}
   header:has(.menu.open)::before{
-    content:"";position:fixed;inset:0;z-index:1;
+    content:"";position:fixed;top:0;left:0;
+    width:100vw;height:100vh;height:100svh;z-index:1;
     background:rgba(8,6,4,.66);
   }
   .menu a{font-size:1.15rem}
