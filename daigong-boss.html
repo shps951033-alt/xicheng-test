@@ -1070,7 +1070,10 @@ function calc(){
   html+=row2('現金價'+floorTag, NT+f(cash));
   html+=row2('押票價'+floorTag, NT+f(press));
   // 2026-07-25：只講「有基本費」這個規則，不再附上實算金額（那是計算過程，也是被殺價的把柄）
-  if(atFloor) html+=row('<span class="est">※ 未達'+p.n.replace(/\s*\(.*/,'')+'的基本費 '+NT+ORDER_FLOOR.toLocaleString()+
+  // 2026-07-26 老闆：「客戶用的不要顯示就好，自用的顯示沒關係」
+  //   這行把「箔材＋工繳」的成本結構講出來了，跟同日撤下的成本明細同一類 → 改 #boss 限定。
+  //   ⚠ 現金／押票旁邊的「基本費」小標籤保留：那只是說明這張單走的是低消，沒有洩漏結構。
+  if(BOSS && atFloor) html+=row('<span class="est">※ 未達'+p.n.replace(/\s*\(.*/,'')+'的基本費 '+NT+ORDER_FLOOR.toLocaleString()+
     '（箔材＋工繳，製版另計），以基本費計</span>','');
   // 季節係數：2026-07-25 起自動套當月、畫面不顯示（老闆：直接套用不要勾選，這頁給同行自己填）
   // 工繳地板警告 —— 只警告、不改價。老闆 07-23 定案：**地板價就是 0.80**。
