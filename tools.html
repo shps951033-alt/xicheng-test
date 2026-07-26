@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>喜成印刷｜報價工具 內測入口</title>
+<title>喜成印刷｜報價工具</title>
 <style>
   :root{--bg:#0f1115;--card:#191c22;--line:#2a2e38;--ink:#eef1f6;--sub:#9aa3b2;--gold:#d8b25b;--gold2:#f0d488;}
   *{box-sizing:border-box}
@@ -16,13 +16,20 @@
   a.tool .t{font-size:17px;font-weight:700;color:var(--gold2)}
   a.tool .d{font-size:13px;color:var(--sub);margin-top:4px}
   .badge{display:inline-block;background:#3a1717;border:1px solid #6a2a2a;color:#ffb4b4;font-size:12px;padding:4px 10px;border-radius:20px;margin-bottom:14px}
+  /* 2026-07-26：內部自用工具的卡片。刻意用紅色系與對外工具區隔，
+     免得老闆在同行面前點錯、或把這一頁直接轉給對方看。 */
+  a.tool.own{background:#241416;border-color:#6a2a2a}
+  a.tool.own:hover{border-color:#ff8a8a}
+  a.tool.own .t{color:#ffb4b4}
+  .ownhead{color:#ff9a9a;font-size:12px;font-weight:700;letter-spacing:.5px;margin:22px 0 8px;border-top:1px solid #3a2a2e;padding-top:14px}
   .foot{text-align:center;color:var(--sub);font-size:12px;margin-top:18px}
 </style>
 </head>
 <body>
-<div class="badge">⚠ 內測版・僅供測試</div>
+<!-- 2026-07-26：Netlify 停用、老闆定「以現在這支為主」→ 這裡已不是內測站，是唯一的站。
+     原本的「⚠ 內測版・僅供測試」badge 與「內測入口」字樣已不成立，一併改掉。 -->
 <h1>喜成印刷　<span class="g">報價工具</span></h1>
-<div class="sub">內測入口・選一個工具進入</div>
+<div class="sub">選一個工具進入</div>
 <a class="tool" href="designer.html"><div class="t">★ 設計師報價系統（對客）→</div><div class="d">名片＋印刷合併入口・左側切換；<b>只顯示條件與含稅報價、不露計算過程</b>，可一鍵複製報價單／傳 LINE</div></a>
 <a class="tool" href="print.html"><div class="t">合版・獨立版 印刷報價 →</div><div class="d">選紙張＋大紙尺寸＋開數 自動落版（含放損）＋印刷＋後加工複選；紙袋已併入此頁（產品類型選「紙袋」）</div></a>
 <a class="tool" href="daigong.html"><div class="t">同行燙金・打凸 代工報價 →</div><div class="d">給印刷同業自助估價</div></a>
@@ -30,6 +37,11 @@
 <a class="tool" href="bagfoil.html"><div class="t">現成紙袋 燙金報價 →</div><div class="d">客戶自備現成紙袋、單純燙金加工；含版費（3 年內再版免版費）與開機基本費試算</div></a>
 <a class="tool" href="calendar/"><div class="t">2027 曆製品預訂 →</div><div class="d">12 款桌曆現貨開訂・每款照片下方各自填數量，可同時訂多款；含底板燙金示意與運費試算</div></a>
 <a class="tool" href="site/"><div class="t">官網 測試版 →</div><div class="d">喜成官網內測（首頁＋知識庫子頁）・正式站 xicheng-print.com</div></a>
+
+<!-- 2026-07-26 老闆：「在總站另做一個分支（同業報價網頁-自用），不然我總站點不到」
+     ⚠ 這一區的連結會露出成本明細與每張工繳，別在同行面前打開這一頁。 -->
+<div class="ownhead">🔒 內部自用（勿給客戶／同行看）</div>
+<a class="tool own" href="daigong-boss.html"><div class="t">同業報價網頁 — 自用 →</div><div class="d">與客戶版同一支引擎、同樣的價，但<b>多顯示</b>成本明細（金箔／加工費）、每張工繳與本月係數、趟數、拼版加價算式，並附「複製訓練資料給 Jesper」按鈕。頁面頂端有紅色警示橫幅。</div></a>
 <div class="foot">喜成印刷　燙金・模切・代工　｜　高雄</div>
 </body>
 </html>
