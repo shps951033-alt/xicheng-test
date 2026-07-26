@@ -528,8 +528,46 @@ function rowsTxt(rows){
 /* ── 燙金工資＝同業代工（工繳＋金箔材料）×2（老闆 2026-07-17 定，取代原 面積×0.01 面積法）──
    公式抄自同業代工工具（營運部/同行燙金打凸代報價工具-原始碼-20260628.html），**那支網頁不動**。
    老闆指定：只取純工繳公式 → 不帶季節係數、不帶 $800 基本費地板；用箔面積照同業（寬+2）×長。
-   ⚠ 原「兩套不可互套」鐵則於此開一個口：僅燙金工資走同業×2，版費／其餘後加工仍各走各的。 */
-const PEER_AREA_REF=1200, PEER_FOIL_YIELD=0.85, PEER_FOIL_UNIT=768000, PEER_MARKUP=2;
+   ⚠ 原「兩套不可互套」鐵則於此開一個口：僅燙金工資走同業×2，版費／其餘後加工仍各走各的。
+
+   ★ 2026-07-25 同步到 v3（老闆指示「其他網頁有用到同行報價規則的一併更新」，當場確認過價差）：
+     同業工繳從舊的一維曲線（peerBaseFee × 面積/1200）換成 **L2D 二維表**（面積 × 總衝壓數 N）。
+     來源＝報價校準 R11–R13 的「整單總收」問法重建，舊曲線在紅區高估 1.3–2.4 倍、小面積則不分大小
+     一律收整條量價曲線。換表後：小圖／雙色單降 25–53%、30×40 大圖升 18%（地板表照舊擋著）。
+     兩處與同業工具的差異，是老闆 07-17 就定好的，不是漏抄：①不乘季節係數 ②不套 MIN_FEE 基本費。
+     ⚠ 工繳查表用**淨面積**（w×h），咬口 +2cm 只算在金箔用量上——同業工具同一條規矩。 */
+/* v3 工繳表：與 同行燙金打凸代報價工具 的 L2D／labour2D 同一份，改那邊記得回來同步這邊 */
+const L2D_N=[2000,5000,10000,30000];
+const L2D=[
+  [  80, 1.13, 0.99, 0.83, 0.80],
+  [ 300, 1.92, 1.74, 1.47, 1.29],
+  [ 500, 2.04, 1.76, 1.48, 1.30],
+  [ 800, 1.81, 1.56, 1.32, 1.15],
+  [1200, 2.72, 2.05, 1.90, 1.55],
+  [1500, 2.79, 2.10, 1.94, 1.56],
+  [2500, 2.96, 2.96, 2.16, 1.62],
+  [3500, 3.02, 3.02, 2.62, 1.96],
+  [4980, 4.34, 4.34, 3.54, 2.74]];
+function labour2D(area,N){
+  area=Math.max(1,area); N=Math.max(1,N||2000);
+  function rowAt(a){
+    if(a<=L2D[0][0])return L2D[0];
+    if(a>=L2D[L2D.length-1][0])return L2D[L2D.length-1];
+    for(var k=0;k<L2D.length-1;k++) if(a<=L2D[k+1][0]){
+      var A=L2D[k],B=L2D[k+1],t=(a-A[0])/(B[0]-A[0]),out=[a];
+      for(var c=1;c<A.length;c++) out.push(A[c]+(B[c]-A[c])*t);
+      return out;
+    }
+  }
+  var row=rowAt(area);
+  if(N<=L2D_N[0])return row[1];
+  if(N>=L2D_N[L2D_N.length-1])return row[L2D_N.length];
+  for(var j=0;j<L2D_N.length-1;j++) if(N<=L2D_N[j+1]){
+    var t=(N-L2D_N[j])/(L2D_N[j+1]-L2D_N[j]);
+    return row[j+1]+(row[j+2]-row[j+1])*t;
+  }
+}
+const PEER_AREA_REF=1200 /* 舊曲線的面積基準，v3 換表後已不用，留著對照 */, PEER_FOIL_YIELD=0.85, PEER_FOIL_UNIT=768000, PEER_MARKUP=2;
 const PEER_FOIL_PRICE={'金':600,'銀':600,'亮金':600,'亮銀':600,'霧金':1500,'霧銀':1500,'珍珠白':1800,'白':3000};
 const PEER_FOIL_DEFAULT=1500;
 const GOLD_COLORS=['金','銀','亮金','亮銀','霧金','霧銀','珍珠白','白','古銅','紅','藍','綠','黑','雷射'];
@@ -561,9 +599,13 @@ function goldFloorTxt(qty,area,grams){
   return (big||thin ? '高表' : '低表')+'（落版'+(big?'≥':'<')+'A3·'
        + (grams==null?'磅數未知':grams+'g') +'）';
 }
-function peerBaseFee(qty){ if(qty<=0)return 0; var b=2.85-1.384*(Math.log10(qty)-Math.log10(500)); return Math.min(6.0,Math.max(1.0,b)); }
-/* 每列（＝一色）的用箔面積：Σ各處 (寬+2)×長 */
+/* 舊工繳曲線（2026-07-25 由 L2D 取代，留著對照，勿再啟用）：
+   function peerBaseFee(qty){ var b=2.85-1.384*(Math.log10(qty)-Math.log10(500)); return Math.min(6,Math.max(1,b)); }
+   舊算法：perSheet += peerBaseFee(qty) × max(1, 用箔面積/1200)  ← 小圖不打折、大圖線性外推 */
+/* 每列（＝一色）的用箔面積：Σ各處 (寬+2)×長 —— 只用在金箔材料 */
 function foilAreaOf(r){ var w=+r.w||0, h=+r.h||0, n=Math.max(0,Math.floor(+r.n||0)); return (h+2)*w*n; }
+/* 每列（＝一色）的淨面積：Σ各處 寬×長 —— 工繳查表用這個（不含咬口） */
+function netAreaOf(r){ var w=+r.w||0, h=+r.h||0, n=Math.max(0,Math.floor(+r.n||0)); return h*w*n; }
 /* ctx={area:落版面積cm², grams:磅數}　→ 用來判地板價那張表 */
 function calcGold(rows,qty,ctx){
   var areas=plateRows(rows), N=areas.length;
@@ -573,9 +615,13 @@ function calcGold(rows,qty,ctx){
   var plate=Math.max(stair,areaFee);
   /* 工資：同業工繳＋金箔，再 ×PEER_MARKUP */
   var perSheet=0, foilMat=0;
+  /* 趟數＝有圖的色數（此頁沒有落版圖可判合併，一色一趟，保守不少收）。
+     N＝總衝壓數＝張數×趟數，與同業工具查表口徑一致（R12 證實趟數＝數量）。 */
+  var nPass=(rows||[]).filter(function(r){ return netAreaOf(r)>0; }).length;
+  var NIMP=qty*Math.max(1,nPass);
   (rows||[]).forEach(function(r){
     var fa=foilAreaOf(r); if(fa<=0) return;
-    perSheet += peerBaseFee(qty)*Math.max(1, fa/PEER_AREA_REF);
+    perSheet += labour2D(netAreaOf(r), NIMP);          // v3：查二維表（淨面積 × 總衝壓數）
     foilMat  += (fa*qty/PEER_FOIL_YIELD/PEER_FOIL_UNIT)*peerFoilPrice(r.c||'金');
   });
   var peerFee=perSheet*qty, byFormula=(peerFee+foilMat)*PEER_MARKUP;
