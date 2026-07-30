@@ -923,7 +923,12 @@ burger.addEventListener('click',e=>{e.stopPropagation();menu.classList.toggle('o
 menu.querySelectorAll('a').forEach(a=>a.addEventListener('click',closeMenu));
 document.addEventListener('click',e=>{if(menu.classList.contains('open')&&!menu.contains(e.target))closeMenu()});
 // reveal on scroll
-const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})},{threshold:.14});
+/* ⚠️ threshold 一律用 0，不可用比例（2026-07-31 修）：
+   比例門檻對「比視窗還高的元素」永遠達不到。實例：手機版作品集 .masonry（columns:1）高 5820px、
+   視窗 813px → 最大可見比例只有 13.97%，卡在舊的 threshold:.14 之下 → 整區 opacity 停在 0 全白，
+   桌機 columns:3 只有 1940px（42%）所以看不出來。改用 threshold:0＋rootMargin 底部負值，
+   效果一樣是「捲到才浮現」，但元素多高都能觸發。 */
+const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})},{threshold:0,rootMargin:'0px 0px -12% 0px'});
 document.querySelectorAll('.reveal:not(.in)').forEach(el=>io.observe(el));
 // 工藝服務卡片 → 點擊進對應知識頁（連結取卡片內的「深入了解」）
 document.querySelectorAll('.svc').forEach(el=>{
