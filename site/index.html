@@ -377,6 +377,10 @@ section{position:relative}
 
 /* GALLERY */
 .gallery{background:var(--cream-bg,#f3efe6)}
+/* ⚠️ 作品集 <img> 一律不可加 loading="lazy"（2026-07-31 修）：
+   .masonry 是 CSS multi-column 容器，瀏覽器在 column 容器裡的原生 lazy 可視判定會失效，
+   圖片永遠不觸發載入 → 手機（columns:1 也一樣是 column 容器）整區全白。
+   改用 decoding="async"，效能一樣不阻塞渲染。要改回 lazy 就得先把 masonry 換成 grid。 */
 .masonry{columns:3;column-gap:18px;margin-top:8px}
 .gitem{break-inside:avoid;margin:0 0 18px;position:relative;border-radius:6px;overflow:hidden;
   border:1px solid var(--line);box-shadow:0 22px 44px -30px rgba(0,0,0,.5)}
@@ -704,24 +708,24 @@ footer{background:#0d0b08;color:#8a7f6b;padding:64px 0 30px;border-top:1px solid
       <p class="reveal d1">從名片、紙袋到禮盒包裝——每一件都是喜成親手燙上細節的成品。</p>
     </div>
     <div class="masonry reveal d1">
-      <figure class="gitem"><img src="assets/photos/web/g01.jpg" alt="品牌紙袋燙金作品" loading="lazy" width="1200" height="1200"><figcaption>品牌紙袋 · 燙金</figcaption></figure>
-      <figure class="gitem"><img src="assets/photos/web/g02.jpg?v=2" alt="咖啡鋁袋燙金作品" loading="lazy" width="870" height="1075"><figcaption>鋁袋 · 燙金</figcaption></figure>
-      <figure class="gitem"><img src="assets/photos/web/g03.jpg" alt="壓紋打凸素燙作品" loading="lazy" width="1200" height="900"><figcaption>壓紋打凸 · 素燙</figcaption></figure>
-      <figure class="gitem"><img src="assets/photos/web/g04.jpg" alt="局部打凸作品" loading="lazy" width="1200" height="900"><figcaption>局部打凸</figcaption></figure>
-      <figure class="gitem"><img src="assets/photos/web/g05.jpg" alt="精品禮盒專案作品" loading="lazy" width="1200" height="1200"><figcaption>精品禮盒專案</figcaption></figure>
-      <figure class="gitem"><img src="assets/photos/web/g06.jpg" alt="中秋禮盒燙金作品" loading="lazy" width="1200" height="1200"><figcaption>中秋禮盒 · 燙金</figcaption></figure>
-      <figure class="gitem"><img src="assets/photos/web/g07.jpg" alt="珠寶品牌包裝作品" loading="lazy" width="1200" height="800"><figcaption>珠寶品牌包裝</figcaption></figure>
-      <figure class="gitem"><img src="assets/photos/web/g08.jpg" alt="特殊燙透紙烙印燙黑名片作品" loading="lazy" width="1200" height="800"><figcaption>特殊燙透紙 · 烙印＋燙黑</figcaption></figure>
-      <figure class="gitem"><img src="assets/photos/web/g09.jpg" alt="水晶貼作品" loading="lazy" width="901" height="1200"><figcaption>水晶貼</figcaption></figure>
-      <figure class="gitem"><img src="assets/photos/web/g10.jpg" alt="燙金紅包袋作品" loading="lazy" width="1200" height="810"><figcaption>燙金紅包袋</figcaption></figure>
-      <figure class="gitem"><img src="assets/photos/web/g11.jpg" alt="雷射包裝盒作品" loading="lazy" width="1200" height="800"><figcaption>雷射包裝盒</figcaption></figure>
-      <figure class="gitem"><img src="assets/photos/web/g13.jpg" alt="婚禮證書夾燙金作品" loading="lazy" width="1200" height="1200"><figcaption>婚禮證書夾 · 燙金</figcaption></figure>
-      <figure class="gitem"><img src="assets/photos/web/g14.jpg" alt="文旦禮盒作品" loading="lazy" width="677" height="627"><figcaption>文旦禮盒</figcaption></figure>
-      <figure class="gitem"><img src="assets/photos/web/g15.jpg" alt="茶包手提袋作品" loading="lazy" width="623" height="793"><figcaption>茶包手提袋</figcaption></figure>
-      <figure class="gitem"><img src="assets/photos/web/g16.jpg?v=2" alt="滴雞精禮盒燙金打凸作品" loading="lazy" width="900" height="1200"><figcaption>滴雞精禮盒 · 燙金＋打凸</figcaption></figure>
-      <figure class="gitem"><img src="assets/photos/web/g17.jpg" alt="品牌形象文具組作品" loading="lazy" width="1200" height="800"><figcaption>品牌形象文具</figcaption></figure>
-      <figure class="gitem"><img src="assets/photos/web/g18.jpg" alt="壓紋名片作品" loading="lazy" width="1200" height="800"><figcaption>壓紋名片</figcaption></figure>
-      <figure class="gitem"><img src="assets/photos/web/g19.jpg" alt="保養品盒專案全燙印打凸作品" loading="lazy" width="1200" height="923"><figcaption>保養品盒專案 · 全燙印＋打凸</figcaption></figure>
+      <figure class="gitem"><img src="assets/photos/web/g01.jpg" alt="品牌紙袋燙金作品" decoding="async" width="1200" height="1200"><figcaption>品牌紙袋 · 燙金</figcaption></figure>
+      <figure class="gitem"><img src="assets/photos/web/g02.jpg?v=2" alt="咖啡鋁袋燙金作品" decoding="async" width="870" height="1075"><figcaption>鋁袋 · 燙金</figcaption></figure>
+      <figure class="gitem"><img src="assets/photos/web/g03.jpg" alt="壓紋打凸素燙作品" decoding="async" width="1200" height="900"><figcaption>壓紋打凸 · 素燙</figcaption></figure>
+      <figure class="gitem"><img src="assets/photos/web/g04.jpg" alt="局部打凸作品" decoding="async" width="1200" height="900"><figcaption>局部打凸</figcaption></figure>
+      <figure class="gitem"><img src="assets/photos/web/g05.jpg" alt="精品禮盒專案作品" decoding="async" width="1200" height="1200"><figcaption>精品禮盒專案</figcaption></figure>
+      <figure class="gitem"><img src="assets/photos/web/g06.jpg" alt="中秋禮盒燙金作品" decoding="async" width="1200" height="1200"><figcaption>中秋禮盒 · 燙金</figcaption></figure>
+      <figure class="gitem"><img src="assets/photos/web/g07.jpg" alt="珠寶品牌包裝作品" decoding="async" width="1200" height="800"><figcaption>珠寶品牌包裝</figcaption></figure>
+      <figure class="gitem"><img src="assets/photos/web/g08.jpg" alt="特殊燙透紙烙印燙黑名片作品" decoding="async" width="1200" height="800"><figcaption>特殊燙透紙 · 烙印＋燙黑</figcaption></figure>
+      <figure class="gitem"><img src="assets/photos/web/g09.jpg" alt="水晶貼作品" decoding="async" width="901" height="1200"><figcaption>水晶貼</figcaption></figure>
+      <figure class="gitem"><img src="assets/photos/web/g10.jpg" alt="燙金紅包袋作品" decoding="async" width="1200" height="810"><figcaption>燙金紅包袋</figcaption></figure>
+      <figure class="gitem"><img src="assets/photos/web/g11.jpg" alt="雷射包裝盒作品" decoding="async" width="1200" height="800"><figcaption>雷射包裝盒</figcaption></figure>
+      <figure class="gitem"><img src="assets/photos/web/g13.jpg" alt="婚禮證書夾燙金作品" decoding="async" width="1200" height="1200"><figcaption>婚禮證書夾 · 燙金</figcaption></figure>
+      <figure class="gitem"><img src="assets/photos/web/g14.jpg" alt="文旦禮盒作品" decoding="async" width="677" height="627"><figcaption>文旦禮盒</figcaption></figure>
+      <figure class="gitem"><img src="assets/photos/web/g15.jpg" alt="茶包手提袋作品" decoding="async" width="623" height="793"><figcaption>茶包手提袋</figcaption></figure>
+      <figure class="gitem"><img src="assets/photos/web/g16.jpg?v=2" alt="滴雞精禮盒燙金打凸作品" decoding="async" width="900" height="1200"><figcaption>滴雞精禮盒 · 燙金＋打凸</figcaption></figure>
+      <figure class="gitem"><img src="assets/photos/web/g17.jpg" alt="品牌形象文具組作品" decoding="async" width="1200" height="800"><figcaption>品牌形象文具</figcaption></figure>
+      <figure class="gitem"><img src="assets/photos/web/g18.jpg" alt="壓紋名片作品" decoding="async" width="1200" height="800"><figcaption>壓紋名片</figcaption></figure>
+      <figure class="gitem"><img src="assets/photos/web/g19.jpg" alt="保養品盒專案全燙印打凸作品" decoding="async" width="1200" height="923"><figcaption>保養品盒專案 · 全燙印＋打凸</figcaption></figure>
     </div>
   </div>
 </section>
