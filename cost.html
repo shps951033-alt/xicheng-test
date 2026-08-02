@@ -172,7 +172,8 @@ button.primary:hover{opacity:.9; color:#fff}
     <b>每張成本不含模具</b>：燙金版費、打凸版費、刀膜是模具（再版還能用），在卡片上獨立列為「模具費（另記）」，不攤進每張單價。
     印刷版費有算進去 —— CTP 版每次開印都要重出，是跟著這一批走的成本。
     <b>貼銀箔按才算</b>：填長寬（cm），自動 ÷ 900 換成才數 × 每才單價（預設 1 元）＝一張多少，
-    再乘<b>印刷張數（大紙數量）</b>——銀箔貼在大紙上，一張大紙切幾張成品不影響貼的次數。印刷張數空白時會退回用製作數量算，小計會標出來。輸入會自動記住，下次打開還在。
+    再乘<b>印刷張數（大紙數量）</b>——銀箔貼在大紙上，一張大紙切幾張成品不影響貼的次數。印刷張數空白時會退回用製作數量算，小計會標出來。
+    <b>低消 2,000</b>：算出來不足 2,000 就以 2,000 計（小計標「低消」）；沒填長寬＝沒這項，不會憑空多一筆。單價與低消都可以直接改。輸入會自動記住，下次打開還在。
   </div>
 </div>
 
@@ -195,7 +196,8 @@ const ROWS = [
   //   單張成本＝(長cm × 寬cm ÷ 900) × 每才單價（預設 1 元）。不是模具，攤進每張成本。
   //   ⚠ 乘的是「印刷張數（大紙）」不是成品數 —— 銀箔貼在大紙上，一張大紙切幾張成品不影響貼的次數。
   //   印刷張數沒填時退回用製作數量（1 開 1 的情況），小計會標「用製作數量」提醒。
-  {k:'silver',n:'貼銀箔',    type:'area', per:900, rate:1, base:'sheet', note:'長×寬 cm ÷ 900 ＝ 才'},
+  //   2026-08-03 老闆：低消 2,000 —— 算出來不足 2,000 就以 2,000 計（沒填長寬＝沒這項，不套低消）。
+  {k:'silver',n:'貼銀箔',    type:'area', per:900, rate:1, min:2000, base:'sheet', note:'長×寬 cm ÷ 900 ＝ 才'},
   {k:'print', n:'印刷費用',  def:'unitsplit', modes:ALL},
   {k:'foilP', n:'燙金版費',  type:'formula', mult:4, note:'長 × 寬 × 4', tool:true},
   {k:'foil',  n:'燙金費用',  def:'unitsplit', modes:ALL},
@@ -243,6 +245,8 @@ ROWS.forEach(r => {
     html += '<td><div class="rate">'
           +   '<input type="number" inputmode="decimal" min="0" step="0.1" id="'+r.k+'_R" value="'+r.rate+'" placeholder="每才單價">'
           +   '<small>元／才</small>'
+          +   '<input type="number" inputmode="decimal" min="0" step="100" id="'+r.k+'_M" value="'+r.min+'" placeholder="低消">'
+          +   '<small>低消（元）</small>'
           + '</div></td>';
     html += '<td colspan="3"><div class="formula">'
           +   '<input type="number" inputmode="decimal" min="0" step="0.1" id="'+r.k+'_L" placeholder="長 cm">'
@@ -305,11 +309,14 @@ function calc(){
       $(r.k+'_cai').textContent = fmt(cai);
       $(r.k+'_out').textContent = fmt(each1);
       const base = r.base === 'sheet' ? COLS.map(c => sheets[c] || qty[c]) : qty;
-      amounts = COLS.map(c => each1 * base[c]);
+      const low  = num($(r.k+'_M').value);
+      // 低消只在「有做這項」時才套：長寬沒填＝根本沒貼，不能無中生有一筆 2,000。
+      amounts = COLS.map(c => { const v = each1 * base[c]; return v > 0 && v < low ? low : v; });
       COLS.forEach(c => {
         const o = $(r.k+'_ur'+c); if (!o) return;
-        const fallback = r.base === 'sheet' && !sheets[c] && qty[c] > 0;
-        o.textContent = '= ' + fmt(amounts[c]) + (fallback ? '（用製作數量）' : '');
+        const fallback = r.base === 'sheet' && !sheets[c] && qty[c] > 0 && amounts[c] > 0;
+        const hit = each1 * base[c] > 0 && each1 * base[c] < low;
+        o.textContent = '= ' + fmt(amounts[c]) + (hit ? '（低消）' : '') + (fallback ? '（用製作數量）' : '');
       });
     } else {
       const mode = $(r.k+'_m').value;
@@ -406,8 +413,8 @@ function restoreRow(r){
 // 免得清空或舊紀錄把它洗成 0、算出來整欄都是 0 卻看不出原因。
 function areaDefaults(){
   ROWS.filter(r => r.type === 'area').forEach(r => {
-    const el = $(r.k+'_R');
-    if (el && el.value === '') el.value = r.rate;
+    const u = $(r.k+'_R'); if (u && u.value === '') u.value = r.rate;
+    const m = $(r.k+'_M'); if (m && m.value === '') m.value = r.min;
   });
 }
 
