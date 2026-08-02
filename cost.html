@@ -68,7 +68,7 @@ select{
 .qty input{font-size:17px; font-weight:700; text-align:center}
 .three{display:grid; grid-template-columns:repeat(3,1fr); gap:8px}
 .ucell{display:flex; flex-direction:column; gap:2px}
-.ucell .ures{
+.ures{
   font-size:11.5px; color:var(--muted); text-align:right; padding-right:3px;
   font-variant-numeric:tabular-nums; white-space:nowrap;
 }
@@ -171,7 +171,8 @@ button.primary:hover{opacity:.9; color:#fff}
     <b>分欄總價</b>＝三欄各填一筆總價，不乘數量｜<b>單價 ×數量（共用）</b>＝三欄共用一個單價｜<b>總價（共用）</b>＝整批一筆、三欄同一個數字。
     <b>每張成本不含模具</b>：燙金版費、打凸版費、刀膜是模具（再版還能用），在卡片上獨立列為「模具費（另記）」，不攤進每張單價。
     印刷版費有算進去 —— CTP 版每次開印都要重出，是跟著這一批走的成本。
-    <b>貼銀箔按才算</b>：填長寬（cm），自動 ÷ 900 換成才數 × 每才單價（預設 1 元）＝每張成本，再乘該欄數量。輸入會自動記住，下次打開還在。
+    <b>貼銀箔按才算</b>：填長寬（cm），自動 ÷ 900 換成才數 × 每才單價（預設 1 元）＝一張多少，
+    再乘<b>印刷張數（大紙數量）</b>——銀箔貼在大紙上，一張大紙切幾張成品不影響貼的次數。印刷張數空白時會退回用製作數量算，小計會標出來。輸入會自動記住，下次打開還在。
   </div>
 </div>
 
@@ -191,8 +192,10 @@ const ROWS = [
   {k:'paper', n:'紙張費用',  def:'unitsplit', modes:ALL},
   {k:'plate', n:'印刷版費',  def:'shared',    modes:['shared','split'], note:'一次性'},
   // 2026-08-03 老闆加：貼銀箔按才計價。1 才 ＝ 30×30cm ＝ 900 cm²，
-  //   每張成本＝(長cm × 寬cm ÷ 900) × 每才單價（預設 1 元），再 × 該欄數量。不是模具，攤進每張成本。
-  {k:'silver',n:'貼銀箔',    type:'area', per:900, rate:1, note:'長×寬 cm ÷ 900 ＝ 才'},
+  //   單張成本＝(長cm × 寬cm ÷ 900) × 每才單價（預設 1 元）。不是模具，攤進每張成本。
+  //   ⚠ 乘的是「印刷張數（大紙）」不是成品數 —— 銀箔貼在大紙上，一張大紙切幾張成品不影響貼的次數。
+  //   印刷張數沒填時退回用製作數量（1 開 1 的情況），小計會標「用製作數量」提醒。
+  {k:'silver',n:'貼銀箔',    type:'area', per:900, rate:1, base:'sheet', note:'長×寬 cm ÷ 900 ＝ 才'},
   {k:'print', n:'印刷費用',  def:'unitsplit', modes:ALL},
   {k:'foilP', n:'燙金版費',  type:'formula', mult:4, note:'長 × 寬 × 4', tool:true},
   {k:'foil',  n:'燙金費用',  def:'unitsplit', modes:ALL},
@@ -217,6 +220,12 @@ const $ = id => document.getElementById(id);
 /* ---------- 建表 ---------- */
 let html = '<tr><td class="name"><b>製作數量</b><small>張 / 個</small></td><td></td>';
 COLS.forEach(c => html += '<td class="qty"><input type="number" inputmode="numeric" min="0" step="1" id="qty'+c+'" placeholder="0"></td>');
+html += '</tr>';
+
+// 2026-08-03 老闆加：印刷張數＝下去印的大紙數量，目前給貼銀箔當基數（貼在大紙上，跟成品數不同）。
+html += '<tr><td class="name"><b>印刷張數</b><small>大紙數量</small></td>'
+      + '<td><span class="sub" style="font-size:12.5px;color:var(--muted)">貼銀箔用</span></td>';
+COLS.forEach(c => html += '<td class="qty"><input type="number" inputmode="numeric" min="0" step="1" id="sheet'+c+'" placeholder="0"></td>');
 html += '</tr>';
 
 ROWS.forEach(r => {
@@ -244,6 +253,9 @@ ROWS.forEach(r => {
           +   '<span class="x">才 × 單價 =</span>'
           +   '<span class="out" id="'+r.k+'_out">0</span>'
           +   '<span class="x">元／張</span>'
+          + '</div>'
+          + '<div class="three" style="margin-top:6px">'
+          +   COLS.map(c => '<span class="ures" id="'+r.k+'_ur'+c+'">= 0</span>').join('')
           + '</div></td>';
   } else {
     html += '<td><select id="'+r.k+'_m">'
@@ -277,7 +289,8 @@ ROWS.filter(r => !r.type).forEach(renderCell);
 
 /* ---------- 計算 ---------- */
 function calc(){
-  const qty = COLS.map(c => num($('qty'+c).value));
+  const qty    = COLS.map(c => num($('qty'+c).value));
+  const sheets = COLS.map(c => num($('sheet'+c).value));   // 大紙張數；沒填就退回成品數
   const lines = [];   // {name, amounts:[a,b,c]}
 
   ROWS.forEach(r => {
@@ -291,7 +304,13 @@ function calc(){
       const each1 = cai * num($(r.k+'_R').value);
       $(r.k+'_cai').textContent = fmt(cai);
       $(r.k+'_out').textContent = fmt(each1);
-      amounts = COLS.map(c => each1 * qty[c]);
+      const base = r.base === 'sheet' ? COLS.map(c => sheets[c] || qty[c]) : qty;
+      amounts = COLS.map(c => each1 * base[c]);
+      COLS.forEach(c => {
+        const o = $(r.k+'_ur'+c); if (!o) return;
+        const fallback = r.base === 'sheet' && !sheets[c] && qty[c] > 0;
+        o.textContent = '= ' + fmt(amounts[c]) + (fallback ? '（用製作數量）' : '');
+      });
     } else {
       const mode = $(r.k+'_m').value;
       if (mode === 'unitsplit') {
@@ -342,7 +361,7 @@ function calc(){
   }).join('');
 
   save();
-  return {qty, lines, totals, tools, makes, each};
+  return {qty, sheets, lines, totals, tools, makes, each};
 }
 
 /* ---------- 事件 ---------- */
@@ -401,11 +420,11 @@ function clearAll(){
 
 /* ---------- 複製報表 ---------- */
 function copyReport(){
-  const {qty, lines, totals, tools, makes, each} = calc();
+  const {qty, sheets, lines, totals, tools, makes, each} = calc();
   let t = '喜成印刷｜成本比價\n';
   COLS.forEach(c => {
     if (!qty[c] && !totals[c]) return;
-    t += '\n【'+COLNAME[c]+'】製作數量 '+fmt(qty[c])+'\n';
+    t += '\n【'+COLNAME[c]+'】製作數量 '+fmt(qty[c])+(sheets[c] ? '　印刷張數 '+fmt(sheets[c]) : '')+'\n';
     lines.filter(l => l.amounts[c] > 0 && !l.tool).forEach(l => { t += '  '+l.name+'：'+fmt(l.amounts[c])+'\n'; });
     t += '  ── 製作成本：'+fmt(makes[c])+'　每張：'+(each[c]===null?'—':fmt(each[c]))+' 元（不含模具）\n';
     const tl = lines.filter(l => l.amounts[c] > 0 && l.tool);
