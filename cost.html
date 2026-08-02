@@ -75,6 +75,9 @@ select{
 .formula{display:flex; align-items:center; gap:8px; flex-wrap:wrap}
 .formula input{max-width:96px}
 .formula .x{color:var(--muted); font-size:13px}
+.formula .cai{font-weight:700; font-variant-numeric:tabular-nums; color:var(--ink)}
+.rate{display:flex; flex-direction:column; gap:2px}
+.rate small{color:var(--muted); font-size:11px; text-align:right; white-space:nowrap}
 .formula .out{
   margin-left:auto; font-weight:700; font-variant-numeric:tabular-nums;
   background:var(--accent-soft); color:var(--accent); padding:4px 10px; border-radius:7px; white-space:nowrap;
@@ -167,7 +170,8 @@ button.primary:hover{opacity:.9; color:#fff}
     計價方式四選一：<b>分欄單價 ×數量</b>（預設）＝三欄各填各的單價，各自乘上該欄數量，格子下面直接顯示小計｜
     <b>分欄總價</b>＝三欄各填一筆總價，不乘數量｜<b>單價 ×數量（共用）</b>＝三欄共用一個單價｜<b>總價（共用）</b>＝整批一筆、三欄同一個數字。
     <b>每張成本不含模具</b>：燙金版費、打凸版費、刀膜是模具（再版還能用），在卡片上獨立列為「模具費（另記）」，不攤進每張單價。
-    印刷版費有算進去 —— CTP 版每次開印都要重出，是跟著這一批走的成本。輸入會自動記住，下次打開還在。
+    印刷版費有算進去 —— CTP 版每次開印都要重出，是跟著這一批走的成本。
+    <b>貼銀箔按才算</b>：填長寬（cm），自動 ÷ 900 換成才數 × 每才單價（預設 1 元）＝每張成本，再乘該欄數量。輸入會自動記住，下次打開還在。
   </div>
 </div>
 
@@ -178,7 +182,7 @@ button.primary:hover{opacity:.9; color:#fff}
 const COLS = [0,1,2];
 const COLNAME = ['A 案','B 案','C 案'];
 
-// type: 'input' 一般費用｜'formula' 版費（長 × 寬 × 倍率）
+// type: 'input' 一般費用｜'formula' 版費（長 × 寬 × 倍率）｜'area' 才數計費（長 × 寬 ÷ 900 才 × 每才單價 × 數量）
 // 2026-07-27 老闆：「都改成分欄輸入單價」→ 會隨數量變的費用一律預設 unitsplit
 //   （三欄各填各的單價，各自 × 該欄數量）。量大單價本來就會降，共用一個單價比不出東西。
 //   版費類（印刷版費、刀膜、兩個版費公式）是一次性費用，維持不隨數量變。
@@ -186,6 +190,9 @@ const ALL = ['unitsplit','split','unit','shared'];
 const ROWS = [
   {k:'paper', n:'紙張費用',  def:'unitsplit', modes:ALL},
   {k:'plate', n:'印刷版費',  def:'shared',    modes:['shared','split'], note:'一次性'},
+  // 2026-08-03 老闆加：貼銀箔按才計價。1 才 ＝ 30×30cm ＝ 900 cm²，
+  //   每張成本＝(長cm × 寬cm ÷ 900) × 每才單價（預設 1 元），再 × 該欄數量。不是模具，攤進每張成本。
+  {k:'silver',n:'貼銀箔',    type:'area', per:900, rate:1, note:'長×寬 cm ÷ 900 ＝ 才'},
   {k:'print', n:'印刷費用',  def:'unitsplit', modes:ALL},
   {k:'foilP', n:'燙金版費',  type:'formula', mult:4, note:'長 × 寬 × 4', tool:true},
   {k:'foil',  n:'燙金費用',  def:'unitsplit', modes:ALL},
@@ -223,6 +230,21 @@ ROWS.forEach(r => {
           +   '<span class="x">× '+r.mult+' =</span>'
           +   '<span class="out" id="'+r.k+'_out">0</span>'
           + '</div></td>';
+  } else if (r.type === 'area') {
+    html += '<td><div class="rate">'
+          +   '<input type="number" inputmode="decimal" min="0" step="0.1" id="'+r.k+'_R" value="'+r.rate+'" placeholder="每才單價">'
+          +   '<small>元／才</small>'
+          + '</div></td>';
+    html += '<td colspan="3"><div class="formula">'
+          +   '<input type="number" inputmode="decimal" min="0" step="0.1" id="'+r.k+'_L" placeholder="長 cm">'
+          +   '<span class="x">×</span>'
+          +   '<input type="number" inputmode="decimal" min="0" step="0.1" id="'+r.k+'_W" placeholder="寬 cm">'
+          +   '<span class="x">÷ '+r.per+' =</span>'
+          +   '<span class="cai" id="'+r.k+'_cai">0</span>'
+          +   '<span class="x">才 × 單價 =</span>'
+          +   '<span class="out" id="'+r.k+'_out">0</span>'
+          +   '<span class="x">元／張</span>'
+          + '</div></td>';
   } else {
     html += '<td><select id="'+r.k+'_m">'
           + r.modes.map(m => '<option value="'+m+'"'+(m===r.def?' selected':'')+'>'+MODE_LABEL[m]+'</option>').join('')
@@ -251,7 +273,7 @@ function renderCell(r){
     box.innerHTML = '<input type="number" inputmode="decimal" min="0" step="0.01" id="'+r.k+'_s" placeholder="'+(mode==='unit'?'單價':'總價')+'">';
   }
 }
-ROWS.filter(r => r.type !== 'formula').forEach(renderCell);
+ROWS.filter(r => !r.type).forEach(renderCell);
 
 /* ---------- 計算 ---------- */
 function calc(){
@@ -264,6 +286,12 @@ function calc(){
       const v = num($(r.k+'_L').value) * num($(r.k+'_W').value) * r.mult;
       $(r.k+'_out').textContent = fmt(v);
       amounts = COLS.map(() => v);
+    } else if (r.type === 'area') {
+      const cai  = num($(r.k+'_L').value) * num($(r.k+'_W').value) / r.per;
+      const each1 = cai * num($(r.k+'_R').value);
+      $(r.k+'_cai').textContent = fmt(cai);
+      $(r.k+'_out').textContent = fmt(each1);
+      amounts = COLS.map(c => each1 * qty[c]);
     } else {
       const mode = $(r.k+'_m').value;
       if (mode === 'unitsplit') {
@@ -347,16 +375,27 @@ function restoreRow(r){
   ['_s','_0','_1','_2','_u0','_u1','_u2'].forEach(sfx => { const el = $(r.k+sfx); if (el && store[r.k+sfx] !== undefined) el.value = store[r.k+sfx]; });
 }
 (function restoreAll(){
-  ROWS.filter(r => r.type !== 'formula').forEach(r => {
+  ROWS.filter(r => !r.type).forEach(r => {
     const sel = $(r.k+'_m');
     if (store[r.k+'_m'] && r.modes.includes(store[r.k+'_m'])) { sel.value = store[r.k+'_m']; renderCell(r); }
   });
   document.querySelectorAll('input').forEach(el => { if (el.id && store[el.id] !== undefined) el.value = store[el.id]; });
+  areaDefaults();
 })();
+
+// 才數計費的「每才單價」是常數性質的設定（貼銀箔＝1 元／才），空白就補回預設，
+// 免得清空或舊紀錄把它洗成 0、算出來整欄都是 0 卻看不出原因。
+function areaDefaults(){
+  ROWS.filter(r => r.type === 'area').forEach(r => {
+    const el = $(r.k+'_R');
+    if (el && el.value === '') el.value = r.rate;
+  });
+}
 
 function clearAll(){
   store = {};   // save() 改成合併後，這裡要先把底稿倒掉，否則隱藏欄位的舊值會被留下來
   document.querySelectorAll('input').forEach(el => el.value = '');
+  areaDefaults();
   calc(); toast('已清空');
 }
 
