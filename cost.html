@@ -45,6 +45,11 @@ h1 .mark{
 .card h2{
   font-size:14px; margin:0; padding:12px 16px; border-bottom:1px solid var(--line);
   color:var(--muted); font-weight:700; letter-spacing:.06em;
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+}
+/* 表格標題列上的歸零鍵：手機填到一半要重來時，最下面那顆「全部清空」要捲很久才碰得到。 */
+button.mini{
+  font-size:12.5px; padding:4px 12px; border-radius:99px; letter-spacing:0; font-weight:600;
 }
 .scroll{overflow-x:auto}
 table{border-collapse:collapse; width:100%; min-width:640px}
@@ -151,11 +156,11 @@ button.primary:hover{opacity:.9; color:#fff}
   <h1><span class="mark">喜成</span>成本比價計算機</h1>
   <div class="sub">同一張單、三種數量一起算，直接比每張成本</div>
   <!-- 版本標示：手機常被快取擋住看到舊版，老闆對一下這個日期就知道有沒有拿到新的。改版時要一起更新。 -->
-  <div class="ver">版本 2026-08-04・貼銀箔</div>
+  <div class="ver">版本 2026-08-04・歸零鍵</div>
 </header>
 
 <div class="card">
-  <h2>成本項目</h2>
+  <h2>成本項目<button class="mini" onclick="clearAll()">歸零</button></h2>
   <div class="scroll">
     <table>
       <thead>
@@ -434,6 +439,8 @@ function areaDefaults(){
 }
 
 function clearAll(){
+  // 歸零鍵放到表格頂端後，手機誤觸的機會變高；填了半天被清光很嘔，所以先問一句。
+  if (!confirm('確定要把所有數字歸零嗎？')) return;
   store = {};   // save() 改成合併後，這裡要先把底稿倒掉，否則隱藏欄位的舊值會被留下來
   document.querySelectorAll('input').forEach(el => el.value = '');
   areaDefaults();
