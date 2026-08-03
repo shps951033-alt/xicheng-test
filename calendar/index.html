@@ -137,6 +137,12 @@ textarea{min-height:88px;resize:vertical}
 .fb-sw{flex:none;display:inline-flex;align-items:center;gap:6px;border:1.5px solid #DECBA4;
   background:var(--card);border-radius:999px;padding:7px 13px;font-size:13px;cursor:pointer;user-select:none}
 .fb-sw input{margin:0;accent-color:var(--gold-2)}
+.fb-rm{flex:none;border:1.5px solid #DECBA4;background:var(--card);color:#B4483C;border-radius:999px;
+  padding:7px 13px;font-size:13px;cursor:pointer;font-family:inherit}
+.addver{display:block;width:100%;margin:-4px 0 14px;border:1.5px dashed var(--gold-line);background:#FFF9EC;
+  color:var(--gold-2);border-radius:10px;padding:10px;font-size:14px;font-weight:700;cursor:pointer;
+  font-family:inherit;text-align:center}
+.addver:active{transform:translateY(1px)}
 .fb-body>label.t{margin-top:16px}
 .fb-body>label.t:first-child{margin-top:0}
 
@@ -645,6 +651,10 @@ function defaultCfg(){
 }
 function cfgOf(k){ if(!foilCfgs[k]) foilCfgs[k]=defaultCfg(); return foilCfgs[k]; }
 
+/* 每款可拆成多塊版（同款分開燙不同內容）：verCfgs[款號] = [第1塊版cfg, 第2塊版cfg, ...] */
+var verCfgs={};
+function versOf(c){ if(!verCfgs[c]) verCfgs[c]=[defaultCfg()]; return verCfgs[c]; }
+
 function foilMode(){
   if(orders().length<2) return '同一組';                  // 只訂一款就沒有分不分的問題
   var r=document.querySelector('input[name=fmode]:checked');
@@ -655,13 +665,24 @@ function foilGroups(){
   if(!foilChk.checked) return [];
   var list=orders();
   if(!list.length) return [];
-  if(foilMode()==='同一組'){
+  if(list.length>1 && foilMode()==='同一組'){
     var c=cfgOf('ALL'); c.on=true;
     return [{key:'ALL', styles:list, cfg:c, qty:totalQty()}];
   }
-  return list.map(function(st){
-    return {key:st.c, style:st, styles:[st], cfg:cfgOf(st.c), qty:getQty(st.c)};
+  /* 分款（或只訂一款）：每款可再拆成多塊版，各塊版燙不同內容、各自算版費與上機費 */
+  var gs=[];
+  list.forEach(function(st){
+    var vers=versOf(st.c), n=vers.length, sq=getQty(st.c);
+    vers.forEach(function(cfg,i){
+      /* 未分版：留空＝整款全燙；填數字＝只燙那些本、其餘不燙。分版：各塊版各自填本數 */
+      var q=(n===1)
+        ? ((cfg.vq==null) ? sq : Math.max(0,cfg.vq))
+        : ((cfg.vq>0)?cfg.vq:0);
+      gs.push({key:st.c+'#'+i, style:st, styles:[st], cfg:cfg, qty:q,
+               verIdx:i, verCount:n, styleQty:sq});
+    });
   });
+  return gs;
 }
 function activeGroups(){ return foilGroups().filter(function(g){ return g.cfg.on; }); }
 
@@ -684,7 +705,9 @@ function optRadio(name,val,label,checked,onchange,swatchCss,fontCss){
 }
 
 function buildBlock(g){
-  var b={key:g.key, style:g.style||null, cfg:g.cfg};
+  var b={key:g.key, style:g.style||null, cfg:g.cfg,
+         verIdx:g.verIdx||0, verCount:g.verCount||1,
+         verTag:(g.verCount>1 ? '（第 '+(g.verIdx+1)+' 塊版）' : '')};
   var cfg=g.cfg, uid=g.key;
   var el=document.createElement('div'); el.className='foilblk'; b.el=el;
 
@@ -692,18 +715,48 @@ function buildBlock(g){
     var hd=document.createElement('div'); hd.className='fb-hd';
     var im=document.createElement('img'); im.src=g.style.cover; im.alt=''; im.loading='lazy';
     var nm=document.createElement('div'); nm.className='fb-nm';
-    nm.innerHTML='<b>'+g.style.n+'</b><span class="fb-q"></span>';
-    var sw=document.createElement('label'); sw.className='fb-sw';
-    var ck=document.createElement('input'); ck.type='checkbox'; ck.checked=cfg.on;
-    ck.addEventListener('change',function(){ cfg.on=ck.checked; el.classList.toggle('off',!cfg.on); recalc(); });
-    sw.appendChild(ck); sw.appendChild(document.createTextNode('這款要燙金'));
-    hd.appendChild(im); hd.appendChild(nm); hd.appendChild(sw);
+    nm.innerHTML='<b>'+g.style.n+(g.verCount>1?'　第 '+(g.verIdx+1)+' 塊版':'')+'</b><span class="fb-q"></span>';
+    hd.appendChild(im); hd.appendChild(nm);
+    if(g.verIdx>0){
+      /* 第 2 塊版起：右上角是移除鈕（整款要不要燙金，看第 1 塊版的開關） */
+      var rm=document.createElement('button'); rm.type='button'; rm.className='fb-rm';
+      rm.textContent='✕ 移除這塊版';
+      rm.addEventListener('click',function(){ versOf(g.style.c).splice(g.verIdx,1); recalc(); });
+      hd.appendChild(rm);
+    }else{
+      var sw=document.createElement('label'); sw.className='fb-sw';
+      var ck=document.createElement('input'); ck.type='checkbox'; ck.checked=cfg.on;
+      ck.addEventListener('change',function(){
+        versOf(g.style.c).forEach(function(v){ v.on=ck.checked; });
+        el.classList.toggle('off',!ck.checked); recalc();
+      });
+      sw.appendChild(ck); sw.appendChild(document.createTextNode('這款要燙金'));
+      hd.appendChild(sw);
+    }
     el.appendChild(hd);
     b.qtyEl=nm.querySelector('.fb-q');
     el.classList.toggle('off',!cfg.on);
   }
 
   var body=document.createElement('div'); body.className='fb-body'; el.appendChild(body);
+
+  if(g.style){
+    var isSplit=g.verCount>1;
+    body.appendChild(fieldLabel(isSplit?'這塊版燙幾本':'這款要燙幾本',
+      isSplit ? '（各塊版合計不可超過訂購本數；沒分到的本數＝不燙金）'
+              : '（留空＝全部燙金；只燙一部分就填本數，其餘不燙）'));
+    var vq=document.createElement('input');
+    vq.type='number'; vq.min='0'; vq.inputMode='numeric';
+    vq.placeholder=isSplit?'0':'全部';
+    vq.value=(cfg.vq==null)?'':cfg.vq;
+    vq.setAttribute('aria-label',g.style.n+(isSplit?' 第 '+(g.verIdx+1)+' 塊版':'')+' 燙金本數');
+    vq.addEventListener('input',function(){
+      cfg.vq=(vq.value==='') ? null : (parseInt(vq.value,10)||0);
+      recalc();
+    });
+    body.appendChild(vq);
+    b.vqHint=hintP(); body.appendChild(b.vqHint);
+  }
 
   body.appendChild(fieldLabel('燙金面數','（同一塊版，雙面內容相同）'));
   var sideRow=optsRow();
@@ -810,7 +863,7 @@ function paint(b){
     b.zone.style.width=(span-inset*2)+'%';
     b.zone.style.top=(m.top+m.h/2)+'%';
     b.dim.style.display='none';
-    b.mode.textContent='底板示意：'+st.n+((!b.style && orders().length>1)?'（各款皆燙同一組內容）':'');
+    b.mode.textContent='底板示意：'+st.n+(b.style?b.verTag:'')+((!b.style && orders().length>1)?'（各款皆燙同一組內容）':'');
   }else{
     b.img.style.display='none';
     b.zone.style.left=''; b.zone.style.width=''; b.zone.style.top='';
@@ -859,7 +912,7 @@ function fitAll(){ Object.keys(blocks).forEach(function(k){ fitBlock(blocks[k]);
 function updateFoilMock(){ Object.keys(blocks).forEach(function(k){ paint(blocks[k]); }); }
 
 /* 只有「組別集合變了」才重建 DOM，否則只更新會動的文字 —— 免得客戶打字打到一半區塊被重畫 */
-var foilSig=null;
+var foilSig=null, addBtns={};
 function renderFoil(){
   var on=foilChk.checked, multi=orders().length>1;
   fModeField.style.display=(on && multi) ? '' : 'none';
@@ -869,30 +922,71 @@ function renderFoil(){
   var sig=on+'|'+foilMode()+'|'+groups.map(function(g){return g.key;}).join(',');
   if(sig!==foilSig){
     foilSig=sig;
-    foilWrap.innerHTML=''; blocks={};
-    groups.forEach(function(g){ var b=buildBlock(g); blocks[g.key]=b; foilWrap.appendChild(b.el); });
+    foilWrap.innerHTML=''; blocks={}; addBtns={};
+    groups.forEach(function(g,i){
+      var b=buildBlock(g); blocks[g.key]=b; foilWrap.appendChild(b.el);
+      /* 每款最後一塊版後面放「再分一塊版」按鈕 */
+      var nxt=groups[i+1];
+      if(g.style && (!nxt || !nxt.style || nxt.style.c!==g.style.c)){
+        var ab=document.createElement('button'); ab.type='button'; ab.className='addver';
+        ab.textContent='＋ '+g.style.n+'：再分一塊版，燙不同內容（例：40 本燙 A、60 本燙 B）';
+        (function(st){
+          ab.addEventListener('click',function(){
+            var vs=versOf(st.c);
+            if(vs.length===1 && vs[0].vq==null) vs[0].vq=getQty(st.c);   /* 原本整款全燙：本數先全掛第 1 塊版 */
+            var nc=defaultCfg();
+            nc.on=vs[0].on; nc.vq=null;
+            nc.side=vs[0].side; nc.color=vs[0].color; nc.font=vs[0].font;
+            nc.align=vs[0].align; nc.talign=vs[0].talign;
+            vs.push(nc);
+            recalc();
+          });
+        })(g.style);
+        foilWrap.appendChild(ab);
+        addBtns[g.style.c]=ab;
+      }
+    });
     groups.forEach(function(g){ paint(blocks[g.key]); });
     // 字型／版面晚一步到位時再量一次，否則字級會停在舊的量測結果
     if(document.fonts && document.fonts.ready) document.fonts.ready.then(fitAll);
     requestAnimationFrame(fitAll);
   }
+  var styleSums={};
+  groups.forEach(function(g){ if(g.style) styleSums[g.style.c]=(styleSums[g.style.c]||0)+g.qty; });
   groups.forEach(function(g){
     var b=blocks[g.key]; if(!b) return;
     b.cfg=g.cfg;
     if(b.qtyEl) b.qtyEl.textContent=g.qty+' 本';
+    /* 整款關掉燙金時，第 2 塊版起整塊隱藏 */
+    if(g.style && g.verIdx>0) b.el.style.display = versOf(g.style.c)[0].on ? '' : 'none';
+    if(b.vqHint){
+      var sum=styleSums[g.style.c], sq=g.styleQty;
+      b.vqHint.innerHTML=(sum>sq)
+        ? '此款共訂 '+sq+' 本，燙金合計 <b style="color:#B4483C">'+sum+' 本已超過訂購本數</b>，請調整。'
+        : (sum===sq
+          ? '此款共訂 '+sq+' 本，<b style="color:var(--ok)">全部燙金 ✓</b>'
+          : '此款共訂 '+sq+' 本，燙金 <b>'+sum+' 本</b>，其餘 <b>'+(sq-sum)+' 本不燙金</b>。');
+    }
     if(g.qty>0 && g.qty<SETUP_MIN){
       b.setupHint.innerHTML='這塊版 '+g.qty+' 本，未達 '+SETUP_MIN+' 本 → 另收上機費 '+
         '<b style="color:#B4483C">NT$ '+FOIL_SETUP[g.cfg.side]+'</b>（'+g.cfg.side+'）。'+
-        (g.style?'這款':'整張單')+'訂滿 '+SETUP_MIN+' 本即免收。';
+        (g.style?'這塊版':'整張單')+'滿 '+SETUP_MIN+' 本即免收。';
     } else if(g.qty>=SETUP_MIN){
       b.setupHint.innerHTML='這塊版已達 '+SETUP_MIN+' 本，<b style="color:var(--ok)">免上機費</b>。';
-    } else b.setupHint.innerHTML='';
+    } else {
+      b.setupHint.innerHTML = (g.style && g.verCount>1)
+        ? '這塊版 0 本，尚未列入計費；不需要可按右上角「✕ 移除這塊版」。'
+        : (g.style ? '燙金本數 0 本＝這款不燙金，未列入計費。' : '');
+    }
     b.plateHint.innerHTML = (g.cfg.plate==='沿用舊版')
       ? '沿用先前製作的燙金版，<b style="color:var(--ok)">免收版費</b>。'
       : '第一次燙金需製版，<b>NT$ '+PLATE_FEE+'</b>（一塊版）。這是<b>一次性費用</b>，日後同一組內容再版就不再收。';
   });
+  Object.keys(addBtns).forEach(function(c){
+    addBtns[c].style.display = versOf(c)[0].on ? '' : 'none';
+  });
   modeHint.innerHTML = (foilMode()==='分款')
-    ? '每款各自一塊版、各自算上機費（版費 '+PLATE_FEE+' 元／塊）。某款不燙金，在該區塊右上角取消勾選即可。'
+    ? '每款各自設定、各自算版費與上機費。同一款要分開燙不同內容，按該款下方的「＋ 再分一塊版」。某款不燙金，取消該區塊右上角的勾選即可。'
     : '所有款式共用一塊版、燙同一組內容，上機費看整張單總本數。';
 }
 
@@ -924,20 +1018,33 @@ var costBox=document.getElementById('costBox'), packChk=document.getElementById(
 
 function calcCost(){
   var q=totalQty(), cal=calSub();
-  var gs=activeGroups();                     // 一組 ＝ 一塊版 ＝ 一次上機
+  var gsAll=activeGroups();                  // 一組 ＝ 一塊版 ＝ 一次上機
+  /* 燙金本數檢查：超過訂購本數→警告；少於→其餘不燙金（合法） */
+  var mism=[], noFoil=[], seenM={};
+  gsAll.forEach(function(g){
+    if(g.style && !seenM[g.style.c]){
+      seenM[g.style.c]=true;
+      var sum=gsAll.filter(function(x){ return x.style && x.style.c===g.style.c; })
+                   .reduce(function(s,x){ return s+x.qty; },0);
+      if(sum>g.styleQty) mism.push({n:g.style.n, sum:sum, q:g.styleQty});
+      else if(sum<g.styleQty) noFoil.push({n:g.style.n, rest:g.styleQty-sum});
+    }
+  });
+  /* 0 本的塊版（沒填本數／設為不燙）不列入計費 */
+  var gs=gsAll.filter(function(g){ return g.qty>0; });
   var foil=0, plate=0, setup=0, newPlates=0;
   gs.forEach(function(g){
     // 燙金 2.5／4.5 元 × 奇數本會出現 0.5 元尾數 → 每組小計四捨五入（2026-07-17 老闆指定）
     foil += Math.round(g.qty*FOIL_UNIT[g.cfg.side]);
     if(g.cfg.plate==='新製版'){ plate += PLATE_FEE; newPlates++; }
-    if(g.qty>0 && g.qty<SETUP_MIN) setup += FOIL_SETUP[g.cfg.side];   // 每塊版各自算門檻
+    if(g.qty<SETUP_MIN) setup += FOIL_SETUP[g.cfg.side];   // 每塊版各自算門檻
   });
   var pack = packChk.checked ? q*PACK_FEE : 0;
   var sh=shipCalc(), ship=sh?sh.fee:0;
   var net=cal+foil+setup+plate+pack+ship;    // 未稅小計
   var tax=Math.round(net*TAX_RATE);
   return {q:q, groups:gs, newPlates:newPlates, cal:cal, foil:foil, setup:setup, plate:plate,
-          pack:pack, sh:sh, ship:ship, net:net, tax:tax, total:net+tax};
+          mism:mism, noFoil:noFoil, pack:pack, sh:sh, ship:ship, net:net, tax:tax, total:net+tax};
 }
 
 function renderCost(){
@@ -949,15 +1056,18 @@ function renderCost(){
                'NT$ '+fmt(getQty(st.c)*priceOf(st.c)), '']);
   });
   c.groups.forEach(function(g){
-    var suffix = g.style ? '　'+g.style.n : '';
+    var suffix = g.style ? '　'+g.style.n+(g.verCount>1?'（第 '+(g.verIdx+1)+' 塊版）':'') : '';
     var raw=g.qty*FOIL_UNIT[g.cfg.side], val=Math.round(raw);
     rows.push(['底板燙金'+suffix,
                '<em>'+g.cfg.side+'　'+g.qty+' 本 × '+FOIL_UNIT[g.cfg.side]+' 元'+
                (raw!==val?'＝'+raw+'，四捨五入':'')+'</em>',
                'NT$ '+fmt(val), '']);
-    if(g.qty<SETUP_MIN)
+    if(g.qty>0 && g.qty<SETUP_MIN)
       rows.push(['燙金上機費'+suffix, '<em>這塊版不足 '+SETUP_MIN+' 本（'+g.cfg.side+'）</em>',
                  'NT$ '+fmt(FOIL_SETUP[g.cfg.side]), 'setup']);
+  });
+  c.noFoil.forEach(function(m){
+    rows.push(['不燙金　'+m.n, '<em>'+m.rest+' 本不加燙金</em>', '—', '']);
   });
   if(c.groups.length){
     rows.push(['燙金版費',
@@ -968,7 +1078,11 @@ function renderCost(){
   if(c.pack) rows.push(['代客包裝', '<em>'+c.q+' 本 × '+PACK_FEE+' 元</em>', 'NT$ '+fmt(c.pack), '']);
   rows.push(['運費', '<em>'+c.sh.boxes+' 箱 × '+BOX_FEE+' 元（各款合併，100 本/箱）</em>', 'NT$ '+fmt(c.ship), '']);
 
-  costBox.innerHTML = rows.map(function(r){
+  var warn=c.mism.map(function(m){
+    return '<div class="r setup"><span class="k">⚠ '+m.n+'：燙金合計 '+m.sum+' 本，超過訂購的 '+m.q+
+           ' 本<em>請調整各塊版本數，金額才會正確</em></span><span class="v"></span></div>';
+  }).join('');
+  costBox.innerHTML = warn + rows.map(function(r){
     return '<div class="r '+r[3]+'"><span class="k">'+r[0]+r[1]+'</span><span class="v">'+r[2]+'</span></div>';
   }).join('') +
   '<div class="r"><span class="k">未稅小計</span><span class="v">NT$ '+fmt(c.net)+'</span></div>' +
@@ -1015,14 +1129,16 @@ document.getElementById('genBtn').addEventListener('click',function(){
     msg+='款式與數量：'+U+'（尚未選款式）\n';
   }
   msg+='代客包裝：'+(bag?'需要（'+c.q+' 本 × '+PACK_FEE+' 元 = NT$ '+fmt(c.pack)+'）':'不需要（附贈 OPP 袋、不代裝）')+'\n';
-  msg+='底板燙金：'+(foilOn?'要':'不用')+(c.groups.length>1?'（各款分開設定，共 '+c.groups.length+' 塊版）':'')+'\n';
+  msg+='底板燙金：'+(foilOn?'要':'不用')+(c.groups.length>1?'（共 '+c.groups.length+' 塊版）':'')+'\n';
+  if(c.mism.length)
+    msg+='　⚠ '+c.mism.map(function(m){ return m.n+'：燙金合計 '+m.sum+' 本，超過訂購 '+m.q+' 本'; }).join('；')+'（請確認）\n';
   c.groups.forEach(function(g){
     var ind='　';
-    if(g.style){ msg+='　▍'+g.style.n+'（'+g.qty+' 本）\n'; ind='　　'; }
+    if(g.style){ msg+='　▍'+g.style.n+(g.verCount>1?'　第 '+(g.verIdx+1)+' 塊版':'')+'（'+g.qty+' 本）\n'; ind='　　'; }
     var raw=g.qty*FOIL_UNIT[g.cfg.side], val=Math.round(raw);
     msg+=ind+'燙金工資：'+g.cfg.side+'　'+g.qty+' 本 × '+FOIL_UNIT[g.cfg.side]+' 元 = NT$ '+fmt(val)+
          (raw!==val?'（'+raw+' 四捨五入）':'')+'\n';
-    if(g.qty<SETUP_MIN)
+    if(g.qty>0 && g.qty<SETUP_MIN)
       msg+=ind+'上機費：NT$ '+fmt(FOIL_SETUP[g.cfg.side])+'（這塊版不足 '+SETUP_MIN+' 本）\n';
     msg+=ind+'燙金版：'+(g.cfg.plate==='沿用舊版' ? '沿用舊版，免版費（將另以 LINE 通知）'
                                                : '新製版 NT$ '+fmt(PLATE_FEE)+'（一塊版，一次性）')+'\n';
@@ -1031,9 +1147,14 @@ document.getElementById('genBtn').addEventListener('click',function(){
     // 多行燙金內容：續行對齊「內容：」後方
     msg+=ind+'內容：'+(g.cfg.text.trim() ? g.cfg.text.trim().replace(/\n/g,'\n'+ind+'　　　') : '（未填，稍後提供）')+'\n';
   });
-  var offList=foilGroups().filter(function(g){ return !g.cfg.on; });
-  if(offList.length)
-    msg+='　（不燙金：'+offList.map(function(g){ return g.style?g.style.n:''; }).join('、')+'）\n';
+  c.noFoil.forEach(function(m){
+    msg+='　（'+m.n+'：其餘 '+m.rest+' 本不燙金）\n';
+  });
+  var offNames=[];
+  foilGroups().forEach(function(g){
+    if(!g.cfg.on && g.style && offNames.indexOf(g.style.n)<0) offNames.push(g.style.n);
+  });
+  if(offNames.length) msg+='　（不燙金：'+offNames.join('、')+'）\n';
   msg+='運費：'+(c.sh ? c.sh.boxes+' 箱 × 150 = NT$ '+fmt(c.ship)+'（各款合併，100 本/箱，未滿一箱以一箱計）'
                      : '（未填數量，無法計算）')+'\n';
   msg+='─────────────\n';
