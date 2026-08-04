@@ -149,6 +149,12 @@ button.primary:hover{opacity:.9; color:#fff}
   opacity:0; pointer-events:none; transition:.25s;
 }
 .toast.on{opacity:1; transform:translateX(-50%) translateY(0)}
+.toast.act{pointer-events:auto; display:flex; align-items:center; gap:12px}
+.toast .undo{
+  font-size:13px; padding:3px 12px; border-radius:99px; font-family:inherit; cursor:pointer;
+  background:transparent; border:1px solid var(--bg); color:var(--bg); font-weight:700;
+}
+.toast .undo:hover{border-color:var(--bg); color:var(--bg); opacity:.75}
 @media print{
   body{background:#fff} .bar,.hint,.sub{display:none} .card{box-shadow:none}
 }
@@ -161,11 +167,11 @@ button.primary:hover{opacity:.9; color:#fff}
   <h1><span class="mark">喜成</span>成本比價計算機</h1>
   <div class="sub">同一張單、三種數量一起算，直接比每張成本</div>
   <!-- 版本標示：手機常被快取擋住看到舊版，老闆對一下這個日期就知道有沒有拿到新的。改版時要一起更新。 -->
-  <div class="ver">版本 2026-08-04・貼銀箔勾選</div>
+  <div class="ver">版本 2026-08-04・歸零可復原</div>
 </header>
 
 <div class="card">
-  <h2>成本項目<button class="mini" onclick="clearAll()">歸零</button></h2>
+  <h2>成本項目<button class="mini" id="resetTop">歸零</button></h2>
   <div class="scroll">
     <table>
       <thead>
@@ -188,7 +194,7 @@ button.primary:hover{opacity:.9; color:#fff}
   <div class="bar">
     <button class="primary" onclick="copyReport()">複製報表</button>
     <button onclick="window.print()">列印 / 存 PDF</button>
-    <button onclick="clearAll()">全部清空</button>
+    <button id="resetBottom">全部清空</button>
   </div>
   <div class="hint">
     計價方式四選一：<b>分欄單價 ×數量</b>（預設）＝三欄各填各的單價，各自乘上該欄數量，格子下面直接顯示小計｜
@@ -437,7 +443,8 @@ function save(){
 function restoreRow(r){
   ['_s','_0','_1','_2','_u0','_u1','_u2'].forEach(sfx => { const el = $(r.k+sfx); if (el && store[r.k+sfx] !== undefined) el.value = store[r.k+sfx]; });
 }
-(function restoreAll(){
+// 把 store 的內容套回畫面。開頁時用，按「復原」把清掉的資料倒回來也用同一套。
+function applyStore(){
   ROWS.filter(r => !r.type).forEach(r => {
     const sel = $(r.k+'_m');
     if (store[r.k+'_m'] && r.modes.includes(store[r.k+'_m'])) { sel.value = store[r.k+'_m']; renderCell(r); }
@@ -450,10 +457,11 @@ function restoreRow(r){
       el.checked = (store[el.id] === undefined) ? el.defaultChecked : (store[el.id] === true);
       return;
     }
-    if (store[el.id] !== undefined) el.value = store[el.id];
+    el.value = (store[el.id] !== undefined) ? store[el.id] : '';
   });
   areaDefaults();
-})();
+}
+applyStore();
 
 // 才數計費的「每才單價」是常數性質的設定（貼銀箔＝1 元／才），空白就補回預設，
 // 免得清空或舊紀錄把它洗成 0、算出來整欄都是 0 卻看不出原因。
@@ -467,12 +475,14 @@ function areaDefaults(reset){
 }
 
 function clearAll(){
-  // 歸零鍵放到表格頂端後，手機誤觸的機會變高；填了半天被清光很嘔，所以先問一句。
-  if (!confirm('確定要把所有數字歸零嗎？')) return;
+  // ⚠ 這裡原本用 confirm() 擋誤觸，但手機（LINE／FB 之類的內建瀏覽器）會直接把對話框吃掉，
+  //    按鈕看起來像壞的 —— 老闆 2026-08-04 回報。改成：直接清空，提示裡給一顆「復原」。
+  const backup = Object.assign({}, store);
   store = {};   // save() 改成合併後，這裡要先把底稿倒掉，否則隱藏欄位的舊值會被留下來
   document.querySelectorAll('input').forEach(el => el.value = '');
   areaDefaults(true);
-  calc(); toast('已清空');
+  calc();
+  toast('已清空', '復原', () => { store = backup; applyStore(); calc(); toast('已復原'); });
 }
 
 /* ---------- 複製報表 ---------- */
@@ -493,10 +503,23 @@ function copyReport(){
   });
   navigator.clipboard.writeText(t).then(() => toast('報表已複製')).catch(() => toast('複製失敗，請手動選取'));
 }
-function toast(msg){
-  const el = $('toast'); el.textContent = msg; el.classList.add('on');
-  clearTimeout(toast._t); toast._t = setTimeout(() => el.classList.remove('on'), 1600);
+function toast(msg, actionLabel, action){
+  const el = $('toast');
+  el.textContent = msg;
+  el.classList.toggle('act', !!action);
+  if (action) {
+    const b = document.createElement('button');
+    b.className = 'undo'; b.textContent = actionLabel;
+    b.onclick = () => { el.classList.remove('on'); action(); };
+    el.appendChild(b);
+  }
+  el.classList.add('on');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => el.classList.remove('on'), action ? 8000 : 1600);
 }
+
+// 歸零鍵用 addEventListener 綁，不用 inline onclick —— 手機內建瀏覽器擋 inline 事件時按鈕會像壞掉。
+['resetTop','resetBottom'].forEach(id => { const b = $(id); if (b) b.addEventListener('click', clearAll); });
 
 calc();
 </script>
