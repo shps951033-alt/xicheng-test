@@ -93,6 +93,11 @@ select{
 .formula input{max-width:96px}
 .formula .x{color:var(--muted); font-size:13px}
 .formula .cai{font-weight:700; font-variant-numeric:tabular-nums; color:var(--ink)}
+.ck{display:flex; align-items:center; gap:5px; cursor:pointer; font-size:11.5px; color:var(--muted)}
+.ck input{width:auto; min-width:0; margin:0; accent-color:var(--accent)}
+.ck b{color:var(--ink); font-weight:600}
+.ck .ures{margin-left:auto}
+.ck.off{opacity:.55}
 .rate{display:flex; flex-direction:column; gap:2px}
 .rate small{color:var(--muted); font-size:11px; text-align:right; white-space:nowrap}
 .formula .out{
@@ -156,7 +161,7 @@ button.primary:hover{opacity:.9; color:#fff}
   <h1><span class="mark">喜成</span>成本比價計算機</h1>
   <div class="sub">同一張單、三種數量一起算，直接比每張成本</div>
   <!-- 版本標示：手機常被快取擋住看到舊版，老闆對一下這個日期就知道有沒有拿到新的。改版時要一起更新。 -->
-  <div class="ver">版本 2026-08-04・歸零鍵</div>
+  <div class="ver">版本 2026-08-04・貼銀箔勾選</div>
 </header>
 
 <div class="card">
@@ -192,7 +197,8 @@ button.primary:hover{opacity:.9; color:#fff}
     印刷版費有算進去 —— CTP 版每次開印都要重出，是跟著這一批走的成本。
     <b>貼銀箔按才算</b>：填長寬（cm），自動 ÷ 900 換成才數 × 每才單價（預設 1 元）＝一張多少，
     再乘<b>印刷張數（大紙數量）</b>——銀箔貼在大紙上，一張大紙切幾張成品不影響貼的次數。印刷張數空白時會退回用製作數量算，小計會標出來。
-    <b>低消 2,000</b>：算出來不足 2,000 就以 2,000 計（小計標「低消」）；沒填長寬＝沒這項，不會憑空多一筆。單價與低消都可以直接改。輸入會自動記住，下次打開還在。
+    <b>低消 2,000</b>：算出來不足 2,000 就以 2,000 計（小計標「低消」）；沒填長寬＝沒這項，不會憑空多一筆。
+    <b>A／B／C 勾選</b>：只有勾起來的方案才算貼銀箔，沒勾的顯示「不貼」不計費 —— 其他數字填一樣，就能直接比貼與不貼差多少。單價與低消都可以直接改。輸入會自動記住，下次打開還在。
     手機看到的版本不對（右上角日期是舊的），在網址最後面加上 <b>?v=2</b> 重新開一次就會拿到最新版。
   </div>
 </div>
@@ -278,8 +284,10 @@ ROWS.forEach(r => {
           +   '<span class="out" id="'+r.k+'_out">0</span>'
           +   '<span class="x">元／張</span>'
           + '</div>'
+          // 2026-08-04 老闆：三欄各給一個勾選，沒勾的那欄不計貼銀箔 —— 用來比「貼」跟「不貼」差多少。
           + '<div class="three" style="margin-top:6px">'
-          +   COLS.map(c => '<span class="ures" id="'+r.k+'_ur'+c+'">= 0</span>').join('')
+          +   COLS.map(c => '<label class="ck"><input type="checkbox" id="'+r.k+'_ck'+c+'" checked>'
+          +     '<b>'+COLNAME[c].charAt(0)+'</b><span class="ures" id="'+r.k+'_ur'+c+'">= 0</span></label>').join('')
           + '</div></td>';
   } else {
     html += '<td><select id="'+r.k+'_m">'
@@ -330,10 +338,18 @@ function calc(){
       $(r.k+'_out').textContent = fmt(each1);
       const base = r.base === 'sheet' ? COLS.map(c => sheets[c] || qty[c]) : qty;
       const low  = num($(r.k+'_M').value);
+      // 沒勾的欄＝這個方案不做這項（老闆用來比「貼」跟「不貼」的價差），整欄歸 0。
+      const on   = COLS.map(c => { const cb = $(r.k+'_ck'+c); return cb ? cb.checked : true; });
       // 低消只在「有做這項」時才套：長寬沒填＝根本沒貼，不能無中生有一筆 2,000。
-      amounts = COLS.map(c => { const v = each1 * base[c]; return v > 0 && v < low ? low : v; });
+      amounts = COLS.map(c => {
+        if (!on[c]) return 0;
+        const v = each1 * base[c];
+        return v > 0 && v < low ? low : v;
+      });
       COLS.forEach(c => {
         const o = $(r.k+'_ur'+c); if (!o) return;
+        o.parentElement.classList.toggle('off', !on[c]);
+        if (!on[c]) { o.textContent = '不貼'; return; }
         const fallback = r.base === 'sheet' && !sheets[c] && qty[c] > 0 && amounts[c] > 0;
         const hit = each1 * base[c] > 0 && each1 * base[c] < low;
         o.textContent = '= ' + fmt(amounts[c]) + (hit ? '（低消）' : '') + (fallback ? '（用製作數量）' : '');
@@ -413,7 +429,8 @@ function save(){
   // ⚠ 要「合併」不能「整包蓋掉」：切換計價方式時，另一種模式的輸入格會從 DOM 消失，
   //    整包蓋掉等於把它們的值刪光 → 切回去就變空白（2026-07-27 測出來的）。
   const d = {};
-  document.querySelectorAll('input,select').forEach(el => { if (el.id) d[el.id] = el.value; });
+  // 勾選框要存 checked（value 永遠是 "on"，存了等於沒存）
+  document.querySelectorAll('input,select').forEach(el => { if (el.id) d[el.id] = (el.type === 'checkbox' ? el.checked : el.value); });
   store = Object.assign({}, store, d);
   try { localStorage.setItem(KEY, JSON.stringify(store)); } catch(e) {}
 }
@@ -425,16 +442,27 @@ function restoreRow(r){
     const sel = $(r.k+'_m');
     if (store[r.k+'_m'] && r.modes.includes(store[r.k+'_m'])) { sel.value = store[r.k+'_m']; renderCell(r); }
   });
-  document.querySelectorAll('input').forEach(el => { if (el.id && store[el.id] !== undefined) el.value = store[el.id]; });
+  document.querySelectorAll('input').forEach(el => {
+    if (!el.id) return;
+    // ⚠ 勾選框不能只靠 HTML 的 checked 預設：瀏覽器重新整理時會自動「還原」上一次的勾選狀態，
+    //    會蓋掉預設值（測出來：清了 localStorage 重載，三欄還是全部沒勾）→ 這裡一律自己決定。
+    if (el.type === 'checkbox') {
+      el.checked = (store[el.id] === undefined) ? el.defaultChecked : (store[el.id] === true);
+      return;
+    }
+    if (store[el.id] !== undefined) el.value = store[el.id];
+  });
   areaDefaults();
 })();
 
 // 才數計費的「每才單價」是常數性質的設定（貼銀箔＝1 元／才），空白就補回預設，
 // 免得清空或舊紀錄把它洗成 0、算出來整欄都是 0 卻看不出原因。
-function areaDefaults(){
+function areaDefaults(reset){
   ROWS.filter(r => r.type === 'area').forEach(r => {
     const u = $(r.k+'_R'); if (u && u.value === '') u.value = r.rate;
     const m = $(r.k+'_M'); if (m && m.value === '') m.value = r.min;
+    // 歸零後三欄勾回來（跟第一次打開一樣），免得清空後怎麼填都是 0 又看不出原因
+    if (reset) COLS.forEach(c => { const cb = $(r.k+'_ck'+c); if (cb) cb.checked = true; });
   });
 }
 
@@ -443,7 +471,7 @@ function clearAll(){
   if (!confirm('確定要把所有數字歸零嗎？')) return;
   store = {};   // save() 改成合併後，這裡要先把底稿倒掉，否則隱藏欄位的舊值會被留下來
   document.querySelectorAll('input').forEach(el => el.value = '');
-  areaDefaults();
+  areaDefaults(true);
   calc(); toast('已清空');
 }
 
