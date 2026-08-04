@@ -1,0 +1,6 @@
+# Cloudflare Workers 靜態資產排除清單（語法同 .gitignore）
+# 2026-08-04 加：wrangler 會把 repo 根目錄整個當資產上傳，連 .git 都掃，
+# 掛曆 44MB 圖片入 repo 後 .git pack 檔超過單檔 25MiB 上限 → 建置失敗。
+# 排除 .git 後恢復正常，順帶避免 git 內部檔案被公開存取。
+.git
+.gitignore

@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>紙張單價換算器｜喜成印刷</title>
+<style>
+  :root{
+    --ink:#2b2b2b;
+    --gold:#b8860b;
+    --gold-light:#d4a437;
+    --paper:#faf7f0;
+    --card:#ffffff;
+    --line:#e5ddcc;
+    --muted:#8a8175;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    font-family:"Microsoft JhengHei","PingFang TC",sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+    min-height:100vh;
+    padding:24px 16px 60px;
+  }
+  .wrap{max-width:860px;margin:0 auto;}
+  h1{
+    font-size:1.5rem;
+    text-align:center;
+    margin-bottom:4px;
+    letter-spacing:2px;
+  }
+  h1 span{color:var(--gold);}
+  .sub{
+    text-align:center;
+    color:var(--muted);
+    font-size:.85rem;
+    margin-bottom:24px;
+  }
+  .grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:20px;
+  }
+  @media (max-width:640px){
+    .grid{grid-template-columns:1fr;}
+  }
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:20px;
+    box-shadow:0 2px 8px rgba(0,0,0,.04);
+  }
+  .card h2{
+    font-size:1.05rem;
+    margin-bottom:14px;
+    padding-bottom:10px;
+    border-bottom:2px solid var(--gold);
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .badge{
+    background:var(--gold);
+    color:#fff;
+    border-radius:50%;
+    width:24px;height:24px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    font-size:.85rem;
+    flex-shrink:0;
+  }
+  label{
+    display:block;
+    font-size:.85rem;
+    color:var(--muted);
+    margin:12px 0 4px;
+  }
+  input[type=number]{
+    width:100%;
+    padding:10px 12px;
+    font-size:1.1rem;
+    border:1px solid var(--line);
+    border-radius:8px;
+    background:#fffdf8;
+    color:var(--ink);
+  }
+  input[type=number]:focus{
+    outline:none;
+    border-color:var(--gold-light);
+    box-shadow:0 0 0 3px rgba(184,134,11,.12);
+  }
+  .row2{display:flex;gap:10px;}
+  .row2>div{flex:1;}
+  .result{
+    margin-top:18px;
+    background:linear-gradient(135deg,#fdf8ec,#faf3e0);
+    border:1px solid var(--gold-light);
+    border-radius:10px;
+    padding:14px 16px;
+  }
+  .result .tag{font-size:.8rem;color:var(--muted);}
+  .result .num{
+    font-size:1.5rem;
+    font-weight:bold;
+    color:var(--gold);
+    word-break:break-all;
+  }
+  .result .unit{font-size:.9rem;color:var(--ink);font-weight:normal;}
+  .result + .result{margin-top:10px;}
+  .hint{
+    margin-top:14px;
+    font-size:.78rem;
+    color:var(--muted);
+    line-height:1.6;
+  }
+  .empty{color:#c0b8a8;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>紙張<span>單價</span>換算器</h1>
+  <div class="sub">左邊輸入基準紙價 → 右邊換算任意尺寸每張價格（單位：公分）</div>
+
+  <div class="grid">
+    <!-- 第一欄：基準紙 -->
+    <div class="card">
+      <h2><span class="badge">1</span>基準紙（算每平方公分單價）</h2>
+      <div class="row2">
+        <div>
+          <label>長（cm）</label>
+          <input type="number" id="l1" inputmode="decimal" min="0" step="any" placeholder="例：109.1">
+        </div>
+        <div>
+          <label>寬（cm）</label>
+          <input type="number" id="w1" inputmode="decimal" min="0" step="any" placeholder="例：78.7">
+        </div>
+      </div>
+      <label>每 500 張價格（元）</label>
+      <input type="number" id="p500" inputmode="decimal" min="0" step="any" placeholder="例：1200">
+
+      <div class="result">
+        <div class="tag">每張價格</div>
+        <div class="num" id="perSheet1"><span class="empty">—</span></div>
+      </div>
+      <div class="result">
+        <div class="tag">每平方公分單價</div>
+        <div class="num" id="perCm2"><span class="empty">—</span></div>
+      </div>
+    </div>
+
+    <!-- 第二欄：換算尺寸 -->
+    <div class="card">
+      <h2><span class="badge">2</span>換算尺寸（算每張價格）</h2>
+      <div class="row2">
+        <div>
+          <label>長（cm）</label>
+          <input type="number" id="l2" inputmode="decimal" min="0" step="any" placeholder="例：54.5">
+        </div>
+        <div>
+          <label>寬（cm）</label>
+          <input type="number" id="w2" inputmode="decimal" min="0" step="any" placeholder="例：39.3">
+        </div>
+      </div>
+
+      <div class="result">
+        <div class="tag">每張價格</div>
+        <div class="num" id="perSheet2"><span class="empty">—</span></div>
+      </div>
+      <div class="result">
+        <div class="tag">每 500 張價格</div>
+        <div class="num" id="p500_2"><span class="empty">—</span></div>
+      </div>
+      <div class="hint">※ 用第一欄算出的每平方公分單價 × 本欄面積。第一欄沒填齊時這裡不會出數字。</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const inputs = ['l1','w1','p500','l2','w2'];
+
+function fmt(n, maxDec){
+  if(!isFinite(n)) return null;
+  return n.toLocaleString('zh-Hant', {maximumFractionDigits: maxDec});
+}
+function show(id, val, unit){
+  $(id).innerHTML = (val === null)
+    ? '<span class="empty">—</span>'
+    : val + ' <span class="unit">' + unit + '</span>';
+}
+
+function calc(){
+  const l1 = parseFloat($('l1').value);
+  const w1 = parseFloat($('w1').value);
+  const p  = parseFloat($('p500').value);
+
+  let rate = null; // 每平方公分單價
+  if(l1 > 0 && w1 > 0 && p > 0){
+    const perSheet = p / 500;
+    rate = perSheet / (l1 * w1);
+    show('perSheet1', fmt(perSheet, 4), '元／張');
+    show('perCm2', fmt(rate, 8), '元／cm²');
+  }else{
+    show('perSheet1', null); show('perCm2', null);
+  }
+
+  const l2 = parseFloat($('l2').value);
+  const w2 = parseFloat($('w2').value);
+  if(rate !== null && l2 > 0 && w2 > 0){
+    const perSheet2 = rate * l2 * w2;
+    show('perSheet2', fmt(perSheet2, 4), '元／張');
+    show('p500_2', fmt(perSheet2 * 500, 2), '元／500張');
+  }else{
+    show('perSheet2', null); show('p500_2', null);
+  }
+}
+
+inputs.forEach(id => $(id).addEventListener('input', calc));
+</script>
+</body>
+</html>
