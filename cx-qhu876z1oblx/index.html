@@ -299,11 +299,10 @@ footer .fnote{line-height:1.9}
   <h2>預訂登記</h2>
 
   <div class="notebar">
+    呈祥保經專屬：<b>最少 50 本起訂</b>（各款合併計算）。<br>
+    滿 50 本<b>免費燙金</b>（含燙金版費，單面／雙面皆免費）；各款要燙<b>不同內容</b>就是各一塊版，一樣免費。<br>
+    <b>免運費</b>，統一寄送呈祥保經（固定一處）。<br>
     一律<b>附贈透明 OPP 袋</b>（不包裝）；需要代客包裝每本 <b>+<span class="packfee"></span> 元</b>。<br>
-    底板燙金：單面每本 <b>+2.5 元</b>、雙面每本 <b>+4.5 元</b>（同一塊版）。
-    版費一塊 <b>200 元</b>（<b>一次性</b>，日後再版免收）；各款要燙<b>不同內容</b>就是各一塊版。
-    每塊版<b>不足 100 本</b>另收上機費（單面 300 元／雙面 500 元）。<br>
-    運費：每 <b>100 本</b>裝一箱，每箱 <b>150 元</b>，未滿一箱以一箱計。<br>
     以上單價均為<b>未稅價</b>；下方費用明細會自動加計 <b>5% 營業稅</b>，總計即為<b>實付金額</b>。
   </div>
 
@@ -348,8 +347,8 @@ footer .fnote{line-height:1.9}
     <input type="text" id="rcPhone" inputmode="tel" placeholder="0912-345-678">
   </div>
   <div class="field">
-    <label class="t" for="rcAddr">寄送地址</label>
-    <input type="text" id="rcAddr" placeholder="台北市信義區信義路五段 7 號">
+    <label class="t">寄送地址</label>
+    <p class="hint" style="margin-top:4px">統一寄送 <b>呈祥保經</b>（固定一處，不需填寫）</p>
   </div>
   <div class="field">
     <label class="t" for="inv">發票抬頭<small>（不需要可留空）</small></label>
@@ -383,7 +382,7 @@ footer .fnote{line-height:1.9}
   <h2>預訂流程</h2>
   <div class="steps">
     <div class="step">填上面的預訂登記，把訊息傳到我們 LINE（有 LOGO 圖檔一併傳）</div>
-    <div class="step">確認款式、燙金排版與報價（含燙金／塑膠袋／運費）</div>
+    <div class="step">確認款式、燙金排版與報價（滿 50 本燙金免費、免運）</div>
     <div class="step">專人以 LINE 提供匯款帳號，匯款後安排製作，完成後準時寄達</div>
   </div>
 </section>
@@ -426,14 +425,19 @@ function isPending(st){ return !!(st && PENDING[st.c]); }
    build_site.ps1 自動產生，重跑會被蓋掉。改價直接改這張表。 */
 var PRICE = {
   '25001':57, '25002':57, '25003':57, '25004':57,          // 米奇、動物方程式、小熊維尼、航海王（呈祥保經專屬價，公版 65）
-  '25005':40, '25006':40, '25007':40,                      // 北境晨光(風景)、世界名畫、豐時四季(水果)
-  '25008':50, '25009':50, '25010':50, '25011':50, '25012':50 // 水豚寶、白爛貓、柴語錄、超人力霸王、比得兔
+  '25005':35, '25006':35, '25007':35,                      // 北境晨光(風景)、世界名畫、豐時四季(水果)（呈祥保經專屬價，公版 40）
+  '25008':46, '25009':46, '25010':46, '25011':46, '25012':46 // 水豚寶、白爛貓、柴語錄、超人力霸王、比得兔（呈祥保經專屬價，公版 50）
 };
 function priceOf(c){ return PRICE[c]||0; }
 
-/* 燙金：同一塊版。單面 2.5／本、雙面 4.5／本；不足 100 本（看整張單總本數）另收上機費。 */
-var FOIL_UNIT  = {'單面':2.5, '雙面':4.5};
-var FOIL_SETUP = {'單面':300, '雙面':500};
+/* ★ 呈祥保經專屬規則（2026-08-04 老闆定）：
+   - 最少 50 本起訂（各款合併計算，MIN_ORDER）
+   - 滿 50 本免費燙金：工資、上機費、版費全免（門檻＝起訂量，等於一律免費，
+     但常數保留公版數字當參考，計費一律走免費）
+   - 免運費，統一寄送呈祥保經（固定一處，不開放填地址） */
+var MIN_ORDER  = 50;
+var FOIL_UNIT  = {'單面':2.5, '雙面':4.5};   // 公版參考值，本頁不計費
+var FOIL_SETUP = {'單面':300, '雙面':500};   // 公版參考值，本頁不計費
 var SETUP_MIN  = 100;
 var PACK_FEE   = 2;      // 代客包裝，每本 2 元（2026-07-17 由 1 元調整；OPP 袋一律附贈，不代裝）
 /* 燙金版費：一塊版 200 元，一次性。之後再版不收版費（沿用舊版者另行以官方 LINE 通知）。
@@ -761,16 +765,16 @@ function buildBlock(g){
   body.appendChild(fieldLabel('燙金面數','（同一塊版，雙面內容相同）'));
   var sideRow=optsRow();
   ['單面','雙面'].forEach(function(s){
-    sideRow.appendChild(optRadio('side-'+uid,s,s+'（每本 +'+FOIL_UNIT[s]+' 元）',cfg.side===s,
+    sideRow.appendChild(optRadio('side-'+uid,s,s+'（免費）',cfg.side===s,
       function(v){ cfg.side=v; recalc(); }));
   });
   body.appendChild(sideRow);
   b.setupHint=hintP(); body.appendChild(b.setupHint);
 
-  body.appendChild(fieldLabel('燙金版','（一塊版 '+PLATE_FEE+' 元，一次性費用）'));
+  body.appendChild(fieldLabel('燙金版','（呈祥保經專屬：版費免費）'));
   var plateRow=optsRow();
   ['新製版','沿用舊版'].forEach(function(p){
-    plateRow.appendChild(optRadio('plate-'+uid,p,p==='新製版'?('新製版（+'+PLATE_FEE+' 元）'):'沿用舊版（免版費）',
+    plateRow.appendChild(optRadio('plate-'+uid,p,p==='新製版'?'新製版（免費）':'沿用舊版（免費）',
       cfg.plate===p, function(v){ cfg.plate=v; recalc(); }));
   });
   body.appendChild(plateRow);
@@ -967,20 +971,15 @@ function renderFoil(){
           ? '此款共訂 '+sq+' 本，<b style="color:var(--ok)">全部燙金 ✓</b>'
           : '此款共訂 '+sq+' 本，燙金 <b>'+sum+' 本</b>，其餘 <b>'+(sq-sum)+' 本不燙金</b>。');
     }
-    if(g.qty>0 && g.qty<SETUP_MIN){
-      b.setupHint.innerHTML='這塊版 '+g.qty+' 本，未達 '+SETUP_MIN+' 本 → 另收上機費 '+
-        '<b style="color:#B4483C">NT$ '+FOIL_SETUP[g.cfg.side]+'</b>（'+g.cfg.side+'）。'+
-        (g.style?'這塊版':'整張單')+'滿 '+SETUP_MIN+' 本即免收。';
-    } else if(g.qty>=SETUP_MIN){
-      b.setupHint.innerHTML='這塊版已達 '+SETUP_MIN+' 本，<b style="color:var(--ok)">免上機費</b>。';
+    if(g.qty>0){
+      b.setupHint.innerHTML='呈祥保經專屬：燙金工資與上機費<b style="color:var(--ok)">全部免費</b>（滿 '+MIN_ORDER+' 本起訂即享）。';
     } else {
       b.setupHint.innerHTML = (g.style && g.verCount>1)
-        ? '這塊版 0 本，尚未列入計費；不需要可按右上角「✕ 移除這塊版」。'
-        : (g.style ? '燙金本數 0 本＝這款不燙金，未列入計費。' : '');
+        ? '這塊版 0 本；不需要可按右上角「✕ 移除這塊版」。'
+        : (g.style ? '燙金本數 0 本＝這款不燙金。' : '');
     }
-    b.plateHint.innerHTML = (g.cfg.plate==='沿用舊版')
-      ? '沿用先前製作的燙金版，<b style="color:var(--ok)">免收版費</b>。'
-      : '第一次燙金需製版，<b>NT$ '+PLATE_FEE+'</b>（一塊版）。這是<b>一次性費用</b>，日後同一組內容再版就不再收。';
+    b.plateHint.innerHTML = '呈祥保經專屬：燙金版費<b style="color:var(--ok)">免費</b>'+
+      (g.cfg.plate==='沿用舊版' ? '（沿用先前製作的版）。' : '（含新製版，燙不同內容各一塊版也免費）。');
   });
   Object.keys(addBtns).forEach(function(c){
     addBtns[c].style.display = versOf(c)[0].on ? '' : 'none';
@@ -998,19 +997,18 @@ window.addEventListener('resize',fitAll);
 if(document.fonts && document.fonts.ready) document.fonts.ready.then(fitAll);
 renderFoil();
 
-/* ---------- 運費：全部款式合併算，100 本/箱，每箱 150 元，未滿一箱以一箱計 ---------- */
-var PER_BOX=100, BOX_FEE=150;
+/* ---------- 運費：呈祥保經專屬免運，統一寄送呈祥保經；此欄兼顯示 50 本起訂門檻 ---------- */
 var shipBox=document.getElementById('shipBox');
 function shipCalc(){
   var q=totalQty();
   if(!q){
-    shipBox.innerHTML='運費：每 <b>100 本</b>裝一箱，每箱 <b>150 元</b><span class="mut">（各款合併計算，未滿一箱以一箱計）</span>';
-    return null;
+    shipBox.innerHTML='最少 <b>'+MIN_ORDER+' 本</b>起訂（各款合併計算）・<b style="color:var(--ok)">免運費</b>，統一寄送呈祥保經';
+  } else if(q<MIN_ORDER){
+    shipBox.innerHTML='<b style="color:#B4483C">⚠ 最少 '+MIN_ORDER+' 本起訂</b>（各款合併計算），目前 '+q+' 本，還差 <b>'+(MIN_ORDER-q)+' 本</b>';
+  } else {
+    shipBox.innerHTML='合計 '+q+' 本 ✓　<b style="color:var(--ok)">免運費</b><span class="mut">（統一寄送呈祥保經）</span>';
   }
-  var boxes=Math.ceil(q/PER_BOX), fee=boxes*BOX_FEE;
-  shipBox.innerHTML='合計 '+q+' 本 → <b>'+boxes+' 箱</b>　運費 <b>NT$ '+fee+'</b> '+
-    '<span class="mut">（'+boxes+' × 150，各款合併，100 本/箱，未滿一箱以一箱計）</span>';
-  return {q:q, boxes:boxes, fee:fee};
+  return null;
 }
 
 /* ---------- 費用試算 ---------- */
@@ -1032,19 +1030,19 @@ function calcCost(){
   });
   /* 0 本的塊版（沒填本數／設為不燙）不列入計費 */
   var gs=gsAll.filter(function(g){ return g.qty>0; });
+  /* 呈祥保經專屬：燙金工資、上機費、版費全免（50 本起訂即享）→ 一律 0 元，
+     newPlates 仍照數，訊息裡才能寫清楚做了幾塊版。 */
   var foil=0, plate=0, setup=0, newPlates=0;
   gs.forEach(function(g){
-    // 燙金 2.5／4.5 元 × 奇數本會出現 0.5 元尾數 → 每組小計四捨五入（2026-07-17 老闆指定）
-    foil += Math.round(g.qty*FOIL_UNIT[g.cfg.side]);
-    if(g.cfg.plate==='新製版'){ plate += PLATE_FEE; newPlates++; }
-    if(g.qty<SETUP_MIN) setup += FOIL_SETUP[g.cfg.side];   // 每塊版各自算門檻
+    if(g.cfg.plate==='新製版'){ newPlates++; }
   });
   var pack = packChk.checked ? q*PACK_FEE : 0;
-  var sh=shipCalc(), ship=sh?sh.fee:0;
-  var net=cal+foil+setup+plate+pack+ship;    // 未稅小計
+  shipCalc();
+  var net=cal+pack;                          // 未稅小計（免運、燙金全免費）
   var tax=Math.round(net*TAX_RATE);
   return {q:q, groups:gs, newPlates:newPlates, cal:cal, foil:foil, setup:setup, plate:plate,
-          mism:mism, noFoil:noFoil, pack:pack, sh:sh, ship:ship, net:net, tax:tax, total:net+tax};
+          mism:mism, noFoil:noFoil, pack:pack, ship:0, net:net, tax:tax, total:net+tax,
+          minShort:(q>0 && q<MIN_ORDER)};
 }
 
 function renderCost(){
@@ -1057,28 +1055,26 @@ function renderCost(){
   });
   c.groups.forEach(function(g){
     var suffix = g.style ? '　'+g.style.n+(g.verCount>1?'（第 '+(g.verIdx+1)+' 塊版）':'') : '';
-    var raw=g.qty*FOIL_UNIT[g.cfg.side], val=Math.round(raw);
     rows.push(['底板燙金'+suffix,
-               '<em>'+g.cfg.side+'　'+g.qty+' 本 × '+FOIL_UNIT[g.cfg.side]+' 元'+
-               (raw!==val?'＝'+raw+'，四捨五入':'')+'</em>',
-               'NT$ '+fmt(val), '']);
-    if(g.qty>0 && g.qty<SETUP_MIN)
-      rows.push(['燙金上機費'+suffix, '<em>這塊版不足 '+SETUP_MIN+' 本（'+g.cfg.side+'）</em>',
-                 'NT$ '+fmt(FOIL_SETUP[g.cfg.side]), 'setup']);
+               '<em>'+g.cfg.side+'　'+g.qty+' 本・呈祥保經專屬免費</em>',
+               '免費', '']);
   });
   c.noFoil.forEach(function(m){
     rows.push(['不燙金　'+m.n, '<em>'+m.rest+' 本不加燙金</em>', '—', '']);
   });
   if(c.groups.length){
     rows.push(['燙金版費',
-               '<em>'+(c.newPlates ? '新製版 '+c.newPlates+' 塊 × '+PLATE_FEE+' 元（一次性，日後再版免收）'
-                                   : '全部沿用舊版，免收')+'</em>',
-               c.newPlates ? 'NT$ '+fmt(c.plate) : '免費', '']);
+               '<em>'+(c.newPlates ? '新製版 '+c.newPlates+' 塊，呈祥保經專屬免費'
+                                   : '全部沿用舊版')+'</em>',
+               '免費', '']);
   }
   if(c.pack) rows.push(['代客包裝', '<em>'+c.q+' 本 × '+PACK_FEE+' 元</em>', 'NT$ '+fmt(c.pack), '']);
-  rows.push(['運費', '<em>'+c.sh.boxes+' 箱 × '+BOX_FEE+' 元（各款合併，100 本/箱）</em>', 'NT$ '+fmt(c.ship), '']);
+  rows.push(['運費', '<em>統一寄送呈祥保經</em>', '免運', '']);
 
-  var warn=c.mism.map(function(m){
+  var warn = (c.minShort
+    ? '<div class="r setup"><span class="k">⚠ 最少 '+MIN_ORDER+' 本起訂（各款合併計算）<em>目前 '+c.q+
+      ' 本，還差 '+(MIN_ORDER-c.q)+' 本</em></span><span class="v"></span></div>' : '') +
+  c.mism.map(function(m){
     return '<div class="r setup"><span class="k">⚠ '+m.n+'：燙金合計 '+m.sum+' 本，超過訂購的 '+m.q+
            ' 本<em>請調整各塊版本數，金額才會正確</em></span><span class="v"></span></div>';
   }).join('');
@@ -1106,11 +1102,15 @@ taxEl.addEventListener('input',function(){
 /* ---------- 產生預訂訊息 ---------- */
 document.getElementById('genBtn').addEventListener('click',function(){
   var list=orders();
+  /* 呈祥保經專屬：最少 50 本起訂（各款合併），未達門檻不產生訊息 */
+  if(totalQty()<MIN_ORDER){
+    alert('最少 '+MIN_ORDER+' 本起訂（各款合併計算），目前 '+totalQty()+' 本，請再加量。');
+    return;
+  }
   var bag=document.getElementById('bag').checked;
   var foilOn=foilChk.checked;
   var nm=document.getElementById('rcName').value.trim();
   var ph=document.getElementById('rcPhone').value.trim();
-  var ad=document.getElementById('rcAddr').value.trim();
   var iv=document.getElementById('inv').value.trim();
   var tax=document.getElementById('tax').value.trim();
   var U='（未填）';
@@ -1135,13 +1135,8 @@ document.getElementById('genBtn').addEventListener('click',function(){
   c.groups.forEach(function(g){
     var ind='　';
     if(g.style){ msg+='　▍'+g.style.n+(g.verCount>1?'　第 '+(g.verIdx+1)+' 塊版':'')+'（'+g.qty+' 本）\n'; ind='　　'; }
-    var raw=g.qty*FOIL_UNIT[g.cfg.side], val=Math.round(raw);
-    msg+=ind+'燙金工資：'+g.cfg.side+'　'+g.qty+' 本 × '+FOIL_UNIT[g.cfg.side]+' 元 = NT$ '+fmt(val)+
-         (raw!==val?'（'+raw+' 四捨五入）':'')+'\n';
-    if(g.qty>0 && g.qty<SETUP_MIN)
-      msg+=ind+'上機費：NT$ '+fmt(FOIL_SETUP[g.cfg.side])+'（這塊版不足 '+SETUP_MIN+' 本）\n';
-    msg+=ind+'燙金版：'+(g.cfg.plate==='沿用舊版' ? '沿用舊版，免版費（將另以 LINE 通知）'
-                                               : '新製版 NT$ '+fmt(PLATE_FEE)+'（一塊版，一次性）')+'\n';
+    msg+=ind+'燙金工資：'+g.cfg.side+'　'+g.qty+' 本・免費（呈祥保經專屬）\n';
+    msg+=ind+'燙金版：免費（'+(g.cfg.plate==='沿用舊版' ? '沿用舊版' : '新製版')+'，呈祥保經專屬）\n';
     msg+=ind+'顏色：'+g.cfg.color+'　字體：'+g.cfg.font+'\n';
     msg+=ind+'排版：'+g.cfg.align+'　對齊：'+g.cfg.talign+'\n';
     // 多行燙金內容：續行對齊「內容：」後方
@@ -1155,8 +1150,7 @@ document.getElementById('genBtn').addEventListener('click',function(){
     if(!g.cfg.on && g.style && offNames.indexOf(g.style.n)<0) offNames.push(g.style.n);
   });
   if(offNames.length) msg+='　（不燙金：'+offNames.join('、')+'）\n';
-  msg+='運費：'+(c.sh ? c.sh.boxes+' 箱 × 150 = NT$ '+fmt(c.ship)+'（各款合併，100 本/箱，未滿一箱以一箱計）'
-                     : '（未填數量，無法計算）')+'\n';
+  msg+='運費：免運（統一寄送呈祥保經）\n';
   msg+='─────────────\n';
   msg+='未稅小計：NT$ '+fmt(c.net)+'\n';
   msg+='營業稅 5%：NT$ '+fmt(c.tax)+'\n';
@@ -1164,7 +1158,7 @@ document.getElementById('genBtn').addEventListener('click',function(){
   msg+='─────────────\n';
   msg+='收件人：'+(nm||U)+'\n';
   msg+='電話：'+(ph||U)+'\n';
-  msg+='地址：'+(ad||U)+'\n';
+  msg+='地址：呈祥保經（固定寄送處）\n';
   msg+='發票抬頭：'+(iv||'（不需要）')+'\n';
   msg+='統一編號：'+(tax||'（不需要）')+'\n';
   msg+='※ 以上為網站試算金額，實際以專人確認為準';
