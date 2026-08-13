@@ -610,26 +610,15 @@ function unitOf(kind, n){
   return null;
 }
 
-/* ===== 實收價：不會因為多印一張反而變便宜 =====
-   整段套同一單價的級距，天生會反轉：10 張 ×350 ＝ 3,500，但 11 張 ×280 只要 3,080。
-   客人自己按得出來，看起來像陷阱。這裡改成「拿較低的那個算」——
-   張數不足下一級距時，直接以下一級距的起跳張數計價，客人付的錢只會更少、不會更多。
-   最低仍守住 130／330（41~50 級距的單價），不會低於老闆的底價。
-   老闆 2026-07-20 授權調整。 */
+/* ===== 實收價：一律照牌價收（老闆 2026-08-13 定）=====
+   張數 × 該級距牌價，跟價目表一個字不差。
+   （2026-07-20~08-13 曾自動套下一級距優惠價，例如 10 張收 11×280＝3,080；
+   老闆 2026-08-13 指示取消，改回 10 張 ×350＝3,500 照牌價收。） */
 function priceOf(kind, n){
-  if(n <= 0) return null;
-  if(n > MAX_SHEETS) return null;
-  var best = null;
-  for(var i=0;i<TIERS.length;i++){
-    var t = TIERS[i];
-    var billQty = Math.max(n, t.min);        /* 不足起跳張數就以起跳張數計 */
-    if(billQty > MAX_SHEETS) continue;
-    var total = billQty * t[kind];
-    if(best === null || total < best.total){
-      best = { total:total, unit:t[kind], tier:t, billQty:billQty };
-    }
-  }
-  return best;
+  if(n <= 0 || n > MAX_SHEETS) return null;
+  var u = unitOf(kind, n);
+  if(u === null) return null;
+  return { total: n * u, unit: u };
 }
 
 /* 把級距表畫進價目表區塊：改 TIERS 就會跟著變，不必手改 HTML，兩邊不可能對不上 */
@@ -695,11 +684,7 @@ function quote(){
   [['cmyk', nC, '印刷色 CMYK'], ['metal', nM, '金屬色']].forEach(function(c){
     var n = c[1]; if(!n) return;
     var p = priceOf(c[0], n); print += p.total;
-    /* billQty > n ＝ 用了下一級距的優惠價，明細要講清楚為什麼單價跟張數對不起來 */
-    var d = p.billQty > n
-      ? '已套用 ' + p.billQty + ' 張級距優惠價 ' + p.unit + ' 元／張'
-      : n + ' 張 × ' + p.unit + ' 元';
-    rows.push({ k:c[2], d:d, v:p.total });
+    rows.push({ k:c[2], d: n + ' 張 × ' + p.unit + ' 元', v:p.total });
   });
 
   var add = 0;
@@ -732,9 +717,7 @@ function syncUnits(){
     var n = num(t[0]); if(n < 1) n = 1;
     var p = priceOf(t[2], n);
     if(!p){ $(t[1]).textContent = '超過 ' + MAX_SHEETS + ' 張，請洽詢'; return; }
-    /* 顯示實際平均單價，客人看到的數字才會跟合計對得起來 */
-    var avg = Math.round(p.total / n);
-    $(t[1]).textContent = avg + ' 元／張' + (p.billQty > n ? '（已套用量大優惠）' : '');
+    $(t[1]).textContent = p.unit + ' 元／張';
   });
 }
 
