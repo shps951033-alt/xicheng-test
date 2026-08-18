@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>喜成印刷 · 報價單</title>
+<style>
+:root{
+  --ink:#2b2620; --ink2:#5c5348; --line:#d8cfbe; --line2:#efe8da;
+  --gold:#a8863c; --gold2:#c8a75c; --paper:#fffdf8; --bg:#efeae1;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:"Noto Sans TC","Microsoft JhengHei",-apple-system,"Segoe UI",sans-serif;
+  font-size:14px; line-height:1.5;
+}
+input,textarea,select,button{font-family:inherit;font-size:inherit;color:inherit}
+input,textarea,select{
+  width:100%; border:0; background:transparent; padding:4px 6px; outline:none;
+  border-bottom:1px dashed transparent; border-radius:3px;
+}
+input:hover,textarea:hover,select:hover,[contenteditable]:hover{background:#fbf6ea}
+input:focus,textarea:focus,select:focus,[contenteditable]:focus{background:#fdf3dd;border-bottom-color:var(--gold2)}
+textarea{resize:vertical;line-height:1.55}
+
+/* 工具列 */
+.toolbar{
+  position:sticky; top:0; z-index:20; background:#241f19; color:#f3ead6;
+  display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:10px 14px;
+  box-shadow:0 2px 10px rgba(0,0,0,.25);
+}
+.toolbar b{font-weight:700;letter-spacing:.08em;color:var(--gold2);margin-right:6px}
+.toolbar button{
+  border:1px solid #574d3c; background:#332c23; color:#f0e6d2; padding:6px 12px;
+  border-radius:6px; cursor:pointer;
+}
+.toolbar button:hover{background:#463c2e;border-color:var(--gold)}
+.toolbar button.main{background:var(--gold);border-color:var(--gold);color:#241f19;font-weight:700}
+.toolbar .sp{flex:1}
+.toolbar .hint{font-size:12px;color:#a99e86}
+
+/* 紙張 */
+.sheet{
+  width:210mm; min-height:297mm; margin:18px auto 40px; padding:14mm 13mm 12mm;
+  background:var(--paper); box-shadow:0 8px 30px rgba(0,0,0,.15);
+}
+.head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;
+  border-bottom:2px solid var(--gold);padding-bottom:10px}
+.seal{
+  width:52px;height:52px;flex:none;border-radius:8px;background:var(--gold);
+  color:#fffdf8;display:flex;align-items:center;justify-content:center;
+  font-family:"Noto Serif TC","Microsoft JhengHei",serif;font-size:26px;font-weight:700;
+}
+.co{display:flex;gap:12px;align-items:center}
+.co .nm{font-family:"Noto Serif TC","Microsoft JhengHei",serif;font-size:21px;font-weight:700;letter-spacing:.06em}
+.co .en{font-size:11px;letter-spacing:.18em;color:var(--gold);text-transform:uppercase}
+.co .sub{font-size:11.5px;color:var(--ink2);margin-top:2px}
+.title{text-align:right}
+.title .t{font-family:"Noto Serif TC",serif;font-size:26px;font-weight:700;letter-spacing:.35em;color:var(--gold)}
+.title .t2{font-size:10.5px;letter-spacing:.3em;color:var(--ink2)}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 14px;margin-top:10px}
+fieldset{border:1px solid var(--line);border-radius:6px;padding:6px 10px 8px;margin:8px 0 0;min-width:0}
+legend{font-size:11.5px;letter-spacing:.14em;color:var(--gold);padding:0 6px;font-weight:700}
+.f{display:grid;grid-template-columns:76px 1fr;align-items:center;border-bottom:1px dotted var(--line2)}
+.f:last-child{border-bottom:0}
+.f>label{font-size:12px;color:var(--ink2);padding-left:2px}
+.info{display:grid;grid-template-columns:repeat(4,1fr);gap:0 12px}
+
+table{width:100%;border-collapse:collapse;margin-top:12px}
+th{background:#f6efe0;border:1px solid var(--line);font-size:12px;letter-spacing:.08em;padding:6px 4px;font-weight:700}
+td{border:1px solid var(--line);vertical-align:top;padding:0}
+td.c{text-align:center}
+.no{text-align:center;font-size:12.5px;color:var(--ink2);padding-top:8px}
+.spec{padding:5px 7px;min-height:56px;font-size:13px;outline:none;white-space:pre-wrap}
+.amt{padding:7px 7px;text-align:right;font-variant-numeric:tabular-nums}
+input.num{text-align:right;font-variant-numeric:tabular-nums}
+select.kind{border:0;padding:5px 4px;font-size:12.5px;text-align:center}
+.del{border:0;background:transparent;color:#c07a7a;cursor:pointer;font-size:15px;line-height:1;padding:6px}
+.del:hover{color:#a33}
+
+.bottom{display:grid;grid-template-columns:1.35fr 1fr;gap:14px;margin-top:12px}
+.terms{border:1px solid var(--line);border-radius:6px;padding:6px 8px}
+.terms h4{margin:0 0 4px;font-size:11.5px;letter-spacing:.14em;color:var(--gold)}
+.sum{border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.sum .r{display:grid;grid-template-columns:1fr 120px;align-items:center;
+  border-bottom:1px solid var(--line2);padding:5px 9px;font-size:13px}
+.sum .r:last-child{border-bottom:0}
+.sum .r span:last-child{text-align:right;font-variant-numeric:tabular-nums}
+.sum .r.total{background:#f6efe0;font-size:16px;font-weight:700;color:var(--gold);padding:8px 9px}
+.sum .cap{padding:5px 9px;font-size:11.5px;color:var(--ink2);background:#faf5ea;border-top:1px solid var(--line2)}
+
+.sign{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:14px}
+.sign .box{border:1px solid var(--line);border-radius:6px;height:74px;padding:5px 8px;font-size:11.5px;color:var(--ink2)}
+.foot{margin-top:10px;border-top:1px solid var(--line);padding-top:6px;
+  font-size:11px;color:var(--ink2);display:flex;justify-content:space-between;gap:10px}
+
+@media print{
+  @page{size:A4;margin:9mm}
+  body{background:#fff}
+  .toolbar,.noprint{display:none !important}
+  .sheet{width:auto;min-height:auto;margin:0;padding:0;box-shadow:none}
+  /* 壓縮版：3～4 個品項時整張塞得進 A4 一頁 */
+  .spec{min-height:44px}
+  .terms textarea{font-size:11.5px;line-height:1.4}
+  .sign{margin-top:10px}
+  .sign .box{height:58px}
+  fieldset{padding-top:4px;padding-bottom:6px}
+  input,textarea,select,[contenteditable]{background:transparent !important}
+  table{page-break-inside:auto}
+  tr{page-break-inside:avoid}
+}
+@media (max-width:820px){
+  .sheet{width:auto;padding:14px}
+  .grid2,.bottom,.sign,.info{grid-template-columns:1fr}
+  /* 手機：品項表左右滑動，欄位才不會擠成一團 */
+  .tablewrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -14px;padding:0 14px}
+  #items{min-width:660px}
+  .toolbar{gap:6px;padding:8px 10px}
+  .toolbar button{padding:6px 9px;font-size:13px}
+  .f{grid-template-columns:72px 1fr}
+  input,textarea,select{font-size:16px}  /* iOS 聚焦時不自動放大整頁 */
+}
+</style>
+</head>
+<body>
+
+<div class="toolbar noprint">
+  <b>喜成報價單</b>
+  <button class="main" onclick="window.print()">🖨 列印 / 存 PDF</button>
+  <button onclick="addRow()">＋ 新增品項</button>
+  <button onclick="saveLS()">💾 存草稿</button>
+  <button onclick="exportJSON()">⬇ 匯出檔案</button>
+  <button onclick="document.getElementById('imp').click()">⬆ 開啟檔案</button>
+  <input type="file" id="imp" accept=".json" style="display:none" onchange="importJSON(this)">
+  <button onclick="newDoc()">🗎 開新報價單</button>
+  <span class="sp"></span>
+  <span class="hint" id="stat">內容自動存在這台瀏覽器</span>
+</div>
+
+<div class="sheet" id="sheet">
+
+  <div class="head">
+    <div class="co">
+      <div class="seal">喜</div>
+      <div>
+        <div class="nm">喜成燙金印刷</div>
+        <div class="en">C Cheng Printing</div>
+        <div class="sub">燙金 · 打凸 · 軋型 · 名片 · 紙袋 · 紙盒 · 精裝盒</div>
+      </div>
+    </div>
+    <div class="title">
+      <div class="t">報價單</div>
+      <div class="t2">QUOTATION</div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <fieldset>
+      <legend>本公司 SUPPLIER</legend>
+      <div class="f"><label>公司名稱</label><input data-k="co_name" value="喜成企業社（喜成燙金印刷）"></div>
+      <div class="f"><label>統一編號</label><input data-k="co_tax" value="92100012"></div>
+      <div class="f"><label>電　　話</label><input data-k="co_tel" value="0986-990-812"></div>
+      <div class="f"><label>E-mail</label><input data-k="co_mail" value="shps951033@gmail.com"></div>
+      <div class="f"><label>地　　址</label><input data-k="co_addr" value="822009 高雄市阿蓮區峰園路 58 號"></div>
+      <div class="f"><label>聯 絡 人</label><input data-k="co_person" value="黃嘉胤"></div>
+    </fieldset>
+
+    <fieldset>
+      <legend>客戶 CUSTOMER</legend>
+      <div class="f"><label>客戶名稱</label><input data-k="cu_name" placeholder="公司 / 客戶名稱"></div>
+      <div class="f"><label>統一編號</label><input data-k="cu_tax" placeholder="8 碼"></div>
+      <div class="f"><label>電　　話</label><input data-k="cu_tel" placeholder="市話 / 手機"></div>
+      <div class="f"><label>E-mail</label><input data-k="cu_mail" placeholder="email@example.com"></div>
+      <div class="f"><label>地　　址</label><input data-k="cu_addr" placeholder="送貨 / 發票地址"></div>
+      <div class="f"><label>聯 絡 人</label><input data-k="cu_person" placeholder="姓名 / 職稱"></div>
+    </fieldset>
+  </div>
+
+  <fieldset>
+    <legend>報價資訊 INFO</legend>
+    <div class="info">
+      <div class="f"><label>報價單號</label><input data-k="q_no"></div>
+      <div class="f"><label>報價日期</label><input type="date" data-k="q_date"></div>
+      <div class="f"><label>有效期限</label><input data-k="q_valid" value="報價日起 30 天"></div>
+      <div class="f"><label>預計交期</label><input data-k="q_lead" value="打樣確認後 7～10 個工作天"></div>
+      <div class="f"><label>付款方式</label><input data-k="q_pay" value="訂金 50%，出貨前付清"></div>
+      <div class="f"><label>運送方式</label><input data-k="q_ship" value="貨運（運費另計）"></div>
+      <div class="f"><label>案件名稱</label><input data-k="q_case" placeholder="例：品牌手提紙袋"></div>
+      <div class="f"><label>報 價 人</label><input data-k="q_by" value="黃嘉胤"></div>
+    </div>
+  </fieldset>
+
+  <div class="tablewrap">
+  <table id="items">
+    <thead>
+      <tr>
+        <th style="width:26px">#</th>
+        <th style="width:74px">品　項</th>
+        <th>品名 · 規格說明</th>
+        <th style="width:62px">數量</th>
+        <th style="width:46px">單位</th>
+        <th style="width:78px">單價</th>
+        <th style="width:90px">金額</th>
+        <th style="width:26px" class="noprint"></th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+  </div>
+
+  <div class="bottom">
+    <div>
+      <div class="terms">
+        <h4>備註 · 報價條件 REMARKS</h4>
+        <textarea data-k="remark" rows="12">1. 本報價未稅，發票另加 5% 營業稅；報價有效期 30 天。
+2. 以上為初步報價，實際以確認完稿之尺寸、紙材、加工方式為準；規格若有異動，價格另行調整。
+3. 數量以正負 5% 為交貨允收範圍，依實際完成數量計價。
+4. 印刷色差、燙金亮度因紙材與批次略有差異，屬正常範圍；如需精準對色請事先指定並打樣。
+5. 打樣費、刀模費、燙金版費如未列於上表則另計。
+6. 刀模保留 5 年：5 年內若有再版，自最近一次製作日起再往後保留 5 年。若製作次數頻繁致刀片耗損需更換，換刀片費用另計。
+7. 燙金版保留 3 年：3 年內若有再版，自最近一次製作日起再往後保留 3 年。
+8. 檔案僅保留 3 個月，逾期不另通知，請務必自行保留您的檔案。
+9. 客戶提供之完稿請附外框字之 AI / PDF 檔（CMYK、出血 3mm）。
+10. 運費、跨區配送、指定時段送達之費用另計。
+11. 匯款帳號請洽本公司官方 LINE，由專人提供。</textarea>
+      </div>
+    </div>
+
+    <div>
+      <div class="sum">
+        <div class="r"><span>小計 SUBTOTAL</span><span id="s_sub">0</span></div>
+        <div class="r"><span>折讓 DISCOUNT</span><input class="num" id="discount" type="number" step="1" value="0" oninput="calc()"></div>
+        <div class="r">
+          <span>稅別</span>
+          <select id="taxmode" onchange="calc()" style="text-align:right">
+            <option value="add">未稅（另加 5%）</option>
+            <option value="inc">含稅（內含 5%）</option>
+            <option value="free">免稅 / 不開發票</option>
+          </select>
+        </div>
+        <div class="r"><span>未稅金額</span><span id="s_net">0</span></div>
+        <div class="r"><span>營業稅 5%</span><span id="s_tax">0</span></div>
+        <div class="r total"><span>總計 TOTAL</span><span id="s_tot">0</span></div>
+        <div class="cap">新台幣（大寫）：<span id="s_cap">零元整</span></div>
+      </div>
+
+      <div class="sign">
+        <div class="box">客戶確認簽章 / 用印<br><span style="color:#bfb5a3">Customer Approval</span></div>
+        <div class="box">喜成企業社 簽章<br><span style="color:#bfb5a3">C Cheng Enterprise</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <span>喜成企業社 · 統編 92100012 · 822009 高雄市阿蓮區峰園路 58 號 · 0986-990-812</span>
+    <span>xicheng-print.com</span>
+  </div>
+</div>
+
+<script>
+/* 品項規格範本 */
+var TPL = {
+  "紙袋":  "尺寸（寬×高×側寬）：　  ×　  ×　  cm\n紙材／磅數：\n印刷：\n加工：燙金／打凸／上膜\n提繩：",
+  "紙盒":  "盒型／成品尺寸：　  ×　  ×　  cm\n紙材／磅數：\n印刷：\n加工：燙金／打凸／上膜\n成型：軋型＋糊盒",
+  "名片":  "尺寸：9 × 5.4 cm\n紙材／磅數：\n印刷：單面／雙面\n加工：燙金／打凸／圓角",
+  "精裝盒":"盒型：天地蓋／掀蓋／書型\n成品尺寸：　  ×　  ×　  cm\n灰紙板厚度：　 mm\n裱紙：外　　／內\n加工：燙金／打凸／局部上光\n內襯：EVA／珍珠板／紙格",
+  "其他":  ""
+};
+var KINDS = ["紙袋","紙盒","名片","精裝盒","其他"];
+
+/* 表格列 */
+function rowHTML(){
+  var opt = KINDS.map(function(k){ return '<option>' + k + '</option>'; }).join('');
+  return '<td class="no"></td>' +
+    '<td class="c"><select class="kind" onchange="fillTpl(this)">' + opt + '</select></td>' +
+    '<td><div class="spec" contenteditable="true"></div></td>' +
+    '<td><input class="num qty" type="number" step="1" min="0" oninput="calc()"></td>' +
+    '<td><input class="unit" value="個" style="text-align:center"></td>' +
+    '<td><input class="num price" type="number" step="0.01" min="0" oninput="calc()"></td>' +
+    '<td class="amt"></td>' +
+    '<td class="c noprint"><button class="del" title="刪除此列" onclick="delRow(this)">×</button></td>';
+}
+function addRow(){
+  var tr = document.createElement('tr');
+  tr.innerHTML = rowHTML();
+  document.querySelector('#items tbody').appendChild(tr);
+  renum(); calc(); saveLS();
+}
+function delRow(btn){
+  var tb = document.querySelector('#items tbody');
+  btn.closest('tr').remove();
+  if(!tb.children.length) addRow();
+  renum(); calc(); saveLS();
+}
+function fillTpl(sel){
+  var cell = sel.closest('tr').querySelector('.spec');
+  var cur = cell.innerText.replace(/\s+$/,'').trim();
+  var isTpl = Object.keys(TPL).some(function(k){
+    var t = TPL[k].trim();
+    return t && cur === t;
+  });
+  if(cur === '' || isTpl) cell.innerText = TPL[sel.value] || '';
+  saveLS();
+}
+function renum(){
+  var rows = document.querySelectorAll('#items tbody tr');
+  for(var i=0;i<rows.length;i++) rows[i].querySelector('.no').textContent = i+1;
+}
+
+/* 計算 */
+function n(v){ var x = parseFloat(v); return isNaN(x) ? 0 : x; }
+function fmt(v){ return (Math.round(v*100)/100).toLocaleString('en-US',{maximumFractionDigits:2}); }
+function calc(){
+  var sub = 0;
+  document.querySelectorAll('#items tbody tr').forEach(function(tr){
+    var a = n(tr.querySelector('.qty').value) * n(tr.querySelector('.price').value);
+    tr.querySelector('.amt').textContent = a ? fmt(a) : '';
+    sub += a;
+  });
+  var disc = n(document.getElementById('discount').value);
+  var base = sub - disc;
+  var mode = document.getElementById('taxmode').value;
+  var net, tax, tot;
+  if(mode === 'add'){ net = base; tax = Math.round(base*0.05); tot = net + tax; }
+  else if(mode === 'inc'){ net = Math.round(base/1.05); tax = base - net; tot = base; }
+  else { net = base; tax = 0; tot = base; }
+  document.getElementById('s_sub').textContent = fmt(sub);
+  document.getElementById('s_net').textContent = fmt(net);
+  document.getElementById('s_tax').textContent = fmt(tax);
+  document.getElementById('s_tot').textContent = 'NT$ ' + fmt(tot);
+  document.getElementById('s_cap').textContent = capital(Math.round(tot));
+}
+/* 中文大寫金額 */
+function capital(num){
+  var neg = num < 0;
+  num = Math.round(Math.abs(num));
+  if(!num) return '零元整';
+  var D = '零壹貳參肆伍陸柒捌玖'.split('');
+  var U = ['仟','佰','拾',''];
+  var G = ['','萬','億','兆'];
+  var groups = [], t = num;
+  while(t > 0){ groups.push(t % 10000); t = Math.floor(t/10000); }
+  var s = '';
+  for(var g = groups.length - 1; g >= 0; g--){
+    var part = groups[g];
+    if(part === 0) continue;                       /* 整段為零：略過，由下一段補「零」 */
+    if(s !== '' && part < 1000) s += '零';          /* 段首缺位要補「零」，例：壹萬零參拾伍 */
+    var dg = [Math.floor(part/1000)%10, Math.floor(part/100)%10, Math.floor(part/10)%10, part%10];
+    var ps = '', pending = false;
+    for(var i = 0; i < 4; i++){
+      if(dg[i] === 0){ if(ps !== '') pending = true; }
+      else { if(pending) ps += '零'; ps += D[dg[i]] + U[i]; pending = false; }
+    }
+    s += ps + G[g];
+  }
+  return (neg ? '負' : '') + s + '元整';
+}
+
+/* 存檔 / 還原：先把輸入值寫回屬性，再存整份 HTML */
+var KEY = 'xicheng_quote_v1';
+function sync(){
+  document.querySelectorAll('#sheet input').forEach(function(el){
+    if(el.type === 'file') return;
+    el.setAttribute('value', el.value);
+  });
+  document.querySelectorAll('#sheet textarea').forEach(function(el){ el.textContent = el.value; });
+  document.querySelectorAll('#sheet select').forEach(function(sel){
+    for(var i=0;i<sel.options.length;i++){
+      var o = sel.options[i];
+      if(i === sel.selectedIndex){ o.setAttribute('selected','selected'); }
+      else { o.removeAttribute('selected'); }
+    }
+  });
+}
+function saveLS(){
+  sync();
+  try{
+    localStorage.setItem(KEY, document.getElementById('sheet').innerHTML);
+    flash('已自動儲存 ' + new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'}));
+  }catch(e){ flash('儲存失敗：' + e.message); }
+}
+function loadLS(){
+  try{
+    var h = localStorage.getItem(KEY);
+    if(h){ document.getElementById('sheet').innerHTML = h; return true; }
+  }catch(e){ flash('此環境無法自動存草稿，請用「匯出檔案」保存'); }
+  return false;
+}
+var tmr;
+function flash(msg){ document.getElementById('stat').textContent = msg; }
+
+/* 備註欄隨內容長高（列印時才不會被裁掉） */
+function grow(el){ el.style.height = 'auto'; el.style.height = (el.scrollHeight + 2) + 'px'; }
+function growAll(){ document.querySelectorAll('#sheet textarea').forEach(grow); }
+document.addEventListener('input', function(e){ if(e.target.tagName === 'TEXTAREA') grow(e.target); });
+window.addEventListener('beforeprint', growAll);
+
+document.addEventListener('input', function(){ clearTimeout(tmr); tmr = setTimeout(saveLS, 600); });
+document.addEventListener('change', function(){ clearTimeout(tmr); tmr = setTimeout(saveLS, 300); });
+
+/* 匯出 / 匯入 */
+function exportJSON(){
+  sync();
+  var name = (document.querySelector('[data-k=cu_name]').value || '報價單').replace(/[\\\/:*?"<>|]/g,'');
+  var no = document.querySelector('[data-k=q_no]').value || '';
+  var blob = new Blob([JSON.stringify({v:1, html:document.getElementById('sheet').innerHTML})],{type:'application/json'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '喜成報價單-' + name + (no ? '-' + no : '') + '.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+function importJSON(inp){
+  var f = inp.files[0]; if(!f) return;
+  var r = new FileReader();
+  r.onload = function(e){
+    try{
+      var d = JSON.parse(e.target.result);
+      if(!d.html) throw new Error('檔案格式不符');
+      document.getElementById('sheet').innerHTML = d.html;
+      renum(); calc(); growAll(); saveLS(); flash('已開啟：' + f.name);
+    }catch(err){ alert('無法開啟此檔：' + err.message); }
+  };
+  r.readAsText(f);
+  inp.value = '';
+}
+function newDoc(){
+  if(!confirm('開新報價單？目前內容若未匯出將會清除。')) return;
+  localStorage.removeItem(KEY);
+  location.reload();
+}
+
+/* 初始化 */
+function serial(){
+  var d = new Date();
+  var p = function(x){ return String(x).padStart(2,'0'); };
+  return 'XC-' + d.getFullYear() + p(d.getMonth()+1) + p(d.getDate()) + '-01';
+}
+(function init(){
+  var restored = loadLS();
+  if(!restored){
+    var d = new Date();
+    var p = function(x){ return String(x).padStart(2,'0'); };
+    document.querySelector('[data-k=q_date]').value = d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());
+    document.querySelector('[data-k=q_no]').value = serial();
+    for(var i=0;i<3;i++) addRow();
+  }
+  renum(); calc(); growAll();
+})();
+</script>
+</body>
+</html>
