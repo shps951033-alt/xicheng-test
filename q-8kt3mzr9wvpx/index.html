@@ -295,11 +295,11 @@ function rowHTML(){
     '<td class="amt"></td>' +
     '<td class="c noprint"><button class="del" title="刪除此列" onclick="delRow(this)">×</button></td>';
 }
-function addRow(){
+function addRow(silent){
   var tr = document.createElement('tr');
   tr.innerHTML = rowHTML();
   document.querySelector('#items tbody').appendChild(tr);
-  renum(); calc(); saveLS();
+  if(!silent){ renum(); calc(); saveLS(); }
 }
 function delRow(btn){
   var tb = document.querySelector('#items tbody');
@@ -371,33 +371,95 @@ function capital(num){
   return (neg ? '負' : '') + s + '元整';
 }
 
-/* 存檔 / 還原：先把輸入值寫回屬性，再存整份 HTML */
-var KEY = 'xicheng_quote_v1';
-function sync(){
-  document.querySelectorAll('#sheet input').forEach(function(el){
-    if(el.type === 'file') return;
-    el.setAttribute('value', el.value);
+/* ═══ 存檔 / 還原：只存「資料」，不存「版面」 ═══
+   ⚠️ 2026-08-20 改寫。舊版把整份 #sheet 的 HTML 存進 localStorage，
+   結果只要瀏覽器裡有舊草稿，開頁面就會把「舊版的表單結構」整個還原回來——
+   之後任何改版（換 LOGO、列印用的備註區塊）在有草稿的人身上完全看不到。
+   現在只存欄位值，版面一律由最新的程式產生。舊草稿會自動轉檔，不用手動清。 */
+var KEY = 'xicheng_quote_v2';
+var OLDKEY = 'xicheng_quote_v1';
+
+function collect(){
+  var d = { v:2, f:{}, rows:[] };
+  document.querySelectorAll('#sheet [data-k]').forEach(function(el){ d.f[el.getAttribute('data-k')] = el.value; });
+  document.querySelectorAll('#items tbody tr').forEach(function(tr){
+    d.rows.push({
+      kind:  tr.querySelector('.kind').value,
+      spec:  tr.querySelector('.spec').innerText,
+      qty:   tr.querySelector('.qty').value,
+      unit:  tr.querySelector('.unit').value,
+      price: tr.querySelector('.price').value
+    });
   });
-  document.querySelectorAll('#sheet textarea').forEach(function(el){ el.textContent = el.value; });
-  document.querySelectorAll('#sheet select').forEach(function(sel){
-    for(var i=0;i<sel.options.length;i++){
-      var o = sel.options[i];
-      if(i === sel.selectedIndex){ o.setAttribute('selected','selected'); }
-      else { o.removeAttribute('selected'); }
-    }
+  d.discount = document.getElementById('discount').value;
+  d.taxmode  = document.getElementById('taxmode').value;
+  return d;
+}
+function apply(d){
+  if(!d || !d.f) return false;
+  Object.keys(d.f).forEach(function(k){
+    var el = document.querySelector('#sheet [data-k="' + k + '"]');
+    if(el) el.value = d.f[k];
   });
+  var tb = document.querySelector('#items tbody');
+  tb.innerHTML = '';
+  (d.rows || []).forEach(function(r){
+    addRow(true);
+    var tr = tb.lastElementChild;
+    if(r.kind) tr.querySelector('.kind').value = r.kind;
+    tr.querySelector('.spec').innerText = r.spec || '';
+    tr.querySelector('.qty').value   = r.qty || '';
+    tr.querySelector('.unit').value  = r.unit || '個';
+    tr.querySelector('.price').value = r.price || '';
+  });
+  if(!tb.children.length) addRow(true);
+  if(d.discount != null) document.getElementById('discount').value = d.discount;
+  if(d.taxmode) document.getElementById('taxmode').value = d.taxmode;
+  return true;
+}
+/* 舊版草稿（整份 HTML）→ 新版資料 */
+function fromLegacy(html){
+  var box = document.createElement('div');
+  box.innerHTML = html;
+  var d = { v:2, f:{}, rows:[] };
+  box.querySelectorAll('[data-k]').forEach(function(el){
+    d.f[el.getAttribute('data-k')] = el.tagName === 'TEXTAREA' ? el.textContent : (el.getAttribute('value') || '');
+  });
+  box.querySelectorAll('tbody tr').forEach(function(tr){
+    var kindSel = tr.querySelector('.kind');
+    var picked  = kindSel ? kindSel.querySelector('option[selected]') : null;
+    var attr = function(sel){ var el = tr.querySelector(sel); return el ? (el.getAttribute('value') || '') : ''; };
+    var spec = tr.querySelector('.spec');
+    d.rows.push({
+      kind:  picked ? picked.textContent : '紙袋',
+      spec:  spec ? spec.innerText : '',
+      qty:   attr('.qty'),
+      unit:  attr('.unit') || '個',
+      price: attr('.price')
+    });
+  });
+  var disc = box.querySelector('#discount');
+  if(disc) d.discount = disc.getAttribute('value') || '0';
+  var tm = box.querySelector('#taxmode option[selected]');
+  if(tm) d.taxmode = tm.getAttribute('value') || 'add';
+  return d;
 }
 function saveLS(){
-  sync();
   try{
-    localStorage.setItem(KEY, document.getElementById('sheet').innerHTML);
+    localStorage.setItem(KEY, JSON.stringify(collect()));
     flash('已自動儲存 ' + new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'}));
   }catch(e){ flash('儲存失敗：' + e.message); }
 }
 function loadLS(){
   try{
-    var h = localStorage.getItem(KEY);
-    if(h){ document.getElementById('sheet').innerHTML = h; return true; }
+    var s = localStorage.getItem(KEY);
+    if(s) return apply(JSON.parse(s));
+    var old = localStorage.getItem(OLDKEY);
+    if(old){
+      var ok = apply(fromLegacy(old));
+      if(ok){ localStorage.removeItem(OLDKEY); flash('舊草稿已轉成新版'); }
+      return ok;
+    }
   }catch(e){ flash('此環境無法自動存草稿，請用「匯出檔案」保存'); }
   return false;
 }
@@ -410,8 +472,15 @@ function growAll(){ document.querySelectorAll('#sheet textarea').forEach(grow); 
 /* 備註同步到列印用的區塊（螢幕看 textarea、列印印這個 div） */
 function syncRemark(){
   var ta = document.querySelector('[data-k=remark]');
+  if(!ta) return;
   var pr = document.querySelector('.remark-print');
-  if(ta && pr) pr.textContent = ta.value;
+  if(!pr){   /* 保險：舊草稿還原後若少了這個區塊，就地補上，列印才不會漏掉備註 */
+    pr = document.createElement('div');
+    pr.className = 'remark-print';
+    pr.setAttribute('aria-hidden','true');
+    ta.parentNode.appendChild(pr);
+  }
+  pr.textContent = ta.value;
 }
 document.addEventListener('input', function(e){
   if(e.target.tagName === 'TEXTAREA'){ grow(e.target); syncRemark(); }
@@ -423,10 +492,9 @@ document.addEventListener('change', function(){ clearTimeout(tmr); tmr = setTime
 
 /* 匯出 / 匯入 */
 function exportJSON(){
-  sync();
   var name = (document.querySelector('[data-k=cu_name]').value || '報價單').replace(/[\\\/:*?"<>|]/g,'');
   var no = document.querySelector('[data-k=q_no]').value || '';
-  var blob = new Blob([JSON.stringify({v:1, html:document.getElementById('sheet').innerHTML})],{type:'application/json'});
+  var blob = new Blob([JSON.stringify(collect())],{type:'application/json'});
   var a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = '喜成報價單-' + name + (no ? '-' + no : '') + '.json';
@@ -439,8 +507,8 @@ function importJSON(inp){
   r.onload = function(e){
     try{
       var d = JSON.parse(e.target.result);
-      if(!d.html) throw new Error('檔案格式不符');
-      document.getElementById('sheet').innerHTML = d.html;
+      var ok = (d && d.html) ? apply(fromLegacy(d.html)) : apply(d);   /* 也吃得下舊格式的檔 */
+      if(!ok) throw new Error('檔案格式不符');
       renum(); calc(); growAll(); syncRemark(); saveLS(); flash('已開啟：' + f.name);
     }catch(err){ alert('無法開啟此檔：' + err.message); }
   };
@@ -449,7 +517,7 @@ function importJSON(inp){
 }
 function newDoc(){
   if(!confirm('開新報價單？目前內容若未匯出將會清除。')) return;
-  localStorage.removeItem(KEY);
+  try{ localStorage.removeItem(KEY); localStorage.removeItem(OLDKEY); }catch(e){}
   location.reload();
 }
 
