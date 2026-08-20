@@ -145,11 +145,11 @@ select.kind{border:0;padding:5px 4px;font-size:12.5px;text-align:center}
 
 <div class="toolbar noprint">
   <b>喜成報價單</b>
-  <button class="main" onclick="window.print()">🖨 列印 / 存 PDF</button>
+  <button class="main" onclick="doPrint()" title="開啟列印視窗；目的地選「另存為 PDF」即可存成 PDF，檔名會自動帶客戶與單號">🖨 存 PDF / 列印</button>
   <button onclick="addRow()">＋ 新增品項</button>
   <button onclick="saveLS()">💾 存草稿</button>
-  <button onclick="exportJSON()">⬇ 匯出檔案</button>
-  <button onclick="document.getElementById('imp').click()">⬆ 開啟檔案</button>
+  <button onclick="exportJSON()" title="存成 .json 草稿檔（不是 PDF），之後用「開啟草稿檔」可以接著改">⬇ 存草稿檔</button>
+  <button onclick="document.getElementById('imp').click()" title="開啟先前存下的 .json 草稿檔">⬆ 開啟草稿檔</button>
   <input type="file" id="imp" accept=".json" style="display:none" onchange="importJSON(this)">
   <button onclick="newDoc()">🗎 開新報價單</button>
   <span class="sp"></span>
@@ -503,6 +503,20 @@ window.addEventListener('beforeprint', function(){ growAll(); syncRemark(); });
 document.addEventListener('input', function(){ clearTimeout(tmr); tmr = setTimeout(saveLS, 600); });
 document.addEventListener('change', function(){ clearTimeout(tmr); tmr = setTimeout(saveLS, 300); });
 
+/* 存 PDF：瀏覽器的列印視窗就是 PDF 產生器。
+   這裡先把 document.title 換成「喜成報價單-客戶-單號」——Chrome 存 PDF 時
+   預設檔名就是網頁標題，這樣不用每次手打檔名。印完再換回來。 */
+function doPrint(){
+  var name = (document.querySelector('[data-k=cu_name]').value || '').trim();
+  var no   = (document.querySelector('[data-k=q_no]').value || '').trim();
+  var t = ['喜成報價單', name, no].filter(Boolean).join('-').replace(/[\\\/:*?"<>|]/g,'');
+  var old = document.title;
+  document.title = t;
+  flash('列印視窗裡把「目的地」選成「另存為 PDF」就能存檔');
+  window.print();
+  setTimeout(function(){ document.title = old; }, 1500);
+}
+
 /* 匯出 / 匯入 */
 function exportJSON(){
   var name = (document.querySelector('[data-k=cu_name]').value || '報價單').replace(/[\\\/:*?"<>|]/g,'');
@@ -510,7 +524,7 @@ function exportJSON(){
   var blob = new Blob([JSON.stringify(collect())],{type:'application/json'});
   var a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = '喜成報價單-' + name + (no ? '-' + no : '') + '.json';
+  a.download = '喜成報價單草稿-' + name + (no ? '-' + no : '') + '.json';
   a.click();
   URL.revokeObjectURL(a.href);
 }
