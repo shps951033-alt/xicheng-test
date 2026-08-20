@@ -202,8 +202,8 @@ select.kind{border:0;padding:5px 2px;font-size:11.5px;text-align:center}
       <div class="f"><label>報價單號</label><input data-k="q_no"></div>
       <div class="f"><label>報價日期</label><input type="date" data-k="q_date"></div>
       <div class="f"><label>有效期限</label><input data-k="q_valid" value="報價日起 30 天"></div>
-      <div class="f"><label>預計交期</label><input data-k="q_lead" value="打樣確認後 7～10 個工作天"></div>
-      <div class="f"><label>付款方式</label><input data-k="q_pay" value="訂金 50%，出貨前付清"></div>
+      <div class="f"><label>預計交期</label><input data-k="q_lead" value="確認檔案或打樣後 15 天交貨"></div>
+      <div class="f"><label>付款方式</label><input data-k="q_pay" value="匯款後才會開始製作"></div>
       <div class="f"><label>運送方式</label><input data-k="q_ship" value="貨運（運費另計）"></div>
       <div class="f"><label>案件名稱</label><input data-k="q_case" placeholder="例：品牌手提紙袋"></div>
       <div class="f"><label>報 價 人</label><input data-k="q_by" value="黃嘉胤"></div>
@@ -326,6 +326,10 @@ function addRow(silent){
   var tr = document.createElement('tr');
   tr.innerHTML = rowHTML();
   document.querySelector('#items tbody').appendChild(tr);
+  /* 新列直接帶出預設品項（紙袋）的規格範本——不必先切換品項才看得到。
+     從草稿還原時 apply() 會緊接著用存下來的內容覆蓋，不受影響。 */
+  tr.querySelector('.spec').innerText = TPL[KINDS[0]] || '';
+  tr.querySelector('.unit').value = UNIT[KINDS[0]] || '個';
   if(!silent){ renum(); calc(); saveLS(); }
 }
 function delRow(btn){
