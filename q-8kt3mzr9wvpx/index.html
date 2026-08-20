@@ -417,7 +417,14 @@ function apply(d){
   if(d.taxmode) document.getElementById('taxmode').value = d.taxmode;
   return true;
 }
-/* 舊版草稿（整份 HTML）→ 新版資料 */
+/* 舊版草稿（整份 HTML）→ 新版資料
+   ⚠️ 規格欄要自己把 <br>／<div> 換成換行再取文字：脫離畫面的節點讀 innerText
+   等同 textContent，換行會全部消失，五行規格會黏成一行。 */
+function htmlToText(html){
+  var t = document.createElement('div');
+  t.innerHTML = String(html || '').replace(/<br\s*\/?>/gi, '\n').replace(/<\/(div|p|li)>/gi, '\n');
+  return (t.textContent || '').replace(/\n{3,}/g, '\n\n').replace(/\s+$/, '');
+}
 function fromLegacy(html){
   var box = document.createElement('div');
   box.innerHTML = html;
@@ -432,7 +439,7 @@ function fromLegacy(html){
     var spec = tr.querySelector('.spec');
     d.rows.push({
       kind:  picked ? picked.textContent : '紙袋',
-      spec:  spec ? spec.innerText : '',
+      spec:  spec ? htmlToText(spec.innerHTML) : '',
       qty:   attr('.qty'),
       unit:  attr('.unit') || '個',
       price: attr('.price')
@@ -457,7 +464,8 @@ function loadLS(){
     var old = localStorage.getItem(OLDKEY);
     if(old){
       var ok = apply(fromLegacy(old));
-      if(ok){ localStorage.removeItem(OLDKEY); flash('舊草稿已轉成新版'); }
+      /* 轉檔後一定要立刻存成新格式：只刪舊的不存新的，使用者沒動就重新整理＝草稿整份消失 */
+      if(ok){ saveLS(); localStorage.removeItem(OLDKEY); flash('舊草稿已轉成新版'); }
       return ok;
     }
   }catch(e){ flash('此環境無法自動存草稿，請用「匯出檔案」保存'); }
