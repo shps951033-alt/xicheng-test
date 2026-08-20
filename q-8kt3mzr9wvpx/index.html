@@ -78,7 +78,8 @@ td.c{text-align:center}
 .spec{padding:5px 7px;min-height:56px;font-size:13px;outline:none;white-space:pre-wrap}
 .amt{padding:7px 7px;text-align:right;font-variant-numeric:tabular-nums}
 input.num{text-align:right;font-variant-numeric:tabular-nums}
-select.kind{border:0;padding:5px 4px;font-size:12.5px;text-align:center}
+/* 「人工包裝裝箱費」有 7 個字，字級要小一點才不會被切掉 */
+select.kind{border:0;padding:5px 2px;font-size:11.5px;text-align:center}
 .del{border:0;background:transparent;color:#c07a7a;cursor:pointer;font-size:15px;line-height:1;padding:6px}
 .del:hover{color:#a33}
 
@@ -214,7 +215,7 @@ select.kind{border:0;padding:5px 4px;font-size:12.5px;text-align:center}
     <thead>
       <tr>
         <th style="width:26px">#</th>
-        <th style="width:74px">品　項</th>
+        <th style="width:100px">品　項</th>
         <th>品名 · 規格說明</th>
         <th style="width:62px">數量</th>
         <th style="width:46px">單位</th>
@@ -284,9 +285,21 @@ var TPL = {
   "紙盒":  "盒型／成品尺寸：　  ×　  ×　  cm\n紙材／磅數：\n印刷：\n加工：燙金／打凸／上膜\n成型：軋型＋糊盒",
   "名片":  "尺寸：9 × 5.4 cm\n紙材／磅數：\n印刷：單面／雙面\n加工：燙金／打凸／圓角",
   "精裝盒":"盒型：天地蓋／掀蓋／書型\n成品尺寸：　  ×　  ×　  cm\n灰紙板厚度：　 mm\n裱紙：外　　／內\n加工：燙金／打凸／局部上光\n內襯：EVA／珍珠板／紙格",
+  "刀模":  "刀模尺寸：　  ×　  cm\n盒型／展開圖：\n（新開刀模，保留 5 年，5 年內再版沿用）",
+  "燙金版": "版面尺寸：　  ×　  cm\n版數：\n（新製燙金版，保留 3 年，3 年內再版沿用）",
+  "打凸版": "版面尺寸：　  ×　  cm\n版數：\n（新製打凸版）",
+  "糊型費用": "糊型方式：糊盒／糊袋／貼雙面膠\n說明：",
+  "人工包裝裝箱費": "包裝方式：\n每箱入數：\n說明：",
+  "運費":  "配送地點：\n件數／材積：\n說明：",
   "其他":  ""
 };
-var KINDS = ["紙袋","紙盒","名片","精裝盒","其他"];
+var KINDS = ["紙袋","紙盒","名片","精裝盒","刀模","燙金版","打凸版","糊型費用","人工包裝裝箱費","運費","其他"];
+/* 各品項的預設單位：成品算個／盒，版模與費用類算「式」 */
+var UNIT = {
+  "紙袋":"個", "紙盒":"個", "名片":"盒", "精裝盒":"個",
+  "刀模":"式", "燙金版":"式", "打凸版":"式",
+  "糊型費用":"式", "人工包裝裝箱費":"式", "運費":"式", "其他":"式"
+};
 
 /* 表格列 */
 function rowHTML(){
@@ -320,6 +333,9 @@ function fillTpl(sel){
     return t && cur === t;
   });
   if(cur === '' || isTpl) cell.innerText = TPL[sel.value] || '';
+  /* 單位跟著品項換（只在還是預設值時才動，你自己打過的不覆蓋） */
+  var unitEl = sel.closest('tr').querySelector('.unit');
+  if(['','個','式','盒'].indexOf((unitEl.value || '').trim()) >= 0) unitEl.value = UNIT[sel.value] || '個';
   saveLS();
 }
 function renum(){
