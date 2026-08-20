@@ -85,6 +85,9 @@ select.kind{border:0;padding:5px 4px;font-size:12.5px;text-align:center}
 .bottom{display:grid;grid-template-columns:1.35fr 1fr;gap:14px;margin-top:12px}
 .terms{border:1px solid var(--line);border-radius:6px;padding:6px 8px}
 .terms h4{margin:0 0 4px;font-size:11.5px;letter-spacing:.14em;color:var(--gold)}
+/* 列印專用的備註區塊：textarea 在 Chrome 列印時高度不會貼合內容，撐高就被切到第二頁，
+   所以列印改印這個 div（同一份文字，會自己貼合高度）。2026-08-20 老闆實測踩到。 */
+.remark-print{display:none;white-space:pre-wrap;font-size:11px;line-height:1.42;padding:0 2px}
 .sum{border:1px solid var(--line);border-radius:6px;overflow:hidden}
 .sum .r{display:grid;grid-template-columns:1fr 120px;align-items:center;
   border-bottom:1px solid var(--line2);padding:5px 9px;font-size:13px}
@@ -108,7 +111,8 @@ select.kind{border:0;padding:5px 4px;font-size:12.5px;text-align:center}
   .logo.ink{display:block;height:40px}
   /* 壓縮版：5 個品項以內整張塞得進 A4 一頁（實測 3 項 947px、5 項 1037px，可用高度 1054px） */
   .spec{min-height:40px}
-  .terms textarea{font-size:11px;line-height:1.38}
+  .terms textarea{display:none}
+  .remark-print{display:block}
   .sign{margin-top:8px}
   .sign .box{height:52px}
   fieldset{padding-top:4px;padding-bottom:6px}
@@ -233,6 +237,7 @@ select.kind{border:0;padding:5px 4px;font-size:12.5px;text-align:center}
 9. 客戶提供之完稿請附外框字之 AI / PDF 檔（CMYK、出血 3mm）。
 10. 運費、跨區配送、指定時段送達之費用另計。
 11. 匯款帳號請洽本公司官方 LINE，由專人提供。</textarea>
+        <div class="remark-print" aria-hidden="true"></div>
       </div>
     </div>
 
@@ -402,8 +407,16 @@ function flash(msg){ document.getElementById('stat').textContent = msg; }
 /* 備註欄隨內容長高（列印時才不會被裁掉） */
 function grow(el){ el.style.height = 'auto'; el.style.height = (el.scrollHeight + 2) + 'px'; }
 function growAll(){ document.querySelectorAll('#sheet textarea').forEach(grow); }
-document.addEventListener('input', function(e){ if(e.target.tagName === 'TEXTAREA') grow(e.target); });
-window.addEventListener('beforeprint', growAll);
+/* 備註同步到列印用的區塊（螢幕看 textarea、列印印這個 div） */
+function syncRemark(){
+  var ta = document.querySelector('[data-k=remark]');
+  var pr = document.querySelector('.remark-print');
+  if(ta && pr) pr.textContent = ta.value;
+}
+document.addEventListener('input', function(e){
+  if(e.target.tagName === 'TEXTAREA'){ grow(e.target); syncRemark(); }
+});
+window.addEventListener('beforeprint', function(){ growAll(); syncRemark(); });
 
 document.addEventListener('input', function(){ clearTimeout(tmr); tmr = setTimeout(saveLS, 600); });
 document.addEventListener('change', function(){ clearTimeout(tmr); tmr = setTimeout(saveLS, 300); });
@@ -428,7 +441,7 @@ function importJSON(inp){
       var d = JSON.parse(e.target.result);
       if(!d.html) throw new Error('檔案格式不符');
       document.getElementById('sheet').innerHTML = d.html;
-      renum(); calc(); growAll(); saveLS(); flash('已開啟：' + f.name);
+      renum(); calc(); growAll(); syncRemark(); saveLS(); flash('已開啟：' + f.name);
     }catch(err){ alert('無法開啟此檔：' + err.message); }
   };
   r.readAsText(f);
@@ -455,7 +468,7 @@ function serial(){
     document.querySelector('[data-k=q_no]').value = serial();
     for(var i=0;i<3;i++) addRow();
   }
-  renum(); calc(); growAll();
+  renum(); calc(); growAll(); syncRemark();
 })();
 </script>
 </body>
