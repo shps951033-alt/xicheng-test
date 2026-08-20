@@ -549,10 +549,20 @@ function newDoc(){
 }
 
 /* 初始化 */
+/* 報價單號流水：每開一張新單就 +1（XC-20260820-01 → -02 → -03…），
+   跨到隔天自動從 -01 重新起算。計數存在瀏覽器，「開新報價單」不會清掉它。 */
+var SEQKEY = 'xicheng_quote_seq';
 function serial(){
   var d = new Date();
   var p = function(x){ return String(x).padStart(2,'0'); };
-  return 'XC-' + d.getFullYear() + p(d.getMonth()+1) + p(d.getDate()) + '-01';
+  var day = '' + d.getFullYear() + p(d.getMonth()+1) + p(d.getDate());
+  var n = 1;
+  try{
+    var s = JSON.parse(localStorage.getItem(SEQKEY) || 'null');
+    if(s && s.day === day) n = (parseInt(s.n, 10) || 0) + 1;
+    localStorage.setItem(SEQKEY, JSON.stringify({ day: day, n: n }));
+  }catch(e){}
+  return 'XC-' + day + '-' + p(n);
 }
 (function init(){
   var restored = loadLS();
