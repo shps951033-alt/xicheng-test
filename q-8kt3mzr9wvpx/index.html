@@ -109,10 +109,16 @@ select.kind{border:0;padding:5px 2px;font-size:11.5px;text-align:center}
   font-size:11px;color:var(--ink2);display:flex;justify-content:space-between;gap:10px}
 
 @media print{
-  @page{size:A4;margin:9mm}
-  body{background:#fff}
+  @page{size:A4 portrait;margin:9mm}
+  /* ⚠️ 手機列印的關鍵三行（2026-08-20 老闆實測手機印不成一頁）：
+     手機瀏覽器列印時會沿用「當下畫面的版面寬度」（約 375px）＝ 把手機單欄版印出來，
+     內容被拉成一長條，怎麼調都塞不進一頁。這裡強制把列印版面寬度釘在 192mm
+     （A4 210mm 扣掉左右各 9mm 邊界），手機就會改用跟電腦一樣的雙欄 A4 版面；
+     再關掉手機的自動放大字（font boosting），否則字會被放大、高度又爆掉。 */
+  html{width:192mm;-webkit-text-size-adjust:none;text-size-adjust:none}
+  body{width:192mm;margin:0;background:#fff}
   .toolbar,.noprint{display:none !important}
-  .sheet{width:auto;min-height:auto;margin:0;padding:0;box-shadow:none}
+  .sheet{width:192mm;min-height:auto;margin:0;padding:0;box-shadow:none}
   /* 列印改用墨色標誌：黑白印表機印金色會變成淡灰、幾乎看不見 */
   .logo.gold{display:none}
   .logo.ink{display:block;height:40px}
@@ -129,6 +135,9 @@ select.kind{border:0;padding:5px 2px;font-size:11.5px;text-align:center}
   .head{padding-bottom:6px}
   table{margin-top:8px}
   .bottom{margin-top:8px}
+  /* 手機的橫向捲動容器在列印時要放開，否則右半邊會被裁掉 */
+  .tablewrap{overflow:visible !important}
+  #items{min-width:0 !important}
   input,textarea,select,[contenteditable]{background:transparent !important}
   table{page-break-inside:auto}
   tr{page-break-inside:avoid}
