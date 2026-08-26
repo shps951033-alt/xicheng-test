@@ -123,7 +123,7 @@ select.kind{border:0;padding:5px 2px;font-size:11.5px;text-align:center}
   .logo.gold{display:none}
   .logo.ink{display:block;height:40px}
   /* 壓縮版：5 個品項以內整張塞得進 A4 一頁（實測 3 項 947px、5 項 1037px，可用高度 1054px） */
-  .spec{min-height:40px}
+  .spec{min-height:40px;font-size:11.5px;line-height:1.4}
   .terms textarea{display:none}
   .remark-print{display:block;font-size:10.5px;line-height:1.35}
   .sign{margin-top:8px}
@@ -138,6 +138,9 @@ select.kind{border:0;padding:5px 2px;font-size:11.5px;text-align:center}
   /* 手機的橫向捲動容器在列印時要放開，否則右半邊會被裁掉 */
   .tablewrap{overflow:visible !important}
   #items{min-width:0 !important}
+  /* 沒填數量也沒填單價、規格還是原始範本的列＝沒用到，不要印出來
+     （自從新列會自動帶範本後，空白列會印出五行範本，三列就把一頁撐爆） */
+  #items tbody tr.skip{display:none}
   input,textarea,select,[contenteditable]{background:transparent !important}
   table{page-break-inside:auto}
   tr{page-break-inside:avoid}
@@ -549,7 +552,33 @@ function syncRemark(){
 document.addEventListener('input', function(e){
   if(e.target.tagName === 'TEXTAREA'){ grow(e.target); syncRemark(); }
 });
-window.addEventListener('beforeprint', function(){ growAll(); syncRemark(); });
+/* 列印前：把「沒用到的列」標記起來（列印 CSS 會把它們藏掉），並重排序號 */
+function isTplOnly(text){
+  var t = (text || '').replace(/\s+$/,'').trim();
+  if(!t) return true;
+  return Object.keys(TPL).some(function(k){
+    var v = (TPL[k] || '').trim();
+    return v && t === v;
+  });
+}
+function markUnusedRows(){
+  var rows = [].slice.call(document.querySelectorAll('#items tbody tr'));
+  var used = 0;
+  rows.forEach(function(tr){
+    var qty   = (tr.querySelector('.qty').value   || '').trim();
+    var price = (tr.querySelector('.price').value || '').trim();
+    var unused = !qty && !price && isTplOnly(tr.querySelector('.spec').innerText);
+    if(unused){ tr.classList.add('skip'); }
+    else { tr.classList.remove('skip'); tr.querySelector('.no').textContent = ++used; }
+  });
+  /* 整張都還沒填：當成空白表格照印，不要印出沒有任何列的表 */
+  if(!used){ rows.forEach(function(tr){ tr.classList.remove('skip'); }); renum(); }
+}
+window.addEventListener('beforeprint', function(){ growAll(); syncRemark(); markUnusedRows(); });
+window.addEventListener('afterprint', function(){
+  [].forEach.call(document.querySelectorAll('#items tbody tr.skip'), function(tr){ tr.classList.remove('skip'); });
+  renum();
+});
 
 document.addEventListener('input', function(){ clearTimeout(tmr); tmr = setTimeout(saveLS, 600); });
 document.addEventListener('change', function(){ clearTimeout(tmr); tmr = setTimeout(saveLS, 300); });
