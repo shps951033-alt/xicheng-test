@@ -148,6 +148,9 @@ select{
 }
 .res .line b{color:var(--ink); font-weight:700}
 .res .line.tool b{color:var(--accent)}
+/* 完成每張單價（含模具）：跟上面那個大字「每張（不含模具）」是兩個數字，用綠色分開好認。 */
+.res .line.done{margin-top:4px}
+.res .line.done b{color:var(--good)}
 .res .sum{
   display:flex; justify-content:space-between; gap:10px; font-size:13px; color:var(--muted);
   font-variant-numeric:tabular-nums; margin-top:6px; padding-top:6px; border-top:1px solid var(--line);
@@ -233,6 +236,8 @@ button.primary:hover{opacity:.9; color:#fff}
     紙張費用、印刷版費、印刷費用不進勾選，維持常駐（不印就留空，算 0）。<br>
     計價方式四選一：<b>分欄單價 ×數量</b>（預設）＝三欄各填各的單價，各自乘上該欄數量，格子下面直接顯示小計｜
     <b>分欄總價</b>＝三欄各填一筆總價，不乘數量｜<b>單價 ×數量（共用）</b>＝三欄共用一個單價｜<b>總價（共用）</b>＝整批一筆、三欄同一個數字。
+    卡片上有兩個每張的數字：上面的大字<b>每張＝製作成本 ÷ 數量（不含模具）</b>，合計下面的綠字
+    <b>完成每張單價＝合計 ÷ 製作數量（含模具）</b>——真的要跟客戶收的那個。<br>
     <b>每張成本不含模具</b>：燙金版費、打凸版費、刀膜是模具（再版還能用），在卡片上獨立列為「模具費（另記）」，不攤進每張單價。
     印刷版費有算進去 —— CTP 版每次開印都要重出，是跟著這一批走的成本。
     <b>貼銀箔按才算</b>：填長寬（cm），自動 ÷ 900 換成才數 × 每才單價（預設 1 元）＝一張多少，
@@ -546,6 +551,8 @@ function calc(){
   const tools  = COLS.map(c => lines.filter(l => l.tool).reduce((s,l) => s + l.amounts[c], 0));
   const makes  = COLS.map(c => totals[c] - tools[c]);
   const each   = COLS.map(c => qty[c] > 0 ? makes[c] / qty[c] : null);
+  // 2026-08-28 老闆：再給一個「完成每張單價」＝ 合計 ÷ 製作數量（這個含模具，跟上面不含模具的每張分開看）。
+  const allEach = COLS.map(c => qty[c] > 0 ? totals[c] / qty[c] : null);
 
   const valid = COLS.filter(c => qty[c] > 0 && each[c] !== null);
   const best  = valid.length ? valid.reduce((a,b) => each[a] <= each[b] ? a : b) : -1;
@@ -569,13 +576,14 @@ function calc(){
       + '<div class="line"><span>製作成本</span><b>'+fmt(makes[c])+'</b></div>'
       + '<div class="line tool"><span>模具費（另記）</span><b>'+fmt(tools[c])+'</b></div>'
       + '<div class="sum"><span>合計</span><b>'+fmt(totals[c])+'</b></div>'
+      + '<div class="line done"><span>完成每張單價（含模具）</span><b>'+(allEach[c]===null?'—':fmt(allEach[c]))+'</b></div>'
       + diff
       + (items ? '<ul>'+items+'</ul>' : '')
       + '</div>';
   }).join('');
 
   save();
-  return {qty, sheets, lines, totals, tools, makes, each};
+  return {qty, sheets, lines, totals, tools, makes, each, allEach};
 }
 
 /* ---------- 事件 ---------- */
@@ -669,7 +677,7 @@ function clearAll(){
 
 /* ---------- 複製報表 ---------- */
 function copyReport(){
-  const {qty, sheets, lines, totals, tools, makes, each} = calc();
+  const {qty, sheets, lines, totals, tools, makes, each, allEach} = calc();
   let t = '喜成印刷｜成本比價\n';
   COLS.forEach(c => {
     if (!qty[c] && !totals[c]) return;
@@ -681,7 +689,7 @@ function copyReport(){
       t += '  ── 模具費（另記）：'+fmt(tools[c])+'\n';
       tl.forEach(l => { t += '       '+l.name+'：'+fmt(l.amounts[c])+'\n'; });
     }
-    t += '  ── 合計：'+fmt(totals[c])+'\n';
+    t += '  ── 合計：'+fmt(totals[c])+'　完成每張單價：'+(allEach[c]===null?'—':fmt(allEach[c]))+' 元（含模具）\n';
   });
   navigator.clipboard.writeText(t).then(() => toast('報表已複製')).catch(() => toast('複製失敗，請手動選取'));
 }
