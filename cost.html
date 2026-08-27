@@ -149,8 +149,8 @@ select{
 .res .line b{color:var(--ink); font-weight:700}
 .res .line.tool b{color:var(--accent)}
 /* 完成每張單價（含模具）：跟上面那個大字「每張（不含模具）」是兩個數字，用綠色分開好認。 */
-.res .line.done{margin-top:4px}
-.res .line.done b{color:var(--good)}
+.res .line.done{margin-top:4px; align-items:baseline}
+.res .line.done b{color:var(--good); font-size:22px; font-weight:800; letter-spacing:-.01em; line-height:1.2}
 .res .sum{
   display:flex; justify-content:space-between; gap:10px; font-size:13px; color:var(--muted);
   font-variant-numeric:tabular-nums; margin-top:6px; padding-top:6px; border-top:1px solid var(--line);
