@@ -113,7 +113,7 @@ select{
 .ck .ures{margin-left:auto}
 .ck.off{opacity:.55}
 /* 2026-08-28 老闆：印後加工先勾選，勾了才跳出對應的加工填入格 ——
-   一張單很少八種加工全上，整片空格反而難填也容易漏看。 */
+   一張單很少九種加工全上，整片空格反而難填也容易漏看。 */
 .crafts{display:flex; flex-wrap:wrap; gap:6px}
 .chip{
   display:inline-flex; align-items:center; gap:6px; cursor:pointer; user-select:none;
@@ -224,11 +224,11 @@ button.primary:hover{opacity:.9; color:#fff}
     <b>方案要幾個自己加</b>：預設只開 A 案，按右上「＋ 新增方案」加 B、C…最多到 Z 案；「－ 移除末案」收掉最後一個。
     移除掉的那欄數字會留著，加回來就還在。開幾案會記住，下次打開一樣。<br>
     <b>印後加工先勾選</b>：勾起來的加工才會把它的填入格跳出來，沒勾的整列收起來、也不計費。
-    燙金／打凸／軋型／局部光／磨砂勾了會一次跳出「版費＋工繳」兩列（版費是模具，另記）。
+    燙金／打凸／軋型／局部光／磨砂／夜光油墨勾了會一次跳出「版費＋工繳」兩列（版費是模具，另記）。
     <b>燙金版費、打凸版費要各案自己勾才算</b>（預設都不勾，跟貼銀箔那排一樣一欄一個勾）——
     公式照樣算給你看，A 案要收版費、B 案客戶有舊版不收，就只勾 A —— 直接比出差多少。
     <b>貼膜</b>＝原本的上光那一列（換個名字，填過的數字還在）；<b>局部光</b>另外算，有自己的局部光版費。
-    <b>貼膜、局部光、磨砂都是「單價 × 印刷張數」</b>（做在大紙上，跟貼銀箔同一個道理；
+    <b>貼膜、局部光、磨砂、夜光油墨都是「單價 × 印刷張數」</b>（做在大紙上，跟貼銀箔同一個道理；
     沒填印刷張數會退回用製作數量算，小計會標出來）。
     紙張費用、印刷版費、印刷費用不進勾選，維持常駐（不印就留空，算 0）。<br>
     計價方式四選一：<b>分欄單價 ×數量</b>（預設）＝三欄各填各的單價，各自乘上該欄數量，格子下面直接顯示小計｜
@@ -285,6 +285,7 @@ const CRAFTS = [
   {c:'silver', n:'貼銀箔'},
   {c:'spot',   n:'局部光'},
   {c:'matte',  n:'磨砂'},
+  {c:'glow',   n:'夜光油墨'},
   {c:'glue',   n:'糊工'},
 ];
 
@@ -320,6 +321,9 @@ const ROWS = [
   // 2026-08-28 老闆：磨砂也要開版 —— 跟局部光一樣，版費是模具（再版還能用）、另記，倍率公式老闆還沒給，先填總價。
   {k:'matteP',n:'磨砂版費',  def:'shared',    modes:['shared','split'], note:'模具・另記', tool:true, craft:'matte'},
   {k:'matte', n:'磨砂費用',  def:'unitsplit', modes:ALL, craft:'matte', base:'sheet', note:'單價 × 印刷張數'},
+  // 2026-08-28 老闆：夜光油墨要開版，計價跟局部光／磨砂一樣是單價 × 印刷張數。
+  {k:'glowP', n:'夜光版費',  def:'shared',    modes:['shared','split'], note:'模具・另記', tool:true, craft:'glow'},
+  {k:'glow',  n:'夜光油墨費用', def:'unitsplit', modes:ALL, craft:'glow', base:'sheet', note:'單價 × 印刷張數'},
   {k:'glue',  n:'糊工單價',  def:'unitsplit', modes:ALL, craft:'glue'},
 ];
 const MODE_LABEL = {
