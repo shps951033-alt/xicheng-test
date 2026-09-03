@@ -257,40 +257,47 @@ const pad = n => String(n).padStart(2,'0');
 const today = () => { const d = new Date(); return d.getFullYear()+'/'+pad(d.getMonth()+1)+'/'+pad(d.getDate()); };
 
 /* ---------- 段落與工序對照 ----------
+   ⚠ 2026-09-04 老闆：「兩邊工序不一樣」→ 決定**傳票跟著成本比價計算機走**。
+     所以底下兩件事都要對齊 cost.html 的 ROWS：
+       1. 段落順序＝紙張 → 製版 → 印刷 → 上光 → 模具 → 後加工
+          （成本頁前三列就是 紙張費用／印刷版費／印刷費用，跟原本紙本傳票的「製版在前」相反）
+       2. 每一列的工序名＝成本頁那一列的名字去掉「費用／單價」（貼膜費用→貼膜、糊工單價→糊工），
+          一格都不留白，才看得出對應到成本頁哪一項。
+     ⚠ 改 cost.html 的 ROWS 順序或名稱時，這裡的 ORDER 與 op 要跟著改，否則兩邊又會對不起來。
+
    sec  ＝ 落在哪一段
-   op   ＝ 傳票最左邊那格的工序名（空字串＝跟段名同一件事，照原本的單子留白）
-   ct   ＝ 內容欄預設字（後加工那幾道，工序名就是寫在內容欄）
+   op   ＝ 傳票最左邊那格的工序名（跟成本頁同名）
    vd   ＝ 廠商欄預設字（自家做的填「喜成」，其餘一律留白自己填）
    qty  ＝ 數量欄帶哪個數：sheet 印刷張數（做在大紙上的）｜qty 製作數量（成品數）｜one 一份（模具）  */
 const SECS = [
-  {id:'plate', name:'製版'},
   {id:'paper', name:'紙張'},
+  {id:'plate', name:'製版'},
   {id:'print', name:'印刷'},
   {id:'coat',  name:'上光'},
   {id:'mold',  name:'模具'},
   {id:'post',  name:'後加工'},
 ];
 const MAP = {
+  paper : {sec:'paper', op:'紙張',      qty:'sheet'},
   plate : {sec:'plate', op:'印刷版',    qty:'one'},
-  paper : {sec:'paper', op:'',          qty:'sheet'},
-  print : {sec:'print', op:'',          qty:'sheet'},
-  gloss : {sec:'coat',  op:'',          qty:'sheet'},
-  spot  : {sec:'coat',  op:'局部光',    qty:'sheet'},
-  matte : {sec:'coat',  op:'磨砂',      qty:'sheet'},
-  glow  : {sec:'coat',  op:'夜光油墨',  qty:'sheet'},
+  print : {sec:'print', op:'印刷',      qty:'sheet'},
   foilP : {sec:'mold',  op:'燙金版',    qty:'one'},
+  foil  : {sec:'post',  op:'燙金',      qty:'qty', vd:'喜成'},
   embP  : {sec:'mold',  op:'打凸版',    qty:'one'},
+  emb   : {sec:'post',  op:'打凸',      qty:'qty', vd:'喜成'},
+  gloss : {sec:'coat',  op:'貼膜',      qty:'sheet'},
   die   : {sec:'mold',  op:'刀模',      qty:'one'},
+  cut   : {sec:'post',  op:'軋型',      qty:'qty', vd:'喜成'},
+  silver: {sec:'post',  op:'貼銀箔',    qty:'qty'},
   spotP : {sec:'mold',  op:'局部光版',  qty:'one'},
+  spot  : {sec:'coat',  op:'局部光',    qty:'sheet'},
   matteP: {sec:'mold',  op:'磨砂版',    qty:'one'},
+  matte : {sec:'coat',  op:'磨砂',      qty:'sheet'},
   glowP : {sec:'mold',  op:'夜光版',    qty:'one'},
-  foil  : {sec:'post',  op:'', ct:'燙金',   vd:'喜成', qty:'qty'},
-  emb   : {sec:'post',  op:'', ct:'打凸',   vd:'喜成', qty:'qty'},
-  cut   : {sec:'post',  op:'', ct:'軋型',   vd:'喜成', qty:'qty'},
-  silver: {sec:'post',  op:'', ct:'貼銀箔',            qty:'qty'},
-  glue  : {sec:'post',  op:'', ct:'糊工',   vd:'喜成', qty:'qty'},
+  glow  : {sec:'coat',  op:'夜光油墨',  qty:'sheet'},
+  glue  : {sec:'post',  op:'糊工',      qty:'qty', vd:'喜成'},
 };
-// 段落內的排列順序照 MAP 的宣告順序走
+// 段落內的排列順序照 MAP 的宣告順序走 —— 上面已經照成本頁 ROWS 的順序排好了
 const ORDER = Object.keys(MAP);
 
 const FLAGS = ['新版','再版','改版','數位樣','看印'];
@@ -319,7 +326,6 @@ function fromPayload(p){
     if (!p.rows || p.rows.indexOf(k) < 0) return;
     const m = MAP[k], r = BLANK();
     r.op = m.op || '';
-    r.ct = m.ct || '';
     r.vd = m.vd || '';
     r.qt = m.qty === 'one' ? '1' : (m.qty === 'sheet' ? sheet : qty);
     s.secs[m.sec].push(r);
