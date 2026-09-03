@@ -196,7 +196,7 @@ button.primary:hover{opacity:.9; color:#fff}
   <h1><span class="mark">喜成</span>成本比價計算機</h1>
   <div class="sub">同一張單、多種數量一起算，直接比每張成本</div>
   <!-- 版本標示：手機常被快取擋住看到舊版，老闆對一下這個日期就知道有沒有拿到新的。改版時要一起更新。 -->
-  <div class="ver">版本 2026-08-28・印後加工勾選＋加減方案</div>
+  <div class="ver">版本 2026-09-04・可生成工作傳票</div>
 </header>
 
 <div class="card">
@@ -220,10 +220,18 @@ button.primary:hover{opacity:.9; color:#fff}
   <div class="results" id="results"></div>
   <div class="bar">
     <button class="primary" onclick="copyReport()">複製報表</button>
+    <!-- 2026-09-04 老闆：算完直接開工作傳票（帶製作數量、印刷張數、這批要做的工序過去）。
+         多開幾案時旁邊會跳出選單，選要用哪一案生成。 -->
+    <button class="primary" id="toWork">生成工作單</button>
+    <select id="planSel" hidden></select>
     <button onclick="window.print()">列印 / 存 PDF</button>
     <button id="resetBottom">全部清空</button>
   </div>
   <div class="hint">
+    <b>生成工作單</b>：算完按下去會跳到「工作傳票」那一頁，把製作數量、印刷張數，
+    以及這批要做的工序（勾起來的加工＋有金額的紙張／印刷）照傳票排版列好。
+    開了兩案以上，按鈕旁邊會多一個選單，選要用哪一案生成。
+    廠商、規格、備註在傳票那頁自己填，填完按<b>生成 PDF ／ 列印</b>存檔或印出來。<br>
     <b>方案要幾個自己加</b>：預設只開 A 案，按右上「＋ 新增方案」加 B、C…最多到 Z 案；「－ 移除末案」收掉最後一個。
     移除掉的那欄數字會留著，加回來就還在。開幾案會記住，下次打開一樣。<br>
     <b>印後加工先勾選</b>：勾起來的加工才會把它的填入格跳出來，沒勾的整列收起來、也不計費。
@@ -464,6 +472,7 @@ function setCols(n){
   ROWS.filter(r => !r.type).forEach(renderCell);
   applyStore();                                  // 新欄留空白，舊欄的值原封不動回來
   syncColBtns();
+  syncPlanSel();                                 // 生成工作單要選哪一案，選單跟著欄數走
   calc();
 }
 function syncColBtns(){
@@ -474,6 +483,7 @@ function syncColBtns(){
 $('addCol').addEventListener('click', () => setCols(NCOL + 1));
 $('delCol').addEventListener('click', () => setCols(NCOL - 1));
 syncColBtns();
+syncPlanSel();
 
 // 歸零後印後加工的勾選全部收掉，跟第一次打開一樣。
 function craftDefaults(){
@@ -489,8 +499,11 @@ function calc(){
 
   ROWS.forEach(r => {
     let amounts;
+    // active ＝ 這一案「有沒有要做這道」。跟金額分開記：工藝勾了但單價還沒填，
+    // 工單上還是要有那道工序（2026-09-04 生成工作傳票用的）。
+    let active = null;
     // 沒勾的工藝＝這批不做這道，整列不計費（列本身也是收起來的）
-    if (r.craft && !craftOn(r.craft)) { lines.push({name:r.n, amounts:COLS.map(()=>0), tool:!!r.tool}); return; }
+    if (r.craft && !craftOn(r.craft)) { lines.push({key:r.k, name:r.n, amounts:COLS.map(()=>0), tool:!!r.tool, active:COLS.map(()=>false)}); return; }
     if (r.type === 'formula') {
       const v = num($(r.k+'_L').value) * num($(r.k+'_W').value) * r.mult;
       $(r.k+'_out').textContent = fmt(v);
@@ -498,6 +511,7 @@ function calc(){
       if (r.opt) {
         const on = COLS.map(c => { const cb = $(r.k+'_ck'+c); return cb ? cb.checked : false; });
         amounts = COLS.map(c => on[c] ? v : 0);
+        active = on;   // 沒勾＝這案不開這支版（客戶有舊版），工單上也不該出現
         COLS.forEach(c => {
           const o = $(r.k+'_ur'+c); if (!o) return;
           o.parentElement.classList.toggle('off', !on[c]);
@@ -513,6 +527,7 @@ function calc(){
       const low  = num($(r.k+'_M').value);
       // 沒勾的欄＝這個方案不做這項（老闆用來比「貼」跟「不貼」的價差），整欄歸 0。
       const on   = COLS.map(c => { const cb = $(r.k+'_ck'+c); return cb ? cb.checked : true; });
+      active = on;   // 沒勾的那案＝不貼，工單上也不列這道
       // 低消只在「有做這項」時才套：長寬沒填＝根本沒貼，不能無中生有一筆 2,000。
       amounts = COLS.map(c => {
         if (!on[c]) return 0;
@@ -540,7 +555,9 @@ function calc(){
       else if (mode === 'unit')  { const u = num($(r.k+'_s').value); amounts = COLS.map(c => u * base[c]); }
       else                       { const v = num($(r.k+'_s').value); amounts = COLS.map(() => v); }
     }
-    lines.push({name:r.n, amounts, tool:!!r.tool});
+    // 工藝勾了就算這案要做（單價還沒填也一樣）；常駐三列（紙張／印刷版／印刷）看有沒有金額。
+    if (!active) active = COLS.map(c => r.craft ? true : amounts[c] > 0);
+    lines.push({key:r.k, name:r.n, amounts, tool:!!r.tool, active});
   });
 
   // 2026-07-27 老闆：「每張單價不記入 刀膜／燙金版／打凸版，另記」
@@ -693,6 +710,32 @@ function copyReport(){
   });
   navigator.clipboard.writeText(t).then(() => toast('報表已複製')).catch(() => toast('複製失敗，請手動選取'));
 }
+/* ---------- 生成工作單 ----------
+   2026-09-04 老闆：「比價算完點生成工作單、跳到另一個網頁，依排版列出要做的印刷與後加工工序，
+   廠商和生產資料我自己填，填完點生成 PDF。」
+   → 這裡只把「哪一案、做多少、要做哪些工序」丟過去，廠商一概不帶（老闆指定手填）。
+   走 localStorage 交件；#wp= 是備援（本機直接開檔或 localStorage 被鎖住時還帶得過去）。 */
+const WORKPIPE = 'xicheng-worksheet-payload';
+function syncPlanSel(){
+  const s = $('planSel'); if (!s) return;
+  const cur = s.value;
+  s.hidden = NCOL <= 1;                       // 只開 A 案時不用選
+  s.innerHTML = COLS.map(c => '<option value="'+c+'">'+COLNAME[c]+'</option>').join('');
+  if (cur !== '' && +cur < NCOL) s.value = cur;
+}
+function goWorksheet(){
+  const {qty, sheets, lines} = calc();
+  const s = $('planSel');
+  const c = (s && !s.hidden && s.value !== '') ? +s.value : 0;
+  // active＝這一案要做的工序（工藝有勾就算，單價還沒填也照樣進工單）
+  const rows = lines.filter(l => l.active && l.active[c]).map(l => l.key);
+  if (!rows.length && !qty[c]) { toast('先填製作數量或勾工序，再生成工作單'); return; }
+  const raw = JSON.stringify({v:1, plan:COLNAME[c], qty:qty[c], sheets:sheets[c], rows, ts:Date.now()});
+  try { localStorage.setItem(WORKPIPE, raw); } catch(e) {}
+  location.href = 'worksheet.html#wp=' + encodeURIComponent(raw);
+}
+$('toWork').addEventListener('click', goWorksheet);
+
 function toast(msg, actionLabel, action){
   const el = $('toast');
   el.textContent = msg;

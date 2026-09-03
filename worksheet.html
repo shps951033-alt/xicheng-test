@@ -1,0 +1,523 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- 內部自用：工作傳票（發包用），會露出廠商與工序，一律不給搜尋引擎收錄。 -->
+<meta name="robots" content="noindex" />
+<title>喜成｜工作傳票</title>
+<style>
+:root{
+  --bg:#faf7f2; --card:#ffffff; --ink:#2b2622; --muted:#8a7f74;
+  --line:#e7ded1; --grid:#cbbfae; --accent:#b3352c; --accent-soft:#fbeeec;
+  --shadow:0 1px 2px rgba(60,45,30,.06),0 10px 30px rgba(60,45,30,.08);
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:"Noto Sans TC","Microsoft JhengHei",system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:15px; line-height:1.55; -webkit-text-size-adjust:100%;
+}
+.wrap{max-width:900px; margin:0 auto; padding:16px 14px 72px}
+
+/* ---------- 工具列（列印時整條消失） ---------- */
+.toolbar{
+  display:flex; gap:8px; flex-wrap:wrap; align-items:center;
+  background:var(--card); border:1px solid var(--line); border-radius:14px;
+  padding:10px 12px; box-shadow:var(--shadow); margin-bottom:14px;
+}
+.toolbar .grow{flex:1 1 auto}
+button{
+  font-family:inherit; font-size:14px; padding:8px 15px; border-radius:9px; cursor:pointer;
+  border:1px solid var(--line); background:var(--card); color:var(--ink); white-space:nowrap;
+}
+button:hover{border-color:var(--accent); color:var(--accent)}
+button.primary{background:var(--accent); border-color:var(--accent); color:#fff}
+button.primary:hover{opacity:.9; color:#fff}
+button.mini{font-size:12.5px; padding:3px 10px; border-radius:99px}
+.addbar{display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin-bottom:14px}
+.addbar .lb{font-size:12.5px; color:var(--muted)}
+.addbar button{font-size:12.5px; padding:4px 12px; border-radius:99px; color:var(--muted)}
+.src{
+  font-size:12.5px; color:var(--muted); background:var(--accent-soft); color:var(--accent);
+  border-radius:99px; padding:3px 12px; border:1px solid var(--accent);
+}
+
+/* ---------- 傳票本體（螢幕上就是一張 A4 白紙） ---------- */
+.sheet{
+  background:var(--card); border:1px solid var(--line); border-radius:14px;
+  box-shadow:var(--shadow); padding:24px 26px 30px;
+}
+.sheet h1{
+  font-size:23px; margin:0; text-align:center; letter-spacing:.14em; font-weight:800;
+}
+.sheet h1 .mark{
+  display:inline-block; background:var(--accent); color:#fff; border-radius:7px;
+  padding:2px 9px; margin-right:10px; font-size:17px; letter-spacing:.1em; vertical-align:3px;
+}
+.tel{text-align:center; font-size:13px; color:var(--muted); margin:4px 0 16px; letter-spacing:.04em}
+.tel b{color:var(--ink); font-weight:700}
+
+table{border-collapse:collapse; width:100%; table-layout:fixed}
+td,th{border:1px solid var(--grid); padding:0; vertical-align:middle; height:31px}
+.lb{
+  background:var(--accent-soft); font-size:12.5px; font-weight:700; color:var(--ink);
+  text-align:center; padding:2px 4px; letter-spacing:.04em; line-height:1.3;
+}
+input[type=text]{
+  width:100%; height:29px; border:0; background:transparent; color:var(--ink);
+  font-family:inherit; font-size:13.5px; padding:0 7px; text-align:center;
+}
+input[type=text]:focus{outline:0; background:var(--accent-soft)}
+input.num{font-variant-numeric:tabular-nums; font-weight:600}
+input::placeholder{color:#c9bfb2; font-weight:400}
+
+/* ---------- 版本旗標列 ---------- */
+.flags{
+  display:flex; flex-wrap:wrap; gap:6px; margin:12px 0 4px;
+}
+.chip{
+  display:inline-flex; align-items:center; gap:6px; cursor:pointer; user-select:none;
+  font-size:13px; padding:4px 14px; border-radius:99px; white-space:nowrap;
+  border:1px solid var(--grid); background:var(--bg); color:var(--muted);
+}
+.chip input{width:auto; margin:0; accent-color:var(--accent)}
+.chip.on{border-color:var(--accent); background:var(--accent-soft); color:var(--accent); font-weight:700}
+.agent{
+  display:flex; align-items:center; gap:8px; margin:10px 0 2px;
+  font-size:14px; font-weight:700; letter-spacing:.04em;
+}
+.agent input{
+  flex:1; border:0; border-bottom:1px solid var(--grid); background:transparent;
+  height:26px; font-size:13.5px; text-align:left; padding:0 4px; font-family:inherit; color:var(--ink);
+}
+.agent input:focus{outline:0; border-bottom-color:var(--accent)}
+
+/* ---------- 工序段落 ---------- */
+.sec{margin-top:14px; page-break-inside:avoid; break-inside:avoid}
+.sechd{
+  display:flex; align-items:center; gap:8px; margin-bottom:4px;
+}
+.sechd .nm{
+  font-size:13px; font-weight:800; letter-spacing:.1em; color:var(--accent);
+  background:var(--accent-soft); border:1px solid var(--accent); border-radius:99px; padding:1px 12px;
+}
+.sechd .sp{flex:1}
+.sechd button{font-size:12px; padding:2px 10px; border-radius:99px; color:var(--muted)}
+td.op{background:#fbf8f3}
+td.op input{font-weight:700; font-size:13px}
+td.tools{border:0; width:26px}
+td.tools button{
+  width:22px; height:22px; padding:0; line-height:1; border-radius:99px; font-size:12px;
+  color:var(--muted); border-color:transparent; background:transparent;
+}
+td.tools button:hover{color:var(--accent); border-color:var(--accent)}
+/* 印刷段底下那條「色數／現翻／天地翻」，跟其他列不同構造 */
+.subrow td{background:#fbf8f3}
+.subrow .ck{
+  display:flex; align-items:center; justify-content:center; gap:6px; font-size:13px; color:var(--muted); cursor:pointer;
+}
+.subrow .ck input{accent-color:var(--accent)}
+.subrow .ck.on{color:var(--accent); font-weight:700}
+
+.foot{margin-top:16px; display:flex; gap:10px; align-items:flex-start}
+.foot .memo{flex:1}
+.foot .memo .t{font-size:12px; color:var(--muted); margin-bottom:3px; letter-spacing:.06em}
+.foot textarea{
+  width:100%; min-height:58px; border:1px solid var(--grid); border-radius:6px; background:transparent;
+  font-family:inherit; font-size:13px; padding:6px 8px; color:var(--ink); resize:vertical;
+}
+.foot textarea:focus{outline:0; border-color:var(--accent)}
+.sign{width:190px}
+.sign table td{height:34px}
+
+.toast{
+  position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(20px);
+  background:var(--ink); color:var(--bg); padding:9px 18px; border-radius:99px; font-size:13px;
+  opacity:0; pointer-events:none; transition:.25s; z-index:9;
+}
+.toast.on{opacity:1; transform:translateX(-50%) translateY(0)}
+
+/* ---------- 列印：回到乾淨的黑白表單 ---------- */
+@page{size:A4 portrait; margin:9mm 10mm}
+@media print{
+  body{background:#fff; font-size:12px}
+  .wrap{max-width:none; padding:0}
+  .toolbar,.addbar,.toast,td.tools,.sechd button{display:none !important}
+  .sheet{border:0; border-radius:0; box-shadow:none; padding:0}
+  .sheet h1{font-size:20px}
+  .sheet h1 .mark{background:none; color:var(--ink); border:1.4px solid #000; padding:1px 7px; font-size:15px}
+  .tel{margin-bottom:10px; color:#000}
+  td,th{border-color:#000; height:26px}
+  .lb{background:#f2f2f2; color:#000; font-size:11.5px}
+  input[type=text]{color:#000; font-size:12px; height:24px}
+  input::placeholder{color:transparent}
+  .sechd .nm{color:#000; background:none; border:1.2px solid #000; font-size:11.5px; padding:0 9px}
+  /* 勾選類在列印時一律回黑白：.chip.on 的紅字／紅框特異性比 .chip 高，要指名蓋掉，
+     accent-color 也要一起改，不然紙上會印出一顆紅勾。 */
+  .chip,.chip.on{border-color:#000; color:#000; background:none; font-size:11.5px; padding:2px 10px}
+  .chip.on{background:#f2f2f2; font-weight:700}
+  .chip input,.subrow .ck input{accent-color:#000}
+  .agent input{border-bottom-color:#000}
+  .subrow td{background:#fafafa}
+  .subrow .ck{color:#000}
+  .sec{margin-top:9px}
+  .foot textarea{border-color:#000}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="toolbar">
+  <button class="primary" id="pdf">生成 PDF ／ 列印</button>
+  <span class="src" id="src" hidden></span>
+  <span class="grow"></span>
+  <button id="back" hidden>← 回比價計算機</button>
+  <button id="reload" hidden>重新帶入比價資料</button>
+  <button id="clear">清空整張</button>
+</div>
+
+<div class="addbar" id="addbar"></div>
+
+<div class="sheet" id="sheet">
+
+  <h1><span class="mark">喜成</span>工作傳票</h1>
+  <div class="tel">電話：黃嘉胤 <b>0986-990-812</b></div>
+
+  <table>
+    <colgroup><col style="width:15%"><col style="width:22%"><col style="width:13%"><col style="width:17%"><col style="width:14%"><col style="width:19%"></colgroup>
+    <tr>
+      <td class="lb">客戶代號（名稱）</td>
+      <td colspan="3"><input type="text" data-f="h.cust"></td>
+      <td class="lb">工單日期</td>
+      <td><input type="text" data-f="h.date"></td>
+    </tr>
+    <tr>
+      <td class="lb">印鑑名稱</td>
+      <td colspan="3"><input type="text" data-f="h.title" placeholder="品名"></td>
+      <td class="lb">交貨日期</td>
+      <td><input type="text" data-f="h.due"></td>
+    </tr>
+    <tr>
+      <td class="lb">製作數量</td>
+      <td><input type="text" class="num" data-f="h.qty"></td>
+      <td class="lb">模數</td>
+      <td><input type="text" class="num" data-f="h.mod"></td>
+      <td class="lb">經手人</td>
+      <td><input type="text" data-f="h.who"></td>
+    </tr>
+    <tr>
+      <td class="lb">成品規格</td>
+      <td><input type="text" data-f="h.spec"></td>
+      <td class="lb">展開規格</td>
+      <td><input type="text" data-f="h.flat"></td>
+      <td class="lb">工令號碼</td>
+      <td><input type="text" data-f="h.no"></td>
+    </tr>
+  </table>
+
+  <div class="flags" id="flags"></div>
+
+  <div class="agent">代發廠商全權處理：<input type="text" data-f="h.agent"></div>
+
+  <div id="secs"></div>
+
+  <div class="foot">
+    <div class="memo">
+      <div class="t">交代事項</div>
+      <textarea data-f="h.memo"></textarea>
+    </div>
+    <div class="sign">
+      <table>
+        <colgroup><col style="width:38%"><col style="width:62%"></colgroup>
+        <tr><td class="lb">開單</td><td><input type="text" data-f="h.s1"></td></tr>
+        <tr><td class="lb">主管</td><td><input type="text" data-f="h.s2"></td></tr>
+      </table>
+    </div>
+  </div>
+
+</div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================================
+   喜成印刷｜工作傳票
+   - 從成本比價計算機（cost.html）按「生成工作單」跳過來時，會帶著那一案的
+     製作數量、印刷張數、以及「這批要做哪些工序」，自動把該有的列排出來。
+   - 直接開這一頁（沒帶資料）＝空白傳票，六個段落各給一列，自己填。
+   - 廠商、規格、備註一律手填（老闆 2026-09-04：不要自動帶廠商資料）。
+   ========================================================================= */
+
+const KEY  = 'xicheng-worksheet-v1';       // 這張傳票填到一半的內容
+const PIPE = 'xicheng-worksheet-payload';  // cost.html 丟過來的比價資料
+const $ = id => document.getElementById(id);
+const pad = n => String(n).padStart(2,'0');
+const today = () => { const d = new Date(); return d.getFullYear()+'/'+pad(d.getMonth()+1)+'/'+pad(d.getDate()); };
+
+/* ---------- 段落與工序對照 ----------
+   sec  ＝ 落在哪一段
+   op   ＝ 傳票最左邊那格的工序名（空字串＝跟段名同一件事，照原本的單子留白）
+   ct   ＝ 內容欄預設字（後加工那幾道，工序名就是寫在內容欄）
+   vd   ＝ 廠商欄預設字（自家做的填「喜成」，其餘一律留白自己填）
+   qty  ＝ 數量欄帶哪個數：sheet 印刷張數（做在大紙上的）｜qty 製作數量（成品數）｜one 一份（模具）  */
+const SECS = [
+  {id:'plate', name:'製版'},
+  {id:'paper', name:'紙張'},
+  {id:'print', name:'印刷'},
+  {id:'coat',  name:'上光'},
+  {id:'mold',  name:'模具'},
+  {id:'post',  name:'後加工'},
+];
+const MAP = {
+  plate : {sec:'plate', op:'印刷版',    qty:'one'},
+  paper : {sec:'paper', op:'',          qty:'sheet'},
+  print : {sec:'print', op:'',          qty:'sheet'},
+  gloss : {sec:'coat',  op:'',          qty:'sheet'},
+  spot  : {sec:'coat',  op:'局部光',    qty:'sheet'},
+  matte : {sec:'coat',  op:'磨砂',      qty:'sheet'},
+  glow  : {sec:'coat',  op:'夜光油墨',  qty:'sheet'},
+  foilP : {sec:'mold',  op:'燙金版',    qty:'one'},
+  embP  : {sec:'mold',  op:'打凸版',    qty:'one'},
+  die   : {sec:'mold',  op:'刀模',      qty:'one'},
+  spotP : {sec:'mold',  op:'局部光版',  qty:'one'},
+  matteP: {sec:'mold',  op:'磨砂版',    qty:'one'},
+  glowP : {sec:'mold',  op:'夜光版',    qty:'one'},
+  foil  : {sec:'post',  op:'', ct:'燙金',   vd:'喜成', qty:'qty'},
+  emb   : {sec:'post',  op:'', ct:'打凸',   vd:'喜成', qty:'qty'},
+  cut   : {sec:'post',  op:'', ct:'軋型',   vd:'喜成', qty:'qty'},
+  silver: {sec:'post',  op:'', ct:'貼銀箔',            qty:'qty'},
+  glue  : {sec:'post',  op:'', ct:'糊工',   vd:'喜成', qty:'qty'},
+};
+// 段落內的排列順序照 MAP 的宣告順序走
+const ORDER = Object.keys(MAP);
+
+const FLAGS = ['新版','再版','改版','數位樣','看印'];
+
+/* ---------- 目前這張單的狀態 ---------- */
+let state = {
+  head : {},                       // 表頭欄位
+  flags: {},                       // 新版／再版…
+  secs : {},                       // {段id: [ {op,vd,ct,sp,qt,rm,pl,fin}, ... ]}
+  hidden: {},                      // 被關掉的段落
+  print: {color:'', now:false, td:false},   // 印刷段的色數／現翻／天地翻
+  src  : '',                       // 資料來源標示（哪一案帶過來的）
+};
+const BLANK = () => ({op:'',vd:'',ct:'',sp:'',qt:'',rm:'',pl:'',fin:''});
+
+/* ---------- 把 cost.html 丟過來的比價資料攤成傳票的列 ---------- */
+function fromPayload(p){
+  const s = {head:{}, flags:{}, secs:{}, hidden:{}, print:{color:'',now:false,td:false}, src:''};
+  s.head.date = today();
+  s.head.qty  = p.qty ? String(p.qty) : '';
+  s.src = '已帶入比價資料' + (p.plan ? '（'+p.plan+'）' : '');
+  const sheet = p.sheets ? String(p.sheets) : (p.qty ? String(p.qty) : '');
+  const qty   = p.qty ? String(p.qty) : '';
+  SECS.forEach(sec => s.secs[sec.id] = []);
+  ORDER.forEach(k => {
+    if (!p.rows || p.rows.indexOf(k) < 0) return;
+    const m = MAP[k], r = BLANK();
+    r.op = m.op || '';
+    r.ct = m.ct || '';
+    r.vd = m.vd || '';
+    r.qt = m.qty === 'one' ? '1' : (m.qty === 'sheet' ? sheet : qty);
+    s.secs[m.sec].push(r);
+  });
+  // 沒有任何列的段落先收起來，要用再從上面那排按鈕加回去
+  SECS.forEach(sec => { if (!s.secs[sec.id].length) s.hidden[sec.id] = true; });
+  return s;
+}
+// 沒帶資料就是一張空白傳票：六段各一列
+function blankState(){
+  const s = {head:{date:today()}, flags:{}, secs:{}, hidden:{}, print:{color:'',now:false,td:false}, src:''};
+  SECS.forEach(sec => s.secs[sec.id] = [BLANK()]);
+  return s;
+}
+
+/* ---------- 開頁：優先吃 cost.html 帶過來的資料 ---------- */
+let payload = null;
+function readPayload(consume){
+  // 主要走 localStorage；#wp= 是備援（本機直接開檔、或瀏覽器把 localStorage 鎖住時還能帶得過來）
+  let raw = null;
+  try { raw = localStorage.getItem(PIPE); } catch(e) {}
+  if (!raw && location.hash.indexOf('#wp=') === 0) {
+    try { raw = decodeURIComponent(location.hash.slice(4)); } catch(e) {}
+  }
+  if (!raw) return null;
+  let p = null;
+  try { p = JSON.parse(raw); } catch(e) { return null; }
+  if (consume) {
+    try { localStorage.removeItem(PIPE); } catch(e) {}
+    // ⚠ 網址上的 #wp= 一定要一起清掉：留著的話，填到一半重新整理會被它再倒一次、
+    //    把手填的廠商規格全部洗掉（填好的內容另外存在 KEY 裡，重整本來就會回來）。
+    if (location.hash) { try { history.replaceState(null, '', location.pathname + location.search); } catch(e) {} }
+  }
+  return p;
+}
+// 這張單有沒有被填過（用來判斷要不要留一手「復原」）
+function filled(s){
+  if (!s || !s.secs) return false;
+  if (Object.keys(s.head || {}).some(k => k !== 'date' && (s.head[k] || '').trim())) return true;
+  return Object.keys(s.secs).some(id => s.secs[id].some(r => Object.keys(r).some(k => (r[k] || '').trim())));
+}
+function boot(){
+  payload = readPayload(true);
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch(e) {}
+  if (payload) {
+    // 從比價那邊帶新資料過來＝開新的一張單。上一張如果填過東西，
+    // 留一顆「復原」8 秒 —— 手機按錯一顆鈕就把填半天的單洗掉，很難救。
+    const prev = (saved && saved.secs && filled(saved)) ? saved : null;
+    state = fromPayload(payload); save(); render();
+    if (prev) toast('已帶入新的比價資料，原本填的單被換掉了', '復原上一張',
+                    () => { state = prev; save(); render(); toast('已復原上一張'); });
+    return;
+  }
+  state = (saved && saved.secs) ? saved : blankState();
+  render();
+}
+
+/* ---------- 畫面 ---------- */
+function render(){
+  // 版本旗標
+  $('flags').innerHTML = FLAGS.map(f =>
+    '<label class="chip'+(state.flags[f]?' on':'')+'"><input type="checkbox" data-flag="'+f+'"'
+    + (state.flags[f]?' checked':'')+'>'+f+'</label>').join('');
+
+  // 工序段落
+  $('secs').innerHTML = SECS.filter(sec => !state.hidden[sec.id]).map(sec => {
+    const rows = state.secs[sec.id] || [];
+    return '<div class="sec">'
+      + '<div class="sechd"><span class="nm">'+sec.name+'</span>'
+      +   '<span class="sp"></span>'
+      +   '<button data-add="'+sec.id+'">＋ 加一列</button>'
+      +   '<button data-drop="'+sec.id+'">收起這段</button>'
+      + '</div>'
+      + '<table>'
+      +   '<colgroup><col style="width:11%"><col style="width:12%"><col style="width:14%"><col style="width:17%">'
+      +   '<col style="width:10%"><col style="width:16%"><col style="width:10%"><col style="width:10%"><col style="width:26px"></colgroup>'
+      +   '<tr><td class="lb">工序</td><td class="lb">廠商</td><td class="lb">內容</td><td class="lb">規格</td>'
+      +   '<td class="lb">數量</td><td class="lb">備註</td><td class="lb">版號</td><td class="lb">完工</td><td class="tools"></td></tr>'
+      +   rows.map((r,i) => rowHTML(sec.id, i, r)).join('')
+      +   (sec.id === 'print' ? printSub() : '')
+      + '</table></div>';
+  }).join('');
+
+  // 被收起來的段落，做成一排可以加回去的按鈕
+  const off = SECS.filter(sec => state.hidden[sec.id]);
+  $('addbar').innerHTML = off.length
+    ? '<span class="lb">加回段落：</span>' + off.map(sec => '<button data-show="'+sec.id+'">＋ '+sec.name+'</button>').join('')
+    : '';
+
+  // 表頭與交代事項
+  document.querySelectorAll('[data-f]').forEach(el => {
+    const k = el.dataset.f.split('.')[1];
+    el.value = state.head[k] || '';
+  });
+
+  $('src').hidden = !state.src;
+  $('src').textContent = state.src;
+  $('back').hidden = $('reload').hidden = !state.src;
+}
+function cell(sec,i,f,r,cls){
+  return '<td'+(f==='op'?' class="op"':'')+'><input type="text"'+(cls?' class="'+cls+'"':'')
+       + ' data-s="'+sec+'" data-i="'+i+'" data-k="'+f+'" value="'+esc(r[f]||'')+'"></td>';
+}
+function rowHTML(sec,i,r){
+  return '<tr>'
+    + cell(sec,i,'op',r) + cell(sec,i,'vd',r) + cell(sec,i,'ct',r) + cell(sec,i,'sp',r)
+    + cell(sec,i,'qt',r,'num') + cell(sec,i,'rm',r) + cell(sec,i,'pl',r) + cell(sec,i,'fin',r)
+    + '<td class="tools"><button data-del="'+sec+'" data-i="'+i+'" title="刪這一列">✕</button></td>'
+    + '</tr>';
+}
+// 印刷段底下的「色數／現翻／天地翻」，照原本的單子留著
+function printSub(){
+  const p = state.print;
+  return '<tr class="subrow">'
+    + '<td class="lb">色數</td>'
+    + '<td><input type="text" class="num" data-p="color" value="'+esc(p.color||'')+'"></td>'
+    + '<td colspan="2"><label class="ck'+(p.now?' on':'')+'"><input type="checkbox" data-p="now"'+(p.now?' checked':'')+'>現翻</label></td>'
+    + '<td colspan="2"><label class="ck'+(p.td?' on':'')+'"><input type="checkbox" data-p="td"'+(p.td?' checked':'')+'>天地翻</label></td>'
+    + '<td></td><td></td><td class="tools"></td></tr>';
+}
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+
+/* ---------- 存檔（填到一半重整不會掉） ---------- */
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e) {} }
+
+/* ---------- 事件 ---------- */
+document.addEventListener('input', e => {
+  const t = e.target;
+  if (t.dataset.s !== undefined && t.dataset.k) { state.secs[t.dataset.s][+t.dataset.i][t.dataset.k] = t.value; save(); return; }
+  if (t.dataset.f) { state.head[t.dataset.f.split('.')[1]] = t.value; save(); return; }
+  if (t.dataset.p === 'color') { state.print.color = t.value; save(); }
+});
+document.addEventListener('change', e => {
+  const t = e.target;
+  if (t.dataset.flag !== undefined) {
+    state.flags[t.dataset.flag] = t.checked;
+    t.closest('.chip').classList.toggle('on', t.checked);
+    save(); return;
+  }
+  if (t.dataset.p === 'now' || t.dataset.p === 'td') {
+    state.print[t.dataset.p] = t.checked;
+    t.closest('.ck').classList.toggle('on', t.checked);
+    save();
+  }
+});
+document.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.add)  { state.secs[b.dataset.add].push(BLANK()); save(); render(); return; }
+  if (b.dataset.del)  {
+    const arr = state.secs[b.dataset.del];
+    arr.splice(+b.dataset.i, 1);
+    if (!arr.length) arr.push(BLANK());   // 一段至少留一列空的，不然整段看起來像壞掉
+    save(); render(); return;
+  }
+  if (b.dataset.drop) { state.hidden[b.dataset.drop] = true; save(); render(); return; }
+  if (b.dataset.show) {
+    delete state.hidden[b.dataset.show];
+    if (!state.secs[b.dataset.show] || !state.secs[b.dataset.show].length) state.secs[b.dataset.show] = [BLANK()];
+    save(); render();
+  }
+});
+
+$('pdf').addEventListener('click', () => window.print());
+$('back').addEventListener('click', () => { location.href = 'cost.html'; });
+$('reload').addEventListener('click', () => {
+  // 比價那邊改了數字，回這裡按一下重新排一次列（表頭填過的字會留著）
+  const p = readPayload(false) || payload;
+  if (!p) { toast('沒有比價資料可以帶'); return; }
+  const head = state.head, flags = state.flags;
+  state = fromPayload(p);
+  state.head = Object.assign({}, head, {qty: p.qty ? String(p.qty) : head.qty});
+  state.flags = flags;
+  save(); render(); toast('已重新帶入');
+});
+$('clear').addEventListener('click', () => {
+  const backup = JSON.parse(JSON.stringify(state));
+  state = blankState(); save(); render();
+  toast('已清空', '復原', () => { state = backup; save(); render(); toast('已復原'); });
+});
+
+function toast(msg, label, act){
+  const el = $('toast');
+  el.textContent = msg;
+  if (act) {
+    const b = document.createElement('button');
+    b.textContent = label;
+    b.style.cssText = 'margin-left:12px;background:transparent;border:1px solid var(--bg);color:var(--bg);border-radius:99px;padding:2px 12px;font-size:13px;font-weight:700';
+    b.onclick = () => { el.classList.remove('on'); act(); };
+    el.appendChild(b);
+    el.style.pointerEvents = 'auto';
+  } else el.style.pointerEvents = 'none';
+  el.classList.add('on');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => el.classList.remove('on'), act ? 8000 : 1600);
+}
+
+boot();
+</script>
+</body>
+</html>
