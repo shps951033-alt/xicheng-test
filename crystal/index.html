@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>水晶標轉印貼 印製訂購｜喜成燙金印刷</title>
-<meta name="description" content="水晶標轉印貼印製，印刷色 CMYK 與金屬色兩種，以 A3 計價、量大單價更低。線上試算金額，並可預覽圖案在 A3 排得下幾個。可代排版、代剪裁、去背。高雄喜成燙金印刷。">
+<meta name="description" content="水晶標轉印貼印製，印刷色 CMYK 與金屬色兩種，以 A3 計價、量大單價更低。線上試算金額，並可預覽圖案在 A3 排得下幾個。可代排版、去背。高雄喜成燙金印刷。">
 <link rel="canonical" href="https://xicheng-print.com/crystal/">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://xicheng-print.com/crystal/">
@@ -322,10 +322,6 @@ footer{padding:30px 0 24px;text-align:center}
       <div class="pv">100<small>元／張 A3</small></div>
     </div>
     <div class="pr">
-      <div class="pk">代客剪裁<em>沿外框裁開，不含半斷</em></div>
-      <div class="pv">50<small>元／張 A3</small></div>
-    </div>
-    <div class="pr">
       <div class="pk">照片、圖片大量去背<em>整筆一次計，不分張數</em></div>
       <div class="pv">600<small>元／筆</small></div>
     </div>
@@ -335,7 +331,7 @@ footer{padding:30px 0 24px;text-align:center}
     </div>
   </div>
   <p class="hint"><b>以上皆為未稅價</b>，發票與稅金於報價時一併確認。
-    基本規格為 A3 整張，未包含剪裁，需自行剪裁；要我們裁好請加購「代客剪裁」。</p>
+    基本規格為 A3 整張，成品需自行剪裁。</p>
 </section>
 
 <section class="wrap">
@@ -399,7 +395,6 @@ footer{padding:30px 0 24px;text-align:center}
     <label class="t">加購服務<small>（不需要就不用勾）</small></label>
     <div class="opts">
       <label><input type="checkbox" id="cLayout">代客排版</label>
-      <label><input type="checkbox" id="cCut">代客剪裁</label>
       <label><input type="checkbox" id="cMat">大量去背 +600</label>
     </div>
 
@@ -417,20 +412,7 @@ footer{padding:30px 0 24px;text-align:center}
       </div>
     </div>
 
-    <div class="sub" id="sCut">
-      <div class="qty">
-        <div class="qrow">
-          <div class="qi"><b>代客剪裁</b><em>50 元／張，不含半斷</em></div>
-          <div class="qc">
-            <button type="button" data-step="-1" data-target="qCut" aria-label="減少">−</button>
-            <input type="number" id="qCut" inputmode="numeric" min="0" step="1" value="0">
-            <span>張</span>
-            <button type="button" data-step="1" data-target="qCut" aria-label="增加">＋</button>
-          </div>
-        </div>
-      </div>
-    </div>
-    <p class="hint">已經自己排好版、也自己剪的話，不用勾任何一項。</p>
+    <p class="hint">已經自己排好版的話，不用勾任何一項。</p>
   </div>
 
   <div class="field">
@@ -580,7 +562,6 @@ footer{padding:30px 0 24px;text-align:center}
    來源：喜成水晶標轉印貼公開報價。改價只改這裡。 */
 var PRICE = {
   layout : 100,  /* 代客排版，每張 A3 */
-  cut    :  50,  /* 代客剪裁（無半斷），每張 A3 */
   matting: 600,  /* 照片圖片大量去背，整筆一次 */
   ship   : 100   /* 郵寄運費，整筆一次 */
 };
@@ -647,7 +628,7 @@ document.querySelectorAll('.qc button').forEach(function(b){
 });
 
 /* 加購勾選：展開子項，並把張數預設帶成目前總張數 */
-[['cLayout','sLayout','qLayout'],['cCut','sCut','qCut']].forEach(function(t){
+[['cLayout','sLayout','qLayout']].forEach(function(t){
   $(t[0]).addEventListener('change', function(){
     var on = $(t[0]).checked;
     $(t[1]).classList.toggle('on', on);
@@ -668,7 +649,7 @@ document.querySelectorAll('input[name=ship]').forEach(function(r){
 function shipMode(){ return document.querySelector('input[name=ship]:checked').value; }
 function totalSheets(){ return num('qCmyk') + num('qMetal'); }
 
-['qCmyk','qMetal','qLayout','qCut'].forEach(function(id){
+['qCmyk','qMetal','qLayout'].forEach(function(id){
   $(id).addEventListener('input', calc);
 });
 $('cMat').addEventListener('change', calc);
@@ -691,10 +672,6 @@ function quote(){
   if($('cLayout').checked && num('qLayout')){
     var a1 = num('qLayout') * PRICE.layout; add += a1;
     rows.push({k:'代客排版', d:num('qLayout') + ' 張 × ' + PRICE.layout + ' 元', v:a1});
-  }
-  if($('cCut').checked && num('qCut')){
-    var a2 = num('qCut') * PRICE.cut; add += a2;
-    rows.push({k:'代客剪裁（不含半斷）', d:num('qCut') + ' 張 × ' + PRICE.cut + ' 元', v:a2});
   }
   if($('cMat').checked){ add += PRICE.matting;
     rows.push({k:'大量去背', d:'整筆一次計', v:PRICE.matting}); }
@@ -1070,7 +1047,6 @@ $('genBtn').addEventListener('click', function(){
 
   var addl = [];
   if($('cLayout').checked && num('qLayout')) addl.push('代客排版 ' + num('qLayout') + ' 張');
-  if($('cCut').checked && num('qCut'))       addl.push('代客剪裁 ' + num('qCut') + ' 張（不含半斷）');
   if($('cMat').checked)                      addl.push('大量去背');
   if(addl.length) m += '\n■ 加購\n‧' + addl.join('\n‧') + '\n';
 
