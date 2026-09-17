@@ -82,6 +82,25 @@ td.c{text-align:center}
 .no{text-align:center;font-size:12.5px;color:var(--ink2);padding-top:8px}
 .spec{padding:5px 7px;min-height:56px;font-size:13px;outline:none;white-space:pre-wrap}
 .amt{padding:7px 7px;text-align:right;font-variant-numeric:tabular-nums}
+/* ── 數量方案（同一張單比 1000 / 2000 兩種數量）──
+   數量、單價、金額三欄各自堆疊 N 條「方案線」，用虛線分隔；欄寬完全不變，
+   所以列印版面不受影響。①②③ 對應右下角總表的方案順序。 */
+.tcell{padding:0}
+.tline{display:flex;align-items:center;border-bottom:1px dotted var(--line);}
+.tcell .tline:last-child{border-bottom:0}
+.tline .tmark{flex:none;width:12px;text-align:center;font-size:9.5px;color:var(--gold);user-select:none}
+.tline input{padding:4px 3px;min-width:0}
+.tline .amt{flex:1;padding:6px 7px;font-size:13px}
+.solo .tmark{display:none}
+table.multi{width:100%;border-collapse:collapse;margin-top:6px;display:none}
+.sum.multi-mode table.multi{display:table}
+.sum.multi-mode .single{display:none}
+table.multi th{background:#f6efe0;font-size:10.5px;letter-spacing:.06em;padding:4px 5px;border:1px solid var(--line)}
+table.multi td{border:1px solid var(--line);padding:0;font-size:12px}
+table.multi td.v{padding:4px 7px;text-align:right;font-variant-numeric:tabular-nums}
+table.multi td.tot{font-weight:700;color:var(--gold);background:#faf5ea}
+table.multi input.plan{border:0;background:transparent;padding:4px 6px;font-size:12px;width:100%}
+table.multi .mk{color:var(--gold);font-size:10px;padding-left:5px}
 input.num{text-align:right;font-variant-numeric:tabular-nums}
 /* 「人工包裝裝箱費」有 7 個字，字級要小一點才不會被切掉 */
 select.kind{border:0;padding:5px 2px;font-size:11.5px;text-align:center}
@@ -136,6 +155,12 @@ select.kind{border:0;padding:5px 2px;font-size:11.5px;text-align:center}
   table{margin-top:8px}
   .bottom{margin-top:8px}
   /* 再收緊：右下金額區與上方欄位列是最吃高度的兩塊（實測填 3 項可省約 60px） */
+  /* 數量方案：列印時線距與比價總表都收緊一點 */
+  .tline input{padding:3px 4px;font-size:12px}
+  .tline .amt{padding:3px 6px;font-size:12px}
+  table.multi th{padding:3px 5px;font-size:10px}
+  table.multi td,table.multi input.plan{font-size:11.5px}
+  table.multi td.v{padding:3px 6px}
   .sum .r{padding:3px 9px;font-size:12px}
   .sum .r.total{padding:5px 9px;font-size:14px}
   .sum .cap{padding:3px 9px}
@@ -240,6 +265,13 @@ select.kind{border:0;padding:5px 2px;font-size:11.5px;text-align:center}
       <div class="f"><label>運送方式</label><input data-k="q_ship" value="貨運（運費另計）"></div>
       <div class="f"><label>案件名稱</label><input data-k="q_case" placeholder="例：品牌手提紙袋"></div>
       <div class="f"><label>報 價 人</label><input data-k="q_by" value="黃嘉胤"></div>
+      <div class="f"><label>數量方案</label>
+        <select data-k="q_tiers" id="tiers" onchange="setTiers(this.value)" title="同一張單要比較不同數量的價格時改這裡">
+          <option value="1">單一數量</option>
+          <option value="2">兩種數量比價（例：1000 / 2000）</option>
+          <option value="3">三種數量比價</option>
+        </select>
+      </div>
     </div>
   </fieldset>
 
@@ -250,7 +282,7 @@ select.kind{border:0;padding:5px 2px;font-size:11.5px;text-align:center}
         <th style="width:26px">#</th>
         <th style="width:100px">品　項</th>
         <th>品名 · 規格說明</th>
-        <th style="width:62px">數量</th>
+        <th style="width:76px">數量</th>
         <th style="width:46px">單位</th>
         <th style="width:78px">單價</th>
         <th style="width:90px">金額</th>
@@ -281,8 +313,8 @@ select.kind{border:0;padding:5px 2px;font-size:11.5px;text-align:center}
     </div>
 
     <div>
-      <div class="sum">
-        <div class="r"><span>小計 SUBTOTAL</span><span id="s_sub">0</span></div>
+      <div class="sum" id="sumbox">
+        <div class="r single"><span>小計 SUBTOTAL</span><span id="s_sub">0</span></div>
         <div class="r"><span>折讓 DISCOUNT</span><input class="num" id="discount" type="number" step="1" value="0" oninput="calc()"></div>
         <div class="r">
           <span>稅別</span>
@@ -292,10 +324,15 @@ select.kind{border:0;padding:5px 2px;font-size:11.5px;text-align:center}
             <option value="free">免稅 / 不開發票</option>
           </select>
         </div>
-        <div class="r"><span>未稅金額</span><span id="s_net">0</span></div>
-        <div class="r"><span>營業稅 5%</span><span id="s_tax">0</span></div>
-        <div class="r total"><span>總計 TOTAL</span><span id="s_tot">0</span></div>
-        <div class="cap">新台幣（大寫）：<span id="s_cap">零元整</span></div>
+        <div class="r single"><span>未稅金額</span><span id="s_net">0</span></div>
+        <div class="r single"><span>營業稅 5%</span><span id="s_tax">0</span></div>
+        <div class="r total single"><span>總計 TOTAL</span><span id="s_tot">0</span></div>
+        <div class="cap single">新台幣（大寫）：<span id="s_cap">零元整</span></div>
+        <!-- 兩種以上數量方案時改顯示這張比價總表（每個方案各自一列） -->
+        <table class="multi" id="multi">
+          <thead><tr><th style="width:38%">數量方案</th><th>未稅</th><th>稅 5%</th><th>總計</th></tr></thead>
+          <tbody></tbody>
+        </table>
       </div>
 
       <div class="sign">
@@ -343,21 +380,78 @@ var UNIT = {
 };
 
 /* 表格列 */
+/* ═══ 數量方案 ═══
+   1＝單一數量（跟以前一樣）；2／3＝同一張單比不同數量的價格。
+   數量、單價、金額三欄各自堆疊 N 條線，第 N 條留空就沿用第一條的值
+   （例：刀模只填一次，兩個方案都算得到）。 */
+var MARKS = ['①','②','③'];
+function tierCount(){
+  var el = document.getElementById('tiers');
+  var v = parseInt(el && el.value, 10) || 1;
+  return Math.max(1, Math.min(3, v));
+}
+function tierHTML(n, cls, tag){
+  var out = '';
+  for(var i = 0; i < n; i++){
+    var mark = '<span class="tmark">' + MARKS[i] + '</span>';
+    out += '<div class="tline">' + mark +
+      (tag === 'amt'
+        ? '<div class="amt"></div>'
+        : '<input class="num ' + cls + '" type="number" step="' + (cls === 'qty' ? '1' : '0.01') + '" min="0" oninput="calc()">') +
+      '</div>';
+  }
+  return out;
+}
+function buildTiers(tr, n){
+  var keep = {
+    qty:   [].map.call(tr.querySelectorAll('.qty'),   function(e){ return e.value; }),
+    price: [].map.call(tr.querySelectorAll('.price'), function(e){ return e.value; })
+  };
+  tr.querySelector('.qtycell').innerHTML   = tierHTML(n, 'qty', 'qty');
+  tr.querySelector('.pricecell').innerHTML = tierHTML(n, 'price', 'price');
+  tr.querySelector('.amtcell').innerHTML   = tierHTML(n, '', 'amt');
+  [].forEach.call(tr.querySelectorAll('.qty'),   function(e, i){ if(keep.qty[i]   != null) e.value = keep.qty[i]; });
+  [].forEach.call(tr.querySelectorAll('.price'), function(e, i){ if(keep.price[i] != null) e.value = keep.price[i]; });
+}
+function setTiers(v){
+  var n = Math.max(1, Math.min(3, parseInt(v, 10) || 1));
+  var el = document.getElementById('tiers'); if(el) el.value = String(n);
+  [].forEach.call(document.querySelectorAll('#items tbody tr'), function(tr){ buildTiers(tr, n); });
+  document.getElementById('items').classList.toggle('solo', n === 1);
+  document.getElementById('sumbox').classList.toggle('multi-mode', n > 1);
+  buildMultiRows(n);
+  calc(); saveLS();
+}
+/* 比價總表的列（方案名稱可自己改成「1000 個」「2000 個」） */
+function buildMultiRows(n){
+  var tb = document.querySelector('#multi tbody');
+  var old = [].map.call(tb.querySelectorAll('.plan'), function(e){ return e.value; });
+  var names = ['方案一', '方案二', '方案三'];
+  var html = '';
+  for(var i = 0; i < n; i++){
+    var name = old[i] != null ? old[i] : names[i];
+    html += '<tr><td><span class="mk">' + MARKS[i] + '</span>' +
+      '<input class="plan" value="' + String(name).replace(/"/g, '&quot;') + '" oninput="saveLS()" placeholder="' + names[i] + '"></td>' +
+      '<td class="v m_net"></td><td class="v m_tax"></td><td class="v tot m_tot"></td></tr>';
+  }
+  tb.innerHTML = html;
+}
 function rowHTML(){
   var opt = KINDS.map(function(k){ return '<option>' + k + '</option>'; }).join('');
   return '<td class="no"></td>' +
     '<td class="c"><select class="kind" onchange="fillTpl(this)">' + opt + '</select></td>' +
     '<td><div class="spec" contenteditable="true"></div></td>' +
-    '<td><input class="num qty" type="number" step="1" min="0" oninput="calc()"></td>' +
+    '<td class="tcell qtycell"></td>' +
     '<td><input class="unit" value="個" style="text-align:center"></td>' +
-    '<td><input class="num price" type="number" step="0.01" min="0" oninput="calc()"></td>' +
-    '<td class="amt"></td>' +
+    '<td class="tcell pricecell"></td>' +
+    '<td class="tcell amtcell"></td>' +
     '<td class="c noprint"><button class="del" title="刪除此列" onclick="delRow(this)">×</button></td>';
 }
 function addRow(silent){
   var tr = document.createElement('tr');
   tr.innerHTML = rowHTML();
   document.querySelector('#items tbody').appendChild(tr);
+  buildTiers(tr, tierCount());
   /* 新列直接帶出預設品項（紙袋）的規格範本——不必先切換品項才看得到。
      從草稿還原時 apply() 會緊接著用存下來的內容覆蓋，不受影響。 */
   tr.querySelector('.spec').innerText = TPL[KINDS[0]] || '';
@@ -379,9 +473,15 @@ function fillTpl(sel){
   });
   if(cur === '' || isTpl) cell.innerText = TPL[sel.value] || '';
   /* 單位跟著品項換（只在還是預設值時才動，你自己打過的不覆蓋） */
-  var unitEl = sel.closest('tr').querySelector('.unit');
+  var tr = sel.closest('tr');
+  var unitEl = tr.querySelector('.unit');
   if(['','個','式','盒','張'].indexOf((unitEl.value || '').trim()) >= 0) unitEl.value = UNIT[sel.value] || '個';
-  saveLS();
+  /* 「式」的品項（刀模／燙金版／打凸版／各項費用）數量自動帶 1。
+     不帶的話數量是空的，填了單價金額還是 0，看起來像「價格打不進去」（老闆 2026-09-17 回報）。 */
+  if((unitEl.value || '').trim() === '式'){
+    [].forEach.call(tr.querySelectorAll('.qty'), function(q){ if(!(q.value || '').trim()) q.value = 1; });
+  }
+  calc(); saveLS();
 }
 function renum(){
   var rows = document.querySelectorAll('#items tbody tr');
@@ -392,24 +492,51 @@ function renum(){
 function n(v){ var x = parseFloat(v); return isNaN(x) ? 0 : x; }
 function fmt(v){ return (Math.round(v*100)/100).toLocaleString('en-US',{maximumFractionDigits:2}); }
 function calc(){
-  var sub = 0;
+  var tiers = tierCount();
+  var subs = [];
+  for(var i = 0; i < tiers; i++) subs[i] = 0;
+
   document.querySelectorAll('#items tbody tr').forEach(function(tr){
-    var a = n(tr.querySelector('.qty').value) * n(tr.querySelector('.price').value);
-    tr.querySelector('.amt').textContent = a ? fmt(a) : '';
-    sub += a;
+    var qs = tr.querySelectorAll('.qty');
+    var ps = tr.querySelectorAll('.price');
+    var as = tr.querySelectorAll('.amt');
+    for(var t = 0; t < tiers; t++){
+      if(!as[t]) continue;
+      /* 該方案沒填就沿用第一個方案的值（刀模、燙金版這種不隨數量變的只要填一次） */
+      var q = qs[t] && (qs[t].value || '').trim() !== '' ? n(qs[t].value) : n(qs[0] && qs[0].value);
+      var p = ps[t] && (ps[t].value || '').trim() !== '' ? n(ps[t].value) : n(ps[0] && ps[0].value);
+      var a = q * p;
+      as[t].textContent = a ? fmt(a) : '';
+      subs[t] += a;
+    }
   });
+
   var disc = n(document.getElementById('discount').value);
-  var base = sub - disc;
   var mode = document.getElementById('taxmode').value;
-  var net, tax, tot;
-  if(mode === 'add'){ net = base; tax = Math.round(base*0.05); tot = net + tax; }
-  else if(mode === 'inc'){ net = Math.round(base/1.05); tax = base - net; tot = base; }
-  else { net = base; tax = 0; tot = base; }
-  document.getElementById('s_sub').textContent = fmt(sub);
-  document.getElementById('s_net').textContent = fmt(net);
-  document.getElementById('s_tax').textContent = fmt(tax);
-  document.getElementById('s_tot').textContent = 'NT$ ' + fmt(tot);
-  document.getElementById('s_cap').textContent = capital(Math.round(tot));
+  var res = subs.map(function(sub){
+    var base = sub - disc, net, tax, tot;
+    if(mode === 'add'){ net = base; tax = Math.round(base * 0.05); tot = net + tax; }
+    else if(mode === 'inc'){ net = Math.round(base / 1.05); tax = base - net; tot = base; }
+    else { net = base; tax = 0; tot = base; }
+    return { sub: sub, net: net, tax: tax, tot: tot };
+  });
+
+  /* 單一數量：右下角照舊 */
+  document.getElementById('s_sub').textContent = fmt(res[0].sub);
+  document.getElementById('s_net').textContent = fmt(res[0].net);
+  document.getElementById('s_tax').textContent = fmt(res[0].tax);
+  document.getElementById('s_tot').textContent = 'NT$ ' + fmt(res[0].tot);
+  document.getElementById('s_cap').textContent = capital(Math.round(res[0].tot));
+
+  /* 多方案：比價總表每列各自的金額 */
+  if(tiers > 1){
+    var trs = document.querySelectorAll('#multi tbody tr');
+    for(var k = 0; k < trs.length && k < res.length; k++){
+      trs[k].querySelector('.m_net').textContent = fmt(res[k].net);
+      trs[k].querySelector('.m_tax').textContent = fmt(res[k].tax);
+      trs[k].querySelector('.m_tot').textContent = 'NT$ ' + fmt(res[k].tot);
+    }
+  }
 }
 /* 中文大寫金額 */
 function capital(num){
@@ -452,11 +579,14 @@ function collect(){
     d.rows.push({
       kind:  tr.querySelector('.kind').value,
       spec:  tr.querySelector('.spec').innerText,
-      qty:   tr.querySelector('.qty').value,
       unit:  tr.querySelector('.unit').value,
-      price: tr.querySelector('.price').value
+      /* 數量／單價改存陣列（一個方案一格）；舊檔的單一數值讀得回來，見 apply() */
+      qty:   [].map.call(tr.querySelectorAll('.qty'),   function(e){ return e.value; }),
+      price: [].map.call(tr.querySelectorAll('.price'), function(e){ return e.value; })
     });
   });
+  d.tiers  = tierCount();
+  d.plans  = [].map.call(document.querySelectorAll('#multi .plan'), function(e){ return e.value; });
   d.discount = document.getElementById('discount').value;
   d.taxmode  = document.getElementById('taxmode').value;
   return d;
@@ -467,16 +597,30 @@ function apply(d){
     var el = document.querySelector('#sheet [data-k="' + k + '"]');
     if(el) el.value = d.f[k];
   });
+  /* 方案數要先定，列才知道要長幾條線；舊檔沒有這欄就是單一數量 */
+  var tiers = Math.max(1, Math.min(3, parseInt(d.tiers, 10) || 1));
+  var tsel = document.getElementById('tiers');
+  if(tsel) tsel.value = String(tiers);
+  document.getElementById('items').classList.toggle('solo', tiers === 1);
+  document.getElementById('sumbox').classList.toggle('multi-mode', tiers > 1);
+  buildMultiRows(tiers);
+  (d.plans || []).forEach(function(v, i){
+    var el = document.querySelectorAll('#multi .plan')[i];
+    if(el && v != null) el.value = v;
+  });
+
   var tb = document.querySelector('#items tbody');
   tb.innerHTML = '';
+  var arr = function(v){ return Array.isArray(v) ? v : (v == null || v === '' ? [] : [v]); };  /* 舊檔：單一數值 */
   (d.rows || []).forEach(function(r){
     addRow(true);
     var tr = tb.lastElementChild;
     if(r.kind) tr.querySelector('.kind').value = r.kind;
     tr.querySelector('.spec').innerText = r.spec || '';
-    tr.querySelector('.qty').value   = r.qty || '';
     tr.querySelector('.unit').value  = r.unit || '個';
-    tr.querySelector('.price').value = r.price || '';
+    var qv = arr(r.qty), pv = arr(r.price);
+    [].forEach.call(tr.querySelectorAll('.qty'),   function(e, i){ e.value = qv[i] != null ? qv[i] : ''; });
+    [].forEach.call(tr.querySelectorAll('.price'), function(e, i){ e.value = pv[i] != null ? pv[i] : ''; });
   });
   if(!tb.children.length) addRow(true);
   if(d.discount != null) document.getElementById('discount').value = d.discount;
@@ -572,9 +716,10 @@ function markUnusedRows(){
   var rows = [].slice.call(document.querySelectorAll('#items tbody tr'));
   var used = 0;
   rows.forEach(function(tr){
-    var qty   = (tr.querySelector('.qty').value   || '').trim();
-    var price = (tr.querySelector('.price').value || '').trim();
-    var unused = !qty && !price && isTplOnly(tr.querySelector('.spec').innerText);
+    var any = function(sel){
+      return [].some.call(tr.querySelectorAll(sel), function(e){ return (e.value || '').trim() !== ''; });
+    };
+    var unused = !any('.qty') && !any('.price') && isTplOnly(tr.querySelector('.spec').innerText);
     if(unused){ tr.classList.add('skip'); }
     else { tr.classList.remove('skip'); tr.querySelector('.no').textContent = ++used; }
   });
@@ -685,6 +830,9 @@ function serial(){
     document.querySelector('[data-k=q_no]').value = serial();
     for(var i=0;i<3;i++) addRow();
   }
+  document.getElementById('items').classList.toggle('solo', tierCount() === 1);
+  document.getElementById('sumbox').classList.toggle('multi-mode', tierCount() > 1);
+  if(!document.querySelector('#multi tbody tr')) buildMultiRows(tierCount());
   renum(); calc(); growAll(); syncRemark();
   showTip();   /* 手機一開頁就先把存 PDF 的步驟寫在最上面 */
 })();
