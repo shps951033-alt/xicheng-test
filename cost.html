@@ -178,6 +178,18 @@ select{
 .res li{display:flex; justify-content:space-between; gap:10px; color:var(--muted); font-variant-numeric:tabular-nums}
 .res li b{color:var(--ink); font-weight:600}
 .bar{display:flex; gap:8px; flex-wrap:wrap; padding:12px 16px; border-top:1px solid var(--line)}
+.bar.nb{border-top:0; align-items:center}   /* 卡片標題下面第一排，不用再畫一條線 */
+/* 2026-09-19 老闆：草稿清單。一列一份，右邊三顆鍵（叫回／覆寫／刪除）。 */
+.dcount{font-size:12px; color:var(--muted); font-weight:600; letter-spacing:0}
+input.dname{max-width:300px; text-align:left; font-size:14px}
+.drafts{padding:0 16px}
+.draft{display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:10px 0; border-top:1px solid var(--line)}
+.dinfo{flex:1 1 220px; min-width:0}
+.dinfo b{display:block; font-size:14px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.dinfo small{display:block; color:var(--muted); font-size:12px; font-variant-numeric:tabular-nums; margin-top:2px}
+.dbtn{display:flex; gap:6px; flex-wrap:wrap; margin-left:auto}
+.drafts .empty{color:var(--muted); font-size:13px; padding:12px 0 14px; border-top:1px solid var(--line)}
+@media print{#draftCard{display:none}}
 button{
   font-family:inherit; font-size:14px; padding:8px 16px; border-radius:9px; cursor:pointer;
   border:1px solid var(--line); background:var(--card); color:var(--ink);
@@ -210,7 +222,7 @@ button.primary:hover{opacity:.9; color:#fff}
   <h1><span class="mark">喜成</span>成本比價計算機</h1>
   <div class="sub">同一張單、多種數量一起算，直接比每張成本</div>
   <!-- 版本標示：手機常被快取擋住看到舊版，老闆對一下這個日期就知道有沒有拿到新的。改版時要一起更新。 -->
-  <div class="ver">版本 2026-09-04・可生成工作傳票</div>
+  <div class="ver">版本 2026-09-19・方案可命名・可存草稿</div>
 </header>
 
 <div class="card">
@@ -269,6 +281,25 @@ button.primary:hover{opacity:.9; color:#fff}
     <b>低消 2,000</b>：算出來不足 2,000 就以 2,000 計（小計標「低消」）；沒填長寬＝沒這項，不會憑空多一筆。
     <b>A／B／C 勾選</b>：只有勾起來的方案才算貼銀箔，沒勾的顯示「不貼」不計費 —— 其他數字填一樣，就能直接比貼與不貼差多少。單價與低消都可以直接改。輸入會自動記住，下次打開還在。
     手機看到的版本不對（右上角日期是舊的），在網址最後面加上 <b>?v=2</b> 重新開一次就會拿到最新版。
+  </div>
+</div>
+
+<!-- 2026-09-19 老闆：存草稿。上面那張表本來就會自動記住「最後的狀態」，但只有一份 ——
+     換算下一張單就蓋掉了。草稿＝把當下整張表另外存一份留著，之後整張叫回來。 -->
+<div class="card" id="draftCard">
+  <h2>草稿<span class="hdbtns"><span class="dcount" id="draftCount"></span></span></h2>
+  <div class="bar nb">
+    <input type="text" id="draftName" class="dname" maxlength="24" autocomplete="off" placeholder="草稿名稱（例：大商紅包袋 5000）">
+    <button class="primary" id="saveDraft">存成草稿</button>
+  </div>
+  <div class="drafts" id="draftList"></div>
+  <div class="hint">
+    <b>存成草稿</b>：把現在整張表另存一份 —— 數量、單價、計價方式、勾了哪些加工、方案名稱、開到幾案，全部一起存。
+    取名留空會自動用 A 案的名稱或日期時間命名。<br>
+    <b>叫回</b>＝把那份草稿整張蓋回上面的表（按錯了，提示列上有「復原」）；
+    <b>覆寫</b>＝用現在畫面的內容更新那一份（改完價再存回同一份用這顆）；<b>刪除</b>也有「復原」。<br>
+    草稿存在這台電腦／這支手機的瀏覽器裡（跟自動記憶分開存，按「全部清空」不會清掉草稿），
+    最多 40 份，換裝置或清瀏覽器資料就會不見 —— 要長期留存的，請用「列印 / 存 PDF」另外存檔。
   </div>
 </div>
 
@@ -636,6 +667,7 @@ function calc(){
 /* ---------- 事件 ---------- */
 document.addEventListener('input', e => {
   if (!e.target.matches('input')) return;
+  if (e.target.id === 'draftName') return;   // 草稿名稱不是計算欄位，別每打一個字就重算
   // 工藝勾選會讓下面的列跳出來／收回去，其餘輸入只要重算
   if (e.target.id && e.target.id.indexOf('cf_') === 0) applyCrafts();
   // 改方案名稱時，「生成工作單」旁邊的選單也要跟著換字
@@ -671,7 +703,12 @@ function save(){
   //    整包蓋掉等於把它們的值刪光 → 切回去就變空白（2026-07-27 測出來的）。
   const d = {};
   // 勾選框要存 checked（value 永遠是 "on"，存了等於沒存）
-  document.querySelectorAll('input,select').forEach(el => { if (el.id) d[el.id] = (el.type === 'checkbox' ? el.checked : el.value); });
+  //（draftName 是草稿名稱輸入框，不屬於這張表的資料，不進 store —— 否則每份草稿快照裡
+  //   都會夾一個別人的名字，叫回時還會把名稱框蓋掉。）
+  document.querySelectorAll('input,select').forEach(el => {
+    if (!el.id || el.id === 'draftName') return;
+    d[el.id] = (el.type === 'checkbox' ? el.checked : el.value);
+  });
   d.__ncol = NCOL;   // 開到幾案也要記住，下次打開維持一樣
   store = Object.assign({}, store, d);
   try { localStorage.setItem(KEY, JSON.stringify(store)); } catch(e) {}
@@ -686,7 +723,7 @@ function applyStore(){
     if (store[r.k+'_m'] && r.modes.includes(store[r.k+'_m'])) { sel.value = store[r.k+'_m']; renderCell(r); }
   });
   document.querySelectorAll('input').forEach(el => {
-    if (!el.id) return;
+    if (!el.id || el.id === 'draftName') return;   // 草稿名稱框不受 store 管
     // ⚠ 勾選框不能只靠 HTML 的 checked 預設：瀏覽器重新整理時會自動「還原」上一次的勾選狀態，
     //    會蓋掉預設值（測出來：清了 localStorage 重載，三欄還是全部沒勾）→ 這裡一律自己決定。
     if (el.type === 'checkbox') {
@@ -723,6 +760,110 @@ function clearAll(){
   calc();
   toast('已清空', '復原', () => { store = backup; applyStore(); calc(); toast('已復原'); });
 }
+
+/* ---------- 草稿（localStorage，與自動記憶分開一支 key） ----------
+   2026-09-19 老闆：「加入存草稿功能」。
+   自動記憶（KEY）只有一份、永遠是「最後的畫面」，換算下一張單就被蓋掉；
+   草稿＝把當下整張表另存一份留著，之後整張叫回來。
+   ⚠ 一份草稿存的是 store 的完整快照（所有 input／select 的值 ＋ __ncol），
+     不是只有數字 —— 計價方式、加工勾選、方案名稱、開到幾案都在裡面，
+     叫回時連欄數都要一起還原（欄數變了要重畫整張表，見 applyState）。 */
+const DKEY = 'xicheng-cost-drafts-v1';
+const MAXDRAFT = 40;
+let drafts = [];
+try { const a = JSON.parse(localStorage.getItem(DKEY) || '[]'); drafts = Array.isArray(a) ? a : []; } catch(e) { drafts = []; }
+
+const esc = s => String(s).replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+const pad2 = n => (n < 10 ? '0' : '') + n;
+function stamp(ts){
+  const d = new Date(ts || Date.now());
+  return pad2(d.getMonth()+1)+'/'+pad2(d.getDate())+' '+pad2(d.getHours())+':'+pad2(d.getMinutes());
+}
+function saveDrafts(){
+  try { localStorage.setItem(DKEY, JSON.stringify(drafts)); }
+  catch(e) { toast('草稿存不下（瀏覽器空間滿了），先刪掉幾份舊的'); }
+}
+// 草稿清單上那行小字：開幾案、第一個有數量的方案是多少張、完成每張多少。
+function draftMeta(){
+  const r = calc();
+  const c = COLS.find(i => r.qty[i] > 0);
+  if (c === undefined) return NCOL + ' 案・尚未填數量';
+  const e = r.allEach[c];
+  // 數量填了但一毛成本都還沒填時，寫「完成每張 0 元」會看不出是空的 → 直接講尚未填成本
+  return NCOL + ' 案・' + planName(c) + ' ' + fmt(r.qty[c]) + ' 張・'
+       + (e ? '完成每張 ' + fmt(e) + ' 元' : '尚未填成本');
+}
+// 目前畫面 → 快照。先 save() 把畫面收進 store，再整包複製（不能直接存 store 的參考，
+// 之後繼續填表會連草稿一起被改掉）。
+function snapshot(){ save(); return JSON.parse(JSON.stringify(store)); }
+// 快照 → 畫面。欄數不一樣要重畫整張表，再讓 applyStore() 把值倒回去。
+function applyState(data){
+  store = JSON.parse(JSON.stringify(data));
+  const n = store.__ncol || 1;
+  if (n !== NCOL) {
+    setNCol(n);
+    buildTable();
+    ROWS.filter(r => !r.type).forEach(renderCell);
+    syncColBtns();
+  }
+  applyStore();
+  syncPlanSel();
+  calc();
+}
+function renderDrafts(){
+  const box = $('draftList');
+  box.innerHTML = drafts.length
+    ? drafts.map(d =>
+        '<div class="draft">'
+        + '<div class="dinfo"><b>'+esc(d.name)+'</b><small>'+esc(d.meta||'')+'　'+stamp(d.ts)+'</small></div>'
+        + '<div class="dbtn">'
+        +   '<button class="mini" data-act="load" data-id="'+d.id+'">叫回</button>'
+        +   '<button class="mini" data-act="over" data-id="'+d.id+'">覆寫</button>'
+        +   '<button class="mini" data-act="del"  data-id="'+d.id+'">刪除</button>'
+        + '</div></div>').join('')
+    : '<div class="empty">還沒有草稿。上面填好之後取個名字按「存成草稿」，之後就能整張叫回來。</div>';
+  $('draftCount').textContent = drafts.length ? drafts.length + ' 份' : '';
+}
+function addDraft(){
+  if (drafts.length >= MAXDRAFT) { toast('草稿最多 '+MAXDRAFT+' 份，先刪掉幾份舊的'); return; }
+  const inp = $('draftName');
+  // 沒取名就自己想一個：優先用 A 案自己填的名稱，再不然用日期時間。
+  const auto = ($('pn0') && $('pn0').value.trim()) || ('草稿 ' + stamp());
+  const name = (inp.value.trim() || auto).slice(0, 24);
+  drafts.unshift({ id: 'd'+Date.now()+Math.random().toString(36).slice(2,6), name, ts: Date.now(), meta: draftMeta(), data: snapshot() });
+  saveDrafts(); renderDrafts();
+  inp.value = '';
+  toast('已存草稿「'+name+'」');
+}
+$('saveDraft').addEventListener('click', addDraft);
+// 名稱框按 Enter 直接存（手機鍵盤上的「完成」也算）
+$('draftName').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addDraft(); } });
+
+$('draftList').addEventListener('click', e => {
+  const b = e.target.closest('button[data-act]'); if (!b) return;
+  const i = drafts.findIndex(x => x.id === b.dataset.id); if (i < 0) return;
+  const d = drafts[i];
+  if (b.dataset.act === 'load') {
+    // 叫回＝整張蓋掉現在的畫面 → 一定要留復原（按錯就白填了）
+    const backup = snapshot();   // 先把現在的畫面收成快照，復原才回得來
+    applyState(d.data);
+    toast('已叫回「'+d.name+'」', '復原', () => { applyState(backup); toast('已復原'); });
+  } else if (b.dataset.act === 'over') {
+    const before = { meta: d.meta, ts: d.ts, data: d.data };
+    d.data = snapshot(); d.meta = draftMeta(); d.ts = Date.now();
+    saveDrafts(); renderDrafts();
+    toast('「'+d.name+'」已更新', '復原', () => {
+      Object.assign(d, before); saveDrafts(); renderDrafts(); toast('已復原');
+    });
+  } else if (b.dataset.act === 'del') {
+    drafts.splice(i, 1);
+    saveDrafts(); renderDrafts();
+    toast('已刪除「'+d.name+'」', '復原', () => {
+      drafts.splice(i, 0, d); saveDrafts(); renderDrafts(); toast('已復原');
+    });
+  }
+});
+renderDrafts();
 
 /* ---------- 複製報表 ---------- */
 function copyReport(){
