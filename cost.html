@@ -62,6 +62,20 @@ thead th{
   position:sticky; top:0; background:var(--card); z-index:2;
 }
 thead th.col{text-align:center; color:var(--ink)}
+/* 2026-09-19 老闆：方案欄可以自己命名（客戶、廠商、紙種都行）。
+   A／B／C 的代號留著（下面的單價格子都用它當提示），名稱填在代號底下那格。 */
+.colh{display:flex; flex-direction:column; align-items:center; gap:4px}
+.colh .cn{font-size:12px; color:var(--muted); letter-spacing:.06em; line-height:1}
+input.pname{
+  min-width:0; max-width:160px; text-align:center;
+  font-size:13px; font-weight:600; padding:5px 8px;
+}
+input.pname::placeholder{font-weight:400; color:var(--muted); font-size:12px}
+/* 列印時輸入框的外框很雜，名稱有填才看得到、沒填就不佔版面 */
+@media print{
+  input.pname{border:0; background:transparent; padding:2px}
+  input.pname:placeholder-shown{display:none}
+}
 tbody tr:hover{background:rgba(179,53,44,.035)}
 td.name{white-space:nowrap}
 /* 2026-08-03 老闆：手機用的時候把項目名稱這欄固定住 —— 表格要橫捲，捲到右邊會不知道在填哪一項。
@@ -234,6 +248,8 @@ button.primary:hover{opacity:.9; color:#fff}
     廠商、規格、備註在傳票那頁自己填，填完按<b>生成 PDF ／ 列印</b>存檔或印出來。<br>
     <b>方案要幾個自己加</b>：預設只開 A 案，按右上「＋ 新增方案」加 B、C…最多到 Z 案；「－ 移除末案」收掉最後一個。
     移除掉的那欄數字會留著，加回來就還在。開幾案會記住，下次打開一樣。<br>
+    <b>方案可以自己取名</b>：表頭「A 案」底下那格填名稱（甲廠、進口紙、含燙金…都行，14 字內），
+    下面的結果卡、複製報表、生成工作單的選單都會變成「A 案・甲廠」。留空就照舊只顯示 A 案，名稱也會記住。<br>
     <b>印後加工先勾選</b>：勾起來的加工才會把它的填入格跳出來，沒勾的整列收起來、也不計費。
     燙金／打凸／軋型／局部光／磨砂／夜光油墨勾了會一次跳出「版費＋工繳」兩列（版費是模具，另記）。
     <b>燙金版費、打凸版費要各案自己勾才算</b>（預設都不勾，跟貼銀箔那排一樣一欄一個勾）——
@@ -425,8 +441,22 @@ ROWS.forEach(r => {
   if (r.k === 'print') html += craftRow;   // 常駐三列（紙張費用、印刷版費、印刷費用）之後才開始勾加工
 });
 $('body').innerHTML = html;
+// 2026-09-19 老闆：每一案上面多一格「方案名稱」自己填（例：甲廠、進口紙、含燙金）。
+//   名稱是純輔助 —— 代號 A／B／C 不動，空白就跟以前一樣只顯示「A 案」。
+//   值靠 id 走既有的 save()／applyStore()，不用另外存。
 $('headrow').innerHTML = '<th style="width:130px">項目</th><th style="width:126px">計價方式</th>'
-                       + COLS.map(c => '<th class="col">'+COLNAME[c]+'</th>').join('');
+                       + COLS.map(c => '<th class="col"><div class="colh">'
+                           + '<span class="cn">'+COLNAME[c]+'</span>'
+                           + '<input type="text" class="pname" id="pn'+c+'" maxlength="14" autocomplete="off" placeholder="方案名稱（選填）">'
+                         + '</div></th>').join('');
+}
+
+// 方案顯示名稱：有填名稱就「A 案・甲廠」，沒填維持「A 案」。
+// 結果卡、複製報表、生成工作單都走這支，改名字三邊一起跟著改。
+function planName(c){
+  const el = $('pn'+c);
+  const v = el ? el.value.trim() : '';
+  return v ? COLNAME[c] + '・' + v : COLNAME[c];
 }
 buildTable();
 
@@ -587,7 +617,7 @@ function calc(){
       }
     }
     return '<div class="res'+(c===best?' best':'')+'">'
-      + '<div class="tag">'+COLNAME[c]+'</div>'
+      + '<div class="tag">'+planName(c)+'</div>'
       + '<div class="qty">製作數量 '+(qty[c]?fmt(qty[c]):'—')+'</div>'
       + '<div class="each big">每張 <b>'+(each[c]===null?'—':fmt(each[c]))+'</b> 元<small>不含模具</small></div>'
       + '<div class="line"><span>製作成本</span><b>'+fmt(makes[c])+'</b></div>'
@@ -608,6 +638,8 @@ document.addEventListener('input', e => {
   if (!e.target.matches('input')) return;
   // 工藝勾選會讓下面的列跳出來／收回去，其餘輸入只要重算
   if (e.target.id && e.target.id.indexOf('cf_') === 0) applyCrafts();
+  // 改方案名稱時，「生成工作單」旁邊的選單也要跟著換字
+  if (e.target.classList.contains('pname')) syncPlanSel();
   calc();
 });
 // 單列歸零：只清這一列的格子。貼銀箔的每才單價／低消交給 areaDefaults() 補回預設，
@@ -698,7 +730,7 @@ function copyReport(){
   let t = '喜成印刷｜成本比價\n';
   COLS.forEach(c => {
     if (!qty[c] && !totals[c]) return;
-    t += '\n【'+COLNAME[c]+'】製作數量 '+fmt(qty[c])+(sheets[c] ? '　印刷張數 '+fmt(sheets[c]) : '')+'\n';
+    t += '\n【'+planName(c)+'】製作數量 '+fmt(qty[c])+(sheets[c] ? '　印刷張數 '+fmt(sheets[c]) : '')+'\n';
     lines.filter(l => l.amounts[c] > 0 && !l.tool).forEach(l => { t += '  '+l.name+'：'+fmt(l.amounts[c])+'\n'; });
     t += '  ── 製作成本：'+fmt(makes[c])+'　每張：'+(each[c]===null?'—':fmt(each[c]))+' 元（不含模具）\n';
     const tl = lines.filter(l => l.amounts[c] > 0 && l.tool);
@@ -720,7 +752,7 @@ function syncPlanSel(){
   const s = $('planSel'); if (!s) return;
   const cur = s.value;
   s.hidden = NCOL <= 1;                       // 只開 A 案時不用選
-  s.innerHTML = COLS.map(c => '<option value="'+c+'">'+COLNAME[c]+'</option>').join('');
+  s.innerHTML = COLS.map(c => '<option value="'+c+'">'+planName(c)+'</option>').join('');
   if (cur !== '' && +cur < NCOL) s.value = cur;
 }
 function goWorksheet(){
@@ -730,7 +762,7 @@ function goWorksheet(){
   // active＝這一案要做的工序（工藝有勾就算，單價還沒填也照樣進工單）
   const rows = lines.filter(l => l.active && l.active[c]).map(l => l.key);
   if (!rows.length && !qty[c]) { toast('先填製作數量或勾工序，再生成工作單'); return; }
-  const raw = JSON.stringify({v:1, plan:COLNAME[c], qty:qty[c], sheets:sheets[c], rows, ts:Date.now()});
+  const raw = JSON.stringify({v:1, plan:planName(c), qty:qty[c], sheets:sheets[c], rows, ts:Date.now()});
   try { localStorage.setItem(WORKPIPE, raw); } catch(e) {}
   location.href = 'worksheet.html#wp=' + encodeURIComponent(raw);
 }

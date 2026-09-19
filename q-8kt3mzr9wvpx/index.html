@@ -75,6 +75,21 @@ legend{font-size:11.5px;letter-spacing:.14em;color:var(--gold);padding:0 6px;fon
 /* 兩欄不是四欄：四欄時「報價日起 30 天」「打樣確認後 7～10 個工作天」會被切掉，列印也印不全 */
 .info{display:grid;grid-template-columns:repeat(2,1fr);gap:0 14px}
 
+/* 客戶快速帶入（只在螢幕上出現，列印會整塊消失）。請款單是同一套，改要兩邊一起改。 */
+.pick{border-bottom:1px dotted var(--line2);padding:2px 0 7px;margin-bottom:2px}
+.pick input,.pick select{
+  border:1px solid var(--line); border-radius:5px; background:#fff;
+  padding:5px 7px; margin-top:4px; font-size:13px;
+}
+.pick input:focus,.pick select:focus{border-color:var(--gold2);background:#fdf3dd}
+.pickbtn{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:6px}
+.pickbtn button{
+  border:1px solid var(--line); background:#f6efe0; color:var(--ink);
+  border-radius:5px; padding:4px 9px; font-size:12px; cursor:pointer;
+}
+.pickbtn button:hover{background:#efe4cc;border-color:var(--gold2)}
+.pickmsg{font-size:11.5px;color:var(--gold)}
+
 table{width:100%;border-collapse:collapse;margin-top:12px}
 th{background:#f6efe0;border:1px solid var(--line);font-size:12px;letter-spacing:.08em;padding:6px 4px;font-weight:700}
 td{border:1px solid var(--line);vertical-align:top;padding:0}
@@ -245,6 +260,19 @@ select.kind{border:0;padding:5px 2px;font-size:11.5px;text-align:center}
 
     <fieldset>
       <legend>客戶 CUSTOMER</legend>
+      <!-- 快速帶入：從「客戶統編抬頭」那份 Google 文件整理過來的名單（見頁尾 CUSTOMERS）。
+           選了會帶入抬頭與統編；不想用下拉就直接在下面自己打，兩種都可以。
+           ⚠️ 與請款單共用同一份名單與同一個 localStorage 鍵，改要兩邊一起改。 -->
+      <div class="pick noprint">
+        <input id="cufind" placeholder="🔍 打幾個字找客戶（例：宇竑、三禾）" oninput="filterCustomers()" autocomplete="off">
+        <select id="cupick" onchange="pickCustomer()"></select>
+        <div class="pickbtn">
+          <button type="button" onclick="saveCustomer()" title="把下面填的客戶資料記起來，以後這台裝置的下拉選單就有它">＋ 存成常用客戶</button>
+          <button type="button" onclick="exportCustomers()" title="把自己新增的客戶列出來，貼回 Google 文件「客戶統編抬頭」">⬇ 匯出新客戶</button>
+          <button type="button" onclick="deleteCustomer()" title="刪掉下拉選單裡自己加的客戶（不會動到 Google 文件）">🗑 刪除自訂</button>
+          <span class="pickmsg" id="pickmsg"></span>
+        </div>
+      </div>
       <div class="f"><label>客戶名稱</label><input data-k="cu_name" placeholder="公司 / 客戶名稱"></div>
       <div class="f"><label>統一編號</label><input data-k="cu_tax" placeholder="8 碼"></div>
       <div class="f"><label>電　　話</label><input data-k="cu_tel" placeholder="市話 / 手機"></div>
@@ -348,6 +376,232 @@ select.kind{border:0;padding:5px 2px;font-size:11.5px;text-align:center}
 </div>
 
 <script>
+/* ═══ 客戶名單 ═══
+   來源：Google 雲端「客戶資料」資料夾底下的「客戶統編抬頭」文件（2026-09-18 整理，40 家）。
+     n＝抬頭、t＝統編。原文件裡益百加重複一次已併掉；
+     末尾兩個沒有統編的粗體標題（生物科技…／光芒國際）是殘骸，沒收進來。
+   ⚠️ 老闆 2026-09-18 指定【只帶名稱與統編】，地址電話不要自動帶。
+      隔壁「客戶寄件資料」文件雖然有地址電話，但那份按郵遞區號記、沒有統編可對，
+      名字也常寫成聯絡人而不是公司，對錯了就是把別人的地址印到請款單上。要加再說。
+   要加客戶：正式做法是先加進 Google 文件，再請 Jesper 同步更新這份名單。
+   老闆自己在頁面上按「＋存成常用客戶」的，只會存在那台裝置的瀏覽器裡（見 CUSKEY）。 */
+var CUSTOMERS = [
+  {n:"里響股份有限公司", t:"90467935"},
+  {n:"點拾事業有限公司", t:"42931982"},
+  {n:"全祿科技有限公司", t:"00156409"},
+  {n:"宇竑彩色印刷有限公司", t:"80562066"},
+  {n:"守家有限公司", t:"90883480"},
+  {n:"益百加科技有限公司", t:"90430419"},
+  {n:"怡美出版社", t:"20153334"},
+  {n:"天晨遊覽車客運有限公司", t:"27878713"},
+  {n:"星凱創意整合行銷有限公司", t:"90515520"},
+  {n:"美商鵬祺德設計製造有限公司台灣分公司", t:"83167808"},
+  {n:"金桃家草莓大福", t:"47771008"},
+  {n:"光芒國際有限公司", t:"29017389"},
+  {n:"三禾文創有限公司", t:"94013302"},
+  {n:"藏藍影像空間有限公司", t:"60623580"},
+  {n:"鑫蘋創藝館", t:"00849563"},
+  {n:"寶石佳有限公司", t:"95434152"},
+  {n:"國際崇她台南佳明社", t:"20266132"},
+  {n:"(老石)誼餉食品企業有限公司", t:"24918451"},
+  {n:"生源泰生物科技股份有限公司", t:"83533994"},
+  {n:"蘇式視覺設計工作室", t:"00280786"},
+  {n:"千家軒烘培坊", t:"81473675"},
+  {n:"全立祥股份有限公司", t:"89303604"},
+  {n:"國立高雄科技大學", t:"76014406"},
+  {n:"鵬祺德有限公司", t:"60480513"},
+  {n:"優美紙品設計有限公司", t:"50910659"},
+  {n:"廣聖紙盒店", t:"69505440"},
+  {n:"慧同企業有限公司", t:"16710098"},
+  {n:"米平方室內裝修工程有限公司", t:"54084126"},
+  {n:"金湛商業有限公司", t:"93565777"},
+  {n:"魁曜企業社", t:"89012964"},
+  {n:"奧恩創意設計", t:"91126892"},
+  {n:"臺南市新世代扶輪社", t:"81288622"},
+  {n:"曆鼎鋼鋁有限公司", t:"27260274"},
+  {n:"翔鈴設計有限公司", t:"59154141"},
+  {n:"森霖行銷國際企業社", t:"85652875"},
+  {n:"成大藥品股份有限公司", t:"72110569"},
+  {n:"璟翔軒印刷品有限公司", t:"24512190"},
+  {n:"元綠生技有限公司", t:"90652827"},
+  {n:"日越能源科技有限公司", t:"83533869"},
+  {n:"峯昌企業有限公司", t:"22591726"}
+];
+var CUSKEY = 'xicheng_customers_v1';   /* 老闆自己加的客戶，只存在這台裝置 */
+
+/* ═══ 自動寫回 Google 文件「客戶統編抬頭」═══
+   接口＝掛在那份文件上的 Apps Script 網頁應用程式（正本：內部工具\客戶統編抬頭-AppsScript.gs）。
+   CUS_API 留空＝關掉這個功能，「＋存成常用客戶」就只存在本機，其餘行為完全不變。
+   ⚠️ 兩張單共用同一組設定，改要兩邊一起改。 */
+var CUS_API   = 'https://script.google.com/macros/s/AKfycbygdAWN5dtIXsc1gtDjCilkJ6jHWU55Ll_qWfwwUXcYvJneEf8WcfAT7h67F8xUvMWq/exec';                      /* 部署好之後把 /exec 網址填進來 */
+var CUS_TOKEN = 'iwhqj25jipnurf6cb9pp';  /* 要與 Apps Script 裡的 TOKEN 一模一樣 */
+
+function pushCustomerToDoc(c){
+  if(!CUS_API) return;                   /* 還沒設定接口就安靜跳過 */
+  if(!window.fetch){ msg('已存在這台裝置（這個瀏覽器太舊，無法寫進文件）'); return; }
+  /* ⚠️ Content-Type 一定要用 text/plain，不能用 application/json：
+        application/json 會讓瀏覽器先送一個 OPTIONS 預檢，而 Apps Script 不回應 OPTIONS，
+        整個請求就直接失敗。text/plain 算「簡單請求」，不預檢，才過得去。
+        伺服器那邊照樣用 JSON.parse(e.postData.contents) 讀得到。 */
+  msg('存檔中…');
+  fetch(CUS_API, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ token: CUS_TOKEN, name: c.n, tax: c.t })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    if(d && d.ok){ msg(d.dup ? '已存（Google 文件本來就有這家）' : '已存，也寫進 Google 文件了'); }
+    else { msg('已存在這台裝置；寫進文件失敗：' + ((d && d.error) || '未知原因')); }
+  })
+  .catch(function(){ msg('已存在這台裝置；連不上 Google 文件，記得手動貼回去'); });
+}
+
+function myCustomers(){
+  try{ return JSON.parse(localStorage.getItem(CUSKEY) || '[]'); }catch(e){ return []; }
+}
+/* 內建名單 ＋ 自己加的（自己加的排在後面，標「自訂」好分辨） */
+function allCustomers(){
+  return CUSTOMERS.concat(myCustomers().map(function(c){ c.mine = true; return c; }));
+}
+/* 重建下拉選單；keyword 有值就只留名稱或統編對得上的 */
+function filterCustomers(){
+  var kw  = (document.getElementById('cufind').value || '').trim().toLowerCase();
+  var sel = document.getElementById('cupick');
+  var list = allCustomers().filter(function(c){
+    if(!kw) return true;
+    return (c.n || '').toLowerCase().indexOf(kw) >= 0 || (c.t || '').indexOf(kw) >= 0;
+  });
+  var html = '<option value="">— 選客戶自動帶入（或直接在下面自己打）—</option>';
+  list.forEach(function(c){
+    /* value 存的是「在完整名單裡的位置」，過濾後索引會跑掉，所以用名稱當鍵 */
+    html += '<option value="' + esc(c.n) + '">' + esc(c.n) + (c.t ? '　' + c.t : '')
+          + (c.mine ? '（自訂）' : '') + '</option>';
+  });
+  html += '<option value="__clear__">— 清空客戶欄位 —</option>';
+  sel.innerHTML = html;
+  msg(kw ? ('找到 ' + list.length + ' 家') : '');
+}
+function esc(s){
+  return String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function msg(t){ document.getElementById('pickmsg').textContent = t || ''; }
+function fld(k){ return document.querySelector('[data-k=' + k + ']'); }
+
+/* 選了客戶 → 六欄一次帶入。
+   ⚠️ 先清空再填：不清的話上一家的地址電話會留在欄位裡，跟著印到請款單上。 */
+function pickCustomer(){
+  var v = document.getElementById('cupick').value;
+  if(!v) return;
+  ['cu_name','cu_tax','cu_tel','cu_mail','cu_addr','cu_person'].forEach(function(k){ fld(k).value = ''; });
+  if(v === '__clear__'){
+    document.getElementById('cupick').value = '';
+    msg('已清空'); saveLS(); return;
+  }
+  var c = allCustomers().filter(function(x){ return x.n === v; })[0];
+  if(!c) return;
+  fld('cu_name').value   = c.n    || '';
+  fld('cu_tax').value    = c.t    || '';
+  fld('cu_tel').value    = c.tel  || '';
+  fld('cu_mail').value   = c.mail || '';
+  fld('cu_addr').value   = c.addr || '';
+  fld('cu_person').value = c.p    || '';
+  /* 內建名單只有抬頭與統編，其餘欄位本來就空著讓老闆自己填；
+     自己存的常用客戶才可能帶到電話地址。 */
+  msg((c.tel || c.addr || c.p) ? '已帶入' : '已帶入抬頭與統編');
+  saveLS();
+}
+
+/* 把目前填的客戶存成常用（只存這台裝置的瀏覽器） */
+function saveCustomer(){
+  var c = {
+    n:    (fld('cu_name').value   || '').trim(),
+    t:    (fld('cu_tax').value    || '').trim(),
+    tel:  (fld('cu_tel').value    || '').trim(),
+    mail: (fld('cu_mail').value   || '').trim(),
+    addr: (fld('cu_addr').value   || '').trim(),
+    p:    (fld('cu_person').value || '').trim()
+  };
+  if(!c.n){ alert('請先填「客戶名稱」再按存檔。'); return; }
+  var mine = myCustomers();
+  /* 同名就覆蓋，不要越存越多筆 */
+  var i = mine.map(function(x){ return x.n; }).indexOf(c.n);
+  if(i >= 0) mine[i] = c; else mine.push(c);
+  try{
+    localStorage.setItem(CUSKEY, JSON.stringify(mine));
+    filterCustomers();
+    msg('已存：' + c.n + (i >= 0 ? '（更新）' : ''));
+    pushCustomerToDoc(c);   /* 有設定接口的話，順便寫回 Google 文件 */
+  }catch(e){ alert('這個瀏覽器不讓存資料：' + e.message); }
+}
+
+
+/* 刪掉自訂客戶。只動這台裝置的 localStorage，不會去碰 Google 文件——
+   文件那邊要刪請自己去文件裡刪，兩邊是分開的。
+   內建名單（CUSTOMERS）不能從這裡刪，那要改原始碼。 */
+function deleteCustomer(){
+  var mine = myCustomers();
+  if(!mine.length){ alert('目前沒有自訂客戶可以刪。'); return; }
+  var sel = document.getElementById('cupick');
+  var v   = sel.value;
+  var hit = null;
+  if(v && v !== '__clear__'){
+    hit = mine.filter(function(x){ return x.n === v; })[0];
+    if(!hit){
+      alert('「' + v + '」是內建名單裡的客戶，不能從這裡刪。\n\n內建名單要增減請跟 Jesper 說。');
+      return;
+    }
+    if(!confirm('刪掉自訂客戶「' + hit.n + '」？\n\n只會清掉這台裝置的下拉選單，\nGoogle 文件裡的那一筆不受影響。')) return;
+    mine = mine.filter(function(x){ return x.n !== hit.n; });
+  }else{
+    if(!confirm('沒有選到特定客戶。\n要把全部 ' + mine.length + ' 筆自訂客戶一次清光嗎？\n\n只會清掉這台裝置的下拉選單，\nGoogle 文件裡的不受影響。')) return;
+    mine = [];
+  }
+  try{
+    localStorage.setItem(CUSKEY, JSON.stringify(mine));
+    sel.value = '';
+    filterCustomers();
+    msg(hit ? ('已刪除：' + hit.n) : '已清空自訂客戶');
+  }catch(e){ alert('這個瀏覽器不讓改資料：' + e.message); }
+}
+
+/* 匯出自己加的客戶 → 貼回 Google 文件「客戶統編抬頭」「客戶統編抬頭」 */
+function exportCustomers(){
+  var mine = myCustomers();
+  if(!mine.length){
+    alert('目前沒有自己新增的客戶。\n\n先在下面把客戶資料填好，按「＋ 存成常用客戶」，再來匯出。');
+    return;
+  }
+  var lines = mine.map(function(c){
+    var s = c.n + '：' + (c.t || '（無統編）');
+    var ex = [];
+    if(c.p)    ex.push('聯絡人 ' + c.p);
+    if(c.tel)  ex.push('電話 ' + c.tel);
+    if(c.mail) ex.push('信箱 ' + c.mail);
+    if(c.addr) ex.push('地址 ' + c.addr);
+    return s + (ex.length ? '\n    ' + ex.join('／') : '');
+  }).join('\n');
+  var txt = '【喜成 新增客戶 ' + mine.length + ' 家】請併回 Google 文件「客戶統編抬頭」\n\n' + lines;
+  /* 剪貼簿在某些瀏覽器會被擋 → 失敗才開一個可全選的視窗當退路（成功就不要多開一個視窗） */
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(
+      function(){ msg('已複製 ' + mine.length + ' 家，貼進 Google 文件就好'); },
+      function(){ showExport(txt); });
+  }else{
+    showExport(txt);
+  }
+}
+function showExport(txt){
+  var w = window.open('', '_blank', 'width=520,height=460');
+  if(!w){ prompt('複製下面這段，貼進 Google 文件「客戶統編抬頭」：', txt); return; }
+  w.document.write('<meta charset="utf-8"><title>新增客戶</title>'
+    + '<textarea style="width:100%;height:92%;font:13px/1.6 monospace;border:1px solid #ccc">'
+    + esc(txt) + '</textarea>');
+  w.document.close();
+}
+
+
 /* 品項規格範本 */
 var TPL = {
   "紙袋":  "尺寸（寬×高×側寬）：　  ×　  ×　  cm\n紙材／磅數：\n印刷：\n加工：燙金／打凸／上光／上膜／局部UV\n提繩：",
@@ -834,6 +1088,7 @@ function serial(){
   document.getElementById('sumbox').classList.toggle('multi-mode', tierCount() > 1);
   if(!document.querySelector('#multi tbody tr')) buildMultiRows(tierCount());
   renum(); calc(); growAll(); syncRemark();
+  filterCustomers();   /* 把客戶下拉選單建起來（含這台裝置自己加的） */
   showTip();   /* 手機一開頁就先把存 PDF 的步驟寫在最上面 */
 })();
 </script>
