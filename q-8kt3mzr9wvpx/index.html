@@ -119,8 +119,20 @@ table.multi .mk{color:var(--gold);font-size:10px;padding-left:5px}
 input.num{text-align:right;font-variant-numeric:tabular-nums}
 /* 「人工包裝裝箱費」有 7 個字，字級要小一點才不會被切掉 */
 select.kind{border:0;padding:5px 2px;font-size:11.5px;text-align:center}
+/* 品項也可以自己打：選「＋ 自己打…」就把下拉換成文字框，按 ▾ 換回清單。
+   清單沒有的品項（打孔、裱板、壓線…）不必再遷就「其他」。 */
+.kindedit{display:flex;align-items:center;gap:2px;padding:0 2px}
+input.kindtext{font-size:11.5px;text-align:center;padding:5px 2px;min-width:0}
+.kindback{border:1px solid var(--line);background:#f6efe0;color:var(--ink2);
+  border-radius:3px;cursor:pointer;font-size:10px;line-height:1;padding:4px 3px;flex:0 0 auto}
+.kindback:hover{background:#efe4cc;border-color:var(--gold2)}
 .del{border:0;background:transparent;color:#c07a7a;cursor:pointer;font-size:15px;line-height:1;padding:6px}
 .del:hover{color:#a33}
+/* 表頭最後一格的「＋」＝就地新增品項（跟下面那排 × 同一直行，手機上不必捲回工具列） */
+th.addcol{padding:2px}
+.addrow{border:1px solid var(--gold2);background:#fff;color:var(--gold);cursor:pointer;
+        font-size:15px;font-weight:700;line-height:1;width:20px;height:20px;padding:0;border-radius:4px}
+.addrow:hover{background:var(--gold);color:#fff;border-color:var(--gold)}
 
 .bottom{display:grid;grid-template-columns:1.35fr 1fr;gap:14px;margin-top:12px}
 .terms{border:1px solid var(--line);border-radius:6px;padding:6px 8px}
@@ -128,8 +140,18 @@ select.kind{border:0;padding:5px 2px;font-size:11.5px;text-align:center}
 /* 列印專用的備註區塊：textarea 在 Chrome 列印時高度不會貼合內容，撐高就被切到第二頁，
    所以列印改印這個 div（同一份文字，會自己貼合高度）。2026-08-20 老闆實測踩到。 */
 .remark-print{display:none;white-space:pre-wrap;font-size:11px;line-height:1.42;padding:0 2px}
+/* 付款資訊：框起來讓客戶一眼看到匯款去哪裡 */
+.bank{border:1px solid var(--gold);border-radius:6px;padding:6px 9px;background:#fbf5e6;margin-top:8px}
+.bank h4{margin:0 0 3px;font-size:11.5px;letter-spacing:.14em;color:var(--gold)}
+.bank .bankhead input{font-weight:700;font-size:13px;color:var(--gold);padding:2px 2px 4px}
+.bank .f{grid-template-columns:52px 1fr;border-bottom-color:#eadcbd}
+.bank .f>label{font-size:11.5px}
+.bank input{font-size:13px}
+/* 列印改印這個靜態區塊：四行輸入框在列印時太佔高度，會把整張擠成兩頁。
+   跟備註同一個做法（見 .remark-print）。 */
+.bank-print{display:none;white-space:pre-wrap}
 .sum{border:1px solid var(--line);border-radius:6px;overflow:hidden}
-.sum .r{display:grid;grid-template-columns:1fr 120px;align-items:center;
+.sum .r{display:grid;grid-template-columns:1fr 140px;align-items:center;
   border-bottom:1px solid var(--line2);padding:5px 9px;font-size:13px}
 .sum .r:last-child{border-bottom:0}
 .sum .r span:last-child{text-align:right;font-variant-numeric:tabular-nums}
@@ -159,9 +181,13 @@ select.kind{border:0;padding:5px 2px;font-size:11.5px;text-align:center}
   /* 壓縮版：5 個品項以內整張塞得進 A4 一頁（實測 3 項 947px、5 項 1037px，可用高度 1054px） */
   .spec{min-height:36px;font-size:11.5px;line-height:1.32;padding:4px 6px}
   .terms textarea{display:none}
-  .remark-print{display:block;font-size:10.5px;line-height:1.35}
+  .remark-print{display:block;font-size:10px;line-height:1.3}
+  .bank{padding:3px 7px;margin-top:5px}
+  .bank h4{margin-bottom:1px;font-size:9.5px}
+  .bank .bankhead,.bank .f{display:none}
+  .bank-print{display:block;font-size:10.5px;line-height:1.45}
   .sign{margin-top:8px}
-  .sign .box{height:42px}
+  .sign .box{height:34px}
   .foot{margin-top:6px}
   .terms h4{margin-bottom:2px}
   fieldset{padding-top:4px;padding-bottom:6px;margin-top:6px}
@@ -171,16 +197,16 @@ select.kind{border:0;padding:5px 2px;font-size:11.5px;text-align:center}
   .bottom{margin-top:8px}
   /* 再收緊：右下金額區與上方欄位列是最吃高度的兩塊（實測填 3 項可省約 60px） */
   /* 數量方案：列印時線距與比價總表都收緊一點 */
-  .tline input{padding:3px 4px;font-size:12px}
+  .tline input{padding:3px 4px;font-size:12px !important}
   .tline .amt{padding:3px 6px;font-size:12px}
   table.multi th{padding:3px 5px;font-size:10px}
-  table.multi td,table.multi input.plan{font-size:11.5px}
+  table.multi td,table.multi input.plan{font-size:11.5px !important}
   table.multi td.v{padding:3px 6px}
   .sum .r{padding:3px 9px;font-size:12px}
   .sum .r.total{padding:5px 9px;font-size:14px}
   .sum .cap{padding:3px 9px}
   .f>label{font-size:11px}
-  .f input,.f select{font-size:12px}
+  .f input,.f select{font-size:12px !important}
   th{padding:4px;font-size:11px}
   /* 手機的橫向捲動容器在列印時要放開，否則右半邊會被裁掉 */
   .tablewrap{overflow:visible !important}
@@ -208,7 +234,7 @@ select.kind{border:0;padding:5px 2px;font-size:11.5px;text-align:center}
   .title .t2{letter-spacing:.2em}
   .co .sub{font-size:11px}
   /* 稅別下拉在手機上會被切成「未稅（另加 5%」，右欄要留寬一點、字再小一級 */
-  .sum .r{grid-template-columns:1fr 158px}
+  .sum .r{grid-template-columns:1fr 165px}
   #taxmode{font-size:13px}
   input,textarea,select{font-size:16px}  /* iOS 聚焦時不自動放大整頁 */
 }
@@ -288,7 +314,7 @@ select.kind{border:0;padding:5px 2px;font-size:11.5px;text-align:center}
       <div class="f"><label>報價單號</label><input data-k="q_no"></div>
       <div class="f"><label>報價日期</label><input type="date" data-k="q_date"></div>
       <div class="f"><label>有效期限</label><input data-k="q_valid" value="報價日起 30 天"></div>
-      <div class="f"><label>預計交期</label><input data-k="q_lead" value="確認檔案或打樣後 15 天交貨"></div>
+      <div class="f"><label>預計交期</label><input data-k="q_lead" value="確認檔案後 15 天交貨"></div>
       <div class="f"><label>付款方式</label><input data-k="q_pay" value="匯款後才會開始製作"></div>
       <div class="f"><label>運送方式</label><input data-k="q_ship" value="貨運（運費另計）"></div>
       <div class="f"><label>案件名稱</label><input data-k="q_case" placeholder="例：品牌手提紙袋"></div>
@@ -308,13 +334,13 @@ select.kind{border:0;padding:5px 2px;font-size:11.5px;text-align:center}
     <thead>
       <tr>
         <th style="width:26px">#</th>
-        <th style="width:100px">品　項</th>
+        <th style="width:112px">品　項</th>
         <th>品名 · 規格說明</th>
         <th style="width:76px">數量</th>
         <th style="width:46px">單位</th>
         <th style="width:78px">單價</th>
         <th style="width:90px">金額</th>
-        <th style="width:26px" class="noprint"></th>
+        <th style="width:26px" class="noprint addcol"><button type="button" class="addrow" title="新增品項" onclick="addRow()">+</button></th>
       </tr>
     </thead>
     <tbody></tbody>
@@ -329,14 +355,26 @@ select.kind{border:0;padding:5px 2px;font-size:11.5px;text-align:center}
 2. 以上為初步報價，實際以確認完稿之尺寸、紙材、加工方式為準；規格若有異動，價格另行調整。
 3. 數量以正負 5% 為交貨允收範圍，依實際完成數量計價。
 4. 印刷色差、燙金亮度因紙材與批次略有差異，屬正常範圍；如需精準對色請事先指定並打樣。
-5. 打樣費、刀模費、燙金版費如未列於上表則另計。
-6. 刀模保留 3 年：3 年內若有再版，自最近一次製作日起再往後保留 3 年。若製作次數頻繁致刀片耗損需更換，換刀片費用另計。
-7. 燙金版保留 3 年：3 年內若有再版，自最近一次製作日起再往後保留 3 年。
-8. 檔案僅保留 3 個月，逾期不另通知，請務必自行保留您的檔案。
-9. 客戶提供之完稿請附外框字之 AI / PDF 檔（CMYK、出血 3mm）。
-10. 運費、跨區配送、指定時段送達之費用另計。
-11. 匯款帳號請洽本公司官方 LINE，由專人提供。</textarea>
+5. 燙金版、刀模保留 3 年：3 年內若有再版，自最近一次製作日起再往後保留 3 年。若製作次數頻繁致刀片耗損需更換，換刀片費用另計。
+6. 檔案僅保留 3 個月，逾期不另通知，請務必自行保留您的檔案。
+7. 客戶提供之完稿請附外框字之 AI / PDF 檔（CMYK、出血 3mm）。
+8. 運費、跨區配送、指定時段送達之費用另計。
+9. 數位打樣 2500 元/個，打樣費不折抵貨款、亦不退還。
+10. 打全樣（完整 1:1 樣品）3500 元/個，燙金版費另計。
+11. 超過一年後再版須另行報價，一年內再版沿用此版報價。</textarea>
         <div class="remark-print" aria-hidden="true"></div>
+      </div>
+      <!-- 付款資訊放左欄（備註底下）不是右欄：右欄的金額區＋簽章本來就比較高，
+           再往右邊加會把整張擠到第二頁。左欄還有空間，擺這裡剛好把兩欄拉齊。
+           ⚠️ 這頁在 Cloudflare Access 後面、repo 也是私有的，才寫得了帳號；
+              別把這一段複製到任何對外公開的頁面（見記憶 bank-account-not-public）。 -->
+      <div class="bank">
+        <h4>付款資訊 PAYMENT</h4>
+        <div class="bankhead"><input data-k="pay_term" value="付款後起印"></div>
+        <div class="f"><label>銀　行</label><input data-k="bk_bank" value="中國信託（822）青年分行 1263"></div>
+        <div class="f"><label>戶　名</label><input data-k="bk_name" value="黃嘉胤"></div>
+        <div class="f"><label>帳　號</label><input data-k="bk_no" value="263540255945"></div>
+        <div class="bank-print" aria-hidden="true"></div>
       </div>
     </div>
 
@@ -510,6 +548,7 @@ function pickCustomer(){
   /* 內建名單只有抬頭與統編，其餘欄位本來就空著讓老闆自己填；
      自己存的常用客戶才可能帶到電話地址。 */
   msg((c.tel || c.addr || c.p) ? '已帶入' : '已帶入抬頭與統編');
+  fitAll();   /* 程式填值不會觸發 input 事件，要自己補跑一次縮字 */
   saveLS();
 }
 
@@ -616,7 +655,7 @@ var TPL = {
   "打凸版": "版面尺寸：　  ×　  cm\n版數：\n（新製打凸版）",
   "糊型費用": "糊型方式：糊盒／糊袋／貼雙面膠\n說明：",
   "人工包裝裝箱費": "包裝方式：\n每箱入數：\n說明：",
-  "打樣費": "打樣內容：\n份數：\n說明：確認下單後折抵／不折抵",
+  "打樣費": "打樣內容：\n份數：\n說明：打樣費不折抵貨款（老闆 2026-09-21 定案）",
   "運費":  "配送地點：\n件數／材積：\n說明：",
   "其他":  ""
 };
@@ -692,8 +731,13 @@ function buildMultiRows(n){
 }
 function rowHTML(){
   var opt = KINDS.map(function(k){ return '<option>' + k + '</option>'; }).join('');
+  opt += '<option value="__custom__">＋ 自己打…</option>';
   return '<td class="no"></td>' +
-    '<td class="c"><select class="kind" onchange="fillTpl(this)">' + opt + '</select></td>' +
+    '<td class="c"><select class="kind" onchange="fillTpl(this)">' + opt + '</select>' +
+      '<span class="kindedit" style="display:none">' +
+        '<input class="kindtext" placeholder="自訂品項">' +
+        '<button class="kindback noprint" title="改回從清單挑" onclick="kindToList(this)">▾</button>' +
+      '</span></td>' +
     '<td><div class="spec" contenteditable="true"></div></td>' +
     '<td class="tcell qtycell"></td>' +
     '<td><input class="unit" value="個" style="text-align:center"></td>' +
@@ -718,7 +762,34 @@ function delRow(btn){
   if(!tb.children.length) addRow();
   renum(); calc(); saveLS();
 }
+/* 品項改成自己打：下拉換成文字框。規格欄不動——自訂品項沒有範本可帶。 */
+function kindToText(tr, txt, silent){
+  tr.querySelector('.kind').style.display = 'none';
+  var box = tr.querySelector('.kindedit');
+  box.style.display = 'flex';
+  var el = box.querySelector('.kindtext');
+  el.value = txt || '';
+  if(!silent){ el.focus(); saveLS(); }
+  if(typeof fitOne === 'function') fitOne(el);
+}
+/* 按 ▾ 換回清單，回到預設品項並帶出它的範本 */
+function kindToList(btn){
+  var tr = btn.closest('tr');
+  tr.querySelector('.kindedit').style.display = 'none';
+  var sel = tr.querySelector('.kind');
+  sel.style.display = '';
+  sel.value = KINDS[0];
+  fillTpl(sel);
+}
+/* 這一列目前的品項名稱：自己打的優先，否則取下拉的值 */
+function kindOf(tr){
+  var box = tr.querySelector('.kindedit');
+  if(box && box.style.display !== 'none') return (tr.querySelector('.kindtext').value || '').trim();
+  return tr.querySelector('.kind').value;
+}
+
 function fillTpl(sel){
+  if(sel.value === '__custom__'){ kindToText(sel.closest('tr'), ''); return; }
   var cell = sel.closest('tr').querySelector('.spec');
   var cur = cell.innerText.replace(/\s+$/,'').trim();
   var isTpl = Object.keys(TPL).some(function(k){
@@ -831,7 +902,7 @@ function collect(){
   document.querySelectorAll('#sheet [data-k]').forEach(function(el){ d.f[el.getAttribute('data-k')] = el.value; });
   document.querySelectorAll('#items tbody tr').forEach(function(tr){
     d.rows.push({
-      kind:  tr.querySelector('.kind').value,
+      kind:  kindOf(tr),
       spec:  tr.querySelector('.spec').innerText,
       unit:  tr.querySelector('.unit').value,
       /* 數量／單價改存陣列（一個方案一格）；舊檔的單一數值讀得回來，見 apply() */
@@ -869,7 +940,11 @@ function apply(d){
   (d.rows || []).forEach(function(r){
     addRow(true);
     var tr = tb.lastElementChild;
-    if(r.kind) tr.querySelector('.kind').value = r.kind;
+    /* 清單裡有就選它；沒有（自己打的品項）就切成文字框還原 */
+    if(r.kind){
+      if(KINDS.indexOf(r.kind) >= 0) tr.querySelector('.kind').value = r.kind;
+      else kindToText(tr, r.kind, true);
+    }
     tr.querySelector('.spec').innerText = r.spec || '';
     tr.querySelector('.unit').value  = r.unit || '個';
     var qv = arr(r.qty), pv = arr(r.price);
@@ -954,8 +1029,20 @@ function syncRemark(){
   }
   pr.textContent = ta.value;
 }
+/* 付款資訊同步到列印用的靜態區塊：螢幕填四個輸入框，列印印成緊湊兩行 */
+function syncBank(){
+  var el = document.querySelector('.bank-print');
+  if(!el) return;
+  var g = function(k){ var e = document.querySelector('[data-k=' + k + ']'); return e ? (e.value || '').trim() : ''; };
+  var l1 = g('pay_term');
+  var l2 = [g('bk_bank'),
+            g('bk_name') ? '戶名：' + g('bk_name') : '',
+            g('bk_no')   ? '帳號：' + g('bk_no')   : ''].filter(Boolean).join('　');
+  el.textContent = [l1, l2].filter(Boolean).join('\n');
+}
 document.addEventListener('input', function(e){
   if(e.target.tagName === 'TEXTAREA'){ grow(e.target); syncRemark(); }
+  if(e.target.getAttribute && /^(pay_term|bk_)/.test(e.target.getAttribute('data-k') || '')) syncBank();
 });
 /* 列印前：把「沒用到的列」標記起來（列印 CSS 會把它們藏掉），並重排序號 */
 function isTplOnly(text){
@@ -980,7 +1067,7 @@ function markUnusedRows(){
   /* 整張都還沒填：當成空白表格照印，不要印出沒有任何列的表 */
   if(!used){ rows.forEach(function(tr){ tr.classList.remove('skip'); }); renum(); }
 }
-window.addEventListener('beforeprint', function(){ growAll(); syncRemark(); markUnusedRows(); });
+window.addEventListener('beforeprint', function(){ growAll(); syncRemark(); syncBank(); markUnusedRows(); });
 window.addEventListener('afterprint', function(){
   [].forEach.call(document.querySelectorAll('#items tbody tr.skip'), function(tr){ tr.classList.remove('skip'); });
   renum();
@@ -1051,7 +1138,7 @@ function importJSON(inp){
       var d = JSON.parse(e.target.result);
       var ok = (d && d.html) ? apply(fromLegacy(d.html)) : apply(d);   /* 也吃得下舊格式的檔 */
       if(!ok) throw new Error('檔案格式不符');
-      renum(); calc(); growAll(); syncRemark(); saveLS(); flash('已開啟：' + f.name);
+      renum(); calc(); growAll(); syncRemark(); syncBank(); fitAll(); saveLS(); flash('已開啟：' + f.name);
     }catch(err){ alert('無法開啟此檔：' + err.message); }
   };
   r.readAsText(f);
@@ -1062,6 +1149,48 @@ function newDoc(){
   try{ localStorage.removeItem(KEY); localStorage.removeItem(OLDKEY); localStorage.removeItem(SEQKEY); }catch(e){}
   location.reload();
 }
+
+/* ═══ 欄位自動縮字：塞不下就把那一格的字縮小 ═══
+   2026-09-21 老闆要求「每個欄位都不能被切掉」。
+   單行 input／select 塞不下時是「無聲截斷」——螢幕上還能捲、一列印就直接不見，最危險。
+   這裡改成塞不下就縮字（最小 10px），整串至少都看得到。
+   ⚠️ 列印的字級在 @media print 裡加了 !important，才不會被這裡的行內樣式蓋掉。
+      列印版面比螢幕寬、字又更小，本來就有餘裕，不需要縮。 */
+var _fitCtx;
+function fitOne(el){
+  if(!el) return;
+  var txt;
+  if(el.tagName === 'SELECT'){
+    var o = el.options[el.selectedIndex];
+    txt = o ? o.text : '';
+  }else{
+    txt = el.value || '';
+  }
+  el.style.fontSize = '';                    /* 先還原，才量得到這個裝置的基準字級 */
+  if(!txt) return;
+  var cs = getComputedStyle(el);
+  if(el.offsetParent === null) return;        /* 藏起來的（例如沒啟用的數量方案）不用管 */
+  var base  = parseFloat(cs.fontSize);
+  var inner = el.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+  if(el.tagName === 'SELECT') inner -= 18;    /* 下拉箭頭佔掉的寬度 */
+  if(el.type === 'date')      inner -= 20;    /* 日曆小圖示佔掉的寬度 */
+  if(inner <= 0) return;
+  _fitCtx = _fitCtx || document.createElement('canvas').getContext('2d');
+  var size = base;
+  while(size > 10){
+    _fitCtx.font = cs.fontWeight + ' ' + size + 'px ' + cs.fontFamily;
+    if(_fitCtx.measureText(txt).width <= inner) break;
+    size -= 0.5;
+  }
+  if(size < base) el.style.fontSize = size + 'px';
+}
+function fitAll(){
+  var els = document.querySelectorAll('#sheet input, #sheet select');
+  for(var i = 0; i < els.length; i++) fitOne(els[i]);
+}
+document.addEventListener('input',  function(e){ if(e.target.tagName === 'INPUT')  fitOne(e.target); });
+document.addEventListener('change', function(e){ if(e.target.tagName === 'SELECT') fitOne(e.target); });
+window.addEventListener('resize', fitAll);
 
 /* 初始化 */
 /* 報價單號＝時間碼：XC-年月日-時分（例 XC-20260820-1432）。
@@ -1087,7 +1216,8 @@ function serial(){
   document.getElementById('items').classList.toggle('solo', tierCount() === 1);
   document.getElementById('sumbox').classList.toggle('multi-mode', tierCount() > 1);
   if(!document.querySelector('#multi tbody tr')) buildMultiRows(tierCount());
-  renum(); calc(); growAll(); syncRemark();
+  renum(); calc(); growAll(); syncRemark(); syncBank();
+  fitAll();   /* 欄位太長就自動縮字，不要無聲截斷 */
   filterCustomers();   /* 把客戶下拉選單建起來（含這台裝置自己加的） */
   showTip();   /* 手機一開頁就先把存 PDF 的步驟寫在最上面 */
 })();

@@ -105,7 +105,8 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
 input:focus{outline:2px solid var(--accent); outline-offset:-1px; background:var(--card)}
 select{
   font-family:inherit; font-size:12.5px; padding:5px 6px; color:var(--ink);
-  background:var(--bg); border:1px solid var(--line); border-radius:7px; max-width:118px;
+  /* 2026-09-25：118 → 142，計價方式多了「分欄單價 ×張數」，太窄會把「數量／張數」剪掉 */
+  background:var(--bg); border:1px solid var(--line); border-radius:7px; max-width:142px;
 }
 /* 欄少的時候輸入框不要被拉成一整條（一欄一個框，佔滿整個 td 很難看）。 */
 .qty input{font-size:17px; font-weight:700; text-align:center; max-width:220px}
@@ -222,7 +223,7 @@ button.primary:hover{opacity:.9; color:#fff}
   <h1><span class="mark">喜成</span>成本比價計算機</h1>
   <div class="sub">同一張單、多種數量一起算，直接比每張成本</div>
   <!-- 版本標示：手機常被快取擋住看到舊版，老闆對一下這個日期就知道有沒有拿到新的。改版時要一起更新。 -->
-  <div class="ver">版本 2026-09-19・方案可命名・可存草稿</div>
+  <div class="ver">版本 2026-09-25・加工可選單價 ×張數</div>
 </header>
 
 <div class="card">
@@ -267,11 +268,14 @@ button.primary:hover{opacity:.9; color:#fff}
     <b>燙金版費、打凸版費要各案自己勾才算</b>（預設都不勾，跟貼銀箔那排一樣一欄一個勾）——
     公式照樣算給你看，A 案要收版費、B 案客戶有舊版不收，就只勾 A —— 直接比出差多少。
     <b>貼膜</b>＝原本的上光那一列（換個名字，填過的數字還在）；<b>局部光</b>另外算，有自己的局部光版費。
-    <b>貼膜、局部光、磨砂、夜光油墨都是「單價 × 印刷張數」</b>（做在大紙上，跟貼銀箔同一個道理；
-    沒填印刷張數會退回用製作數量算，小計會標出來）。
     紙張費用、印刷版費、印刷費用不進勾選，維持常駐（不印就留空，算 0）。<br>
-    計價方式四選一：<b>分欄單價 ×數量</b>（預設）＝三欄各填各的單價，各自乘上該欄數量，格子下面直接顯示小計｜
-    <b>分欄總價</b>＝三欄各填一筆總價，不乘數量｜<b>單價 ×數量（共用）</b>＝三欄共用一個單價｜<b>總價（共用）</b>＝整批一筆、三欄同一個數字。
+    計價方式：<b>分欄單價 ×數量</b>（預設）＝各欄各填各的單價，各自乘上該欄製作數量，格子下面直接顯示小計｜
+    <b>分欄總價</b>＝各欄各填一筆總價，不乘數量｜<b>單價 ×數量（共用）</b>＝各欄共用一個單價｜<b>總價（共用）</b>＝整批一筆、各欄同一個數字。<br>
+    <b>加工列多兩個「× 張數」</b>（燙金／打凸／貼膜／軋型／局部光／磨砂／夜光）：<b>分欄單價 ×張數</b>、<b>單價 ×張數（共用）</b>
+    ——乘的是上面那列「印刷張數（大紙）」不是成品數。做在大紙上、一張大紙切幾張成品不影響加工次數的（貼膜、局部光、磨砂、夜光，
+    還有整張過的燙金、軋型）就選這個，廠商按成品張數報的就用「× 數量」。
+    貼膜／局部光／磨砂／夜光<b>預設就是分欄單價 ×張數</b>（維持以前的算法），燙金／打凸／軋型預設仍是 ×數量，要改自己選。
+    沒填印刷張數會退回用製作數量算，小計會標「（用製作數量）」。
     卡片上有兩個每張的數字：上面的大字<b>每張＝製作成本 ÷ 數量（不含模具）</b>，合計下面的綠字
     <b>完成每張單價＝合計 ÷ 製作數量（含模具）</b>——真的要跟客戶收的那個。<br>
     <b>每張成本不含模具</b>：燙金版費、打凸版費、刀模是模具（再版還能用），在卡片上獨立列為「模具費（另記）」，不攤進每張單價。
@@ -324,7 +328,7 @@ function setNCol(n){
   COLS = Array.from({length:NCOL}, (_,i) => i);
   COLNAME = COLS.map(i => String.fromCharCode(65+i) + ' 案');   // A 案 … Z 案
   document.documentElement.style.setProperty('--ncol', NCOL);            // 方案格線的欄數
-  document.documentElement.style.setProperty('--tmin', (260 + NCOL*130) + 'px');  // 表格最小寬
+  document.documentElement.style.setProperty('--tmin', (284 + NCOL*130) + 'px');  // 表格最小寬（項目 130 ＋ 計價方式 150 ＋ 邊）
 }
 setNCol(store.__ncol || 1);
 
@@ -333,6 +337,13 @@ setNCol(store.__ncol || 1);
 //   （三欄各填各的單價，各自 × 該欄數量）。量大單價本來就會降，共用一個單價比不出東西。
 //   版費類（印刷版費、刀模、兩個版費公式）是一次性費用，維持不隨數量變。
 const ALL = ['unitsplit','split','unit','shared'];
+// 2026-09-25 老闆：燙金／打凸／貼膜／軋型／局部光／磨砂／夜光「增加單價 × 張數選項」。
+//   本來只有貼膜／局部光／磨砂／夜光是寫死乘印刷張數，燙金／打凸／軋型只能乘製作數量 ——
+//   改成下拉自己選：同一列這次按成品數算、下次按大紙張數算，不用改程式。
+//   ⚠ 加工列用 ALLS，常駐三列（紙張／印刷版／印刷）與糊工維持 ALL，選單不變長。
+const ALLS = ['unitsplit','unitsplitS','split','unit','unitS','shared'];
+const isUnitSplit = m => m === 'unitsplit' || m === 'unitsplitS';   // 分欄各填一個單價
+const isSheetMode = m => m === 'unitsplitS' || m === 'unitS';       // 乘的是印刷張數，不是成品數
 
 // 2026-08-28 老闆：加「印後加工」勾選 —— 勾起來的加工才把它的填入列跳出來。
 //   紙張費用、印刷版費、印刷費用不放進來：印刷不是印後加工，三列維持常駐（不印就留空＝0）。
@@ -357,16 +368,17 @@ const ROWS = [
   // 2026-08-28 老闆：燙金版費加一個「計入報價」勾選，預設不勾 —— 客戶有舊版可以重出、這批不收版費。
   //   opt:true ＝ 這列要多長一個計入開關（目前只有燙金版費要）。
   {k:'foilP', n:'燙金版費',  type:'formula', mult:4, note:'長 × 寬 × 4・勾才計入', tool:true, craft:'foil', opt:true},
-  {k:'foil',  n:'燙金費用',  def:'unitsplit', modes:ALL, craft:'foil'},
+  {k:'foil',  n:'燙金費用',  def:'unitsplit', modes:ALLS, craft:'foil'},
   {k:'embP',  n:'打凸版費',  type:'formula', mult:8, note:'長 × 寬 × 8・勾才計入', tool:true, craft:'emb', opt:true},
-  {k:'emb',   n:'打凸費用',  def:'unitsplit', modes:ALL, craft:'emb'},
+  {k:'emb',   n:'打凸費用',  def:'unitsplit', modes:ALLS, craft:'emb'},
   // 2026-08-28 老闆：「貼膜＝上光」→ 原本的「上光單價」就是這一列，改名為貼膜。
   //   資料 key 維持 gloss，舊紀錄裡填過的數字才不會掉。
   //   2026-08-28 老闆：貼膜按「單價 × 印刷張數」—— 膜貼在大紙上，一張大紙切幾張成品不影響貼的次數
   //   （跟貼銀箔同一個道理）。印刷張數沒填時退回用製作數量，小計會標出來。
-  {k:'gloss', n:'貼膜費用',  def:'unitsplit', modes:ALL, craft:'film', base:'sheet', note:'單價 × 印刷張數'},
+  //   2026-09-25 起改成用計價方式決定乘什麼（預設仍是分欄單價 × 張數），base:'sheet' 收掉。
+  {k:'gloss', n:'貼膜費用',  def:'unitsplitS', modes:ALLS, craft:'film'},
   {k:'die',   n:'刀模',      def:'shared',    modes:['shared','split'], note:'模具・另記', tool:true, craft:'cut'},
-  {k:'cut',   n:'軋型費用',  def:'unitsplit', modes:ALL, craft:'cut'},
+  {k:'cut',   n:'軋型費用',  def:'unitsplit', modes:ALLS, craft:'cut'},
   // 2026-08-03 老闆加：貼銀箔按才計價。1 才 ＝ 30×30cm ＝ 900 cm²，
   //   單張成本＝(長cm × 寬cm ÷ 900) × 每才單價（預設 1 元）。不是模具，攤進每張成本。
   //   ⚠ 乘的是「印刷張數（大紙）」不是成品數 —— 銀箔貼在大紙上，一張大紙切幾張成品不影響貼的次數。
@@ -377,21 +389,38 @@ const ROWS = [
   //   ⚠ 倍率公式老闆還沒給，先做成填總價；之後給了長寬倍率再改成 type:'formula'。
   {k:'spotP', n:'局部光版費', def:'shared',   modes:['shared','split'], note:'模具・另記', tool:true, craft:'spot'},
   // 2026-08-28 老闆：局部光、磨砂跟貼膜一樣，做在大紙上 → 單價 × 印刷張數。
-  {k:'spot',  n:'局部光費用', def:'unitsplit', modes:ALL, craft:'spot', base:'sheet', note:'單價 × 印刷張數'},
+  {k:'spot',  n:'局部光費用', def:'unitsplitS', modes:ALLS, craft:'spot'},
   // 2026-08-28 老闆：磨砂也要開版 —— 跟局部光一樣，版費是模具（再版還能用）、另記，倍率公式老闆還沒給，先填總價。
   {k:'matteP',n:'磨砂版費',  def:'shared',    modes:['shared','split'], note:'模具・另記', tool:true, craft:'matte'},
-  {k:'matte', n:'磨砂費用',  def:'unitsplit', modes:ALL, craft:'matte', base:'sheet', note:'單價 × 印刷張數'},
+  {k:'matte', n:'磨砂費用',  def:'unitsplitS', modes:ALLS, craft:'matte'},
   // 2026-08-28 老闆：夜光油墨要開版，計價跟局部光／磨砂一樣是單價 × 印刷張數。
   {k:'glowP', n:'夜光版費',  def:'shared',    modes:['shared','split'], note:'模具・另記', tool:true, craft:'glow'},
-  {k:'glow',  n:'夜光油墨費用', def:'unitsplit', modes:ALL, craft:'glow', base:'sheet', note:'單價 × 印刷張數'},
+  {k:'glow',  n:'夜光油墨費用', def:'unitsplitS', modes:ALLS, craft:'glow'},
   {k:'glue',  n:'糊工單價',  def:'unitsplit', modes:ALL, craft:'glue'},
 ];
 const MODE_LABEL = {
-  unitsplit:'分欄單價 ×數量',   // 三欄各一個單價，各自 × 該欄數量
-  split    :'分欄總價',         // 三欄各一個總價，不乘數量
-  unit     :'單價 ×數量（共用）',
-  shared   :'總價（共用）',
+  unitsplit :'分欄單價 ×數量',   // 各欄一個單價，各自 × 該欄「製作數量」
+  unitsplitS:'分欄單價 ×張數',   // 各欄一個單價，各自 × 該欄「印刷張數」（沒填退回製作數量）
+  split     :'分欄總價',         // 各欄一個總價，不乘任何數
+  unit      :'單價 ×數量（共用）',
+  unitS     :'單價 ×張數（共用）',
+  shared    :'總價（共用）',
 };
+
+/* 2026-09-25 舊紀錄轉檔：貼膜／局部光／磨砂／夜光本來寫死乘印刷張數，存的代號是 unitsplit／unit。
+   新版這兩個代號改成「乘製作數量」的意思 —— 不轉的話舊自動記憶、舊草稿一打開，
+   數字會整個從張數變成成品數（差好幾倍還不會報錯）。轉過的標記 __sheetmode，只轉一次。 */
+const SHEETROWS = ['gloss','spot','matte','glow'];
+function migrateSheetMode(o){
+  if (!o || o.__sheetmode) return o;
+  SHEETROWS.forEach(k => {
+    if (o[k+'_m'] === 'unitsplit')  o[k+'_m'] = 'unitsplitS';
+    else if (o[k+'_m'] === 'unit')  o[k+'_m'] = 'unitS';
+  });
+  o.__sheetmode = 1;
+  return o;
+}
+migrateSheetMode(store);
 
 const num = v => { const n = parseFloat(String(v).replace(/,/g,'')); return isFinite(n) ? n : 0; };
 const fmt = n => (Math.round(n*100)/100).toLocaleString('zh-TW',{maximumFractionDigits:2});
@@ -408,7 +437,7 @@ html += '</tr>';
 
 // 2026-08-03 老闆加：印刷張數＝下去印的大紙數量，目前給貼銀箔當基數（貼在大紙上，跟成品數不同）。
 html += '<tr data-k="sheet"><td class="name">'+rz('sheet')+'<b>印刷張數</b><small>大紙數量</small></td>'
-      + '<td><span class="sub" style="font-size:12.5px;color:var(--muted)">貼銀箔用</span></td>';
+      + '<td><span class="sub" style="font-size:12.5px;color:var(--muted)">貼銀箔／× 張數用</span></td>';
 COLS.forEach(c => html += '<td class="qty"><input type="number" inputmode="numeric" min="0" step="1" id="sheet'+c+'" placeholder="0"></td>');
 html += '</tr>';
 
@@ -462,9 +491,8 @@ ROWS.forEach(r => {
           + '</div></td>';
   } else {
     html += '<td><select id="'+r.k+'_m">'
-          // 乘印刷張數的列（貼膜），下拉字樣跟著改成「×張數」，免得看成乘成品數
           + r.modes.map(m => '<option value="'+m+'"'+(m===r.def?' selected':'')+'>'
-              + (r.base === 'sheet' ? MODE_LABEL[m].replace('數量','張數') : MODE_LABEL[m])+'</option>').join('')
+              + MODE_LABEL[m]+'</option>').join('')
           + '</select></td>';
     html += '<td colspan="'+NCOL+'"><div id="'+r.k+'_cell"></div></td>';
   }
@@ -475,7 +503,8 @@ $('body').innerHTML = html;
 // 2026-09-19 老闆：每一案上面多一格「方案名稱」自己填（例：甲廠、進口紙、含燙金）。
 //   名稱是純輔助 —— 代號 A／B／C 不動，空白就跟以前一樣只顯示「A 案」。
 //   值靠 id 走既有的 save()／applyStore()，不用另外存。
-$('headrow').innerHTML = '<th style="width:130px">項目</th><th style="width:126px">計價方式</th>'
+// 計價方式欄 2026-09-25 加寬（126→150）：多了「×張數」選項，126px 會把「數量／張數」四個字剪掉。
+$('headrow').innerHTML = '<th style="width:130px">項目</th><th style="width:150px">計價方式</th>'
                        + COLS.map(c => '<th class="col"><div class="colh">'
                            + '<span class="cn">'+COLNAME[c]+'</span>'
                            + '<input type="text" class="pname" id="pn'+c+'" maxlength="14" autocomplete="off" placeholder="方案名稱（選填）">'
@@ -494,7 +523,7 @@ buildTable();
 function renderCell(r){
   const mode = $(r.k+'_m').value;
   const box = $(r.k+'_cell');
-  if (mode === 'unitsplit') {
+  if (isUnitSplit(mode)) {
     box.className = 'three';
     box.innerHTML = COLS.map(c =>
       '<div class="ucell">'
@@ -506,7 +535,7 @@ function renderCell(r){
     box.innerHTML = COLS.map(c => '<input type="number" inputmode="decimal" min="0" step="0.01" id="'+r.k+'_'+c+'" placeholder="'+COLNAME[c]+' 總價">').join('');
   } else {
     box.className = 'one';
-    box.innerHTML = '<input type="number" inputmode="decimal" min="0" step="0.01" id="'+r.k+'_s" placeholder="'+(mode==='unit'?'單價':'總價')+'">';
+    box.innerHTML = '<input type="number" inputmode="decimal" min="0" step="0.01" id="'+r.k+'_s" placeholder="'+(mode==='unit'||mode==='unitS'?'單價':'總價')+'">';
   }
 }
 ROWS.filter(r => !r.type).forEach(renderCell);
@@ -605,15 +634,16 @@ function calc(){
       });
     } else {
       const mode = $(r.k+'_m').value;
-      // base:'sheet' 的列（貼膜）乘的是印刷張數，不是成品數；沒填張數就退回用製作數量。
-      const base = r.base === 'sheet' ? COLS.map(c => sheets[c] || qty[c]) : qty;
-      const fb   = c => r.base === 'sheet' && !sheets[c] && qty[c] > 0;
-      if (mode === 'unitsplit') {
+      // 選了「× 張數」的列乘的是印刷張數，不是成品數；沒填張數就退回用製作數量。
+      const useSheet = isSheetMode(mode);
+      const base = useSheet ? COLS.map(c => sheets[c] || qty[c]) : qty;
+      const fb   = c => useSheet && !sheets[c] && qty[c] > 0;
+      if (isUnitSplit(mode)) {
         amounts = COLS.map(c => num(($(r.k+'_u'+c)||{}).value) * base[c]);
         COLS.forEach(c => { const o = $(r.k+'_ur'+c); if (o) o.textContent = '= ' + fmt(amounts[c]) + (fb(c) && amounts[c] > 0 ? '（用製作數量）' : ''); });
       }
       else if (mode === 'split') amounts = COLS.map(c => num(($(r.k+'_'+c)||{}).value));
-      else if (mode === 'unit')  { const u = num($(r.k+'_s').value); amounts = COLS.map(c => u * base[c]); }
+      else if (mode === 'unit' || mode === 'unitS') { const u = num($(r.k+'_s').value); amounts = COLS.map(c => u * base[c]); }
       else                       { const v = num($(r.k+'_s').value); amounts = COLS.map(() => v); }
     }
     // 工藝勾了就算這案要做（單價還沒填也一樣）；常駐三列（紙張／印刷版／印刷）看有沒有金額。
@@ -714,7 +744,11 @@ function save(){
   try { localStorage.setItem(KEY, JSON.stringify(store)); } catch(e) {}
 }
 function restoreRow(r){
-  ['_s','_0','_1','_2','_u0','_u1','_u2'].forEach(sfx => { const el = $(r.k+sfx); if (el && store[r.k+sfx] !== undefined) el.value = store[r.k+sfx]; });
+  // 切換計價方式會把這一列的格子重畫 → 把底稿裡填過的值倒回去。
+  // ⚠ 欄位清單要跟著欄數走：本來寫死 _0.._2／_u0.._u2，開到 D 案以後切一下計價方式，
+  //    D、E 欄填的數字就不見了（2026-09-25 一起修）。
+  const keys = ['_s'].concat(COLS.map(c => '_'+c), COLS.map(c => '_u'+c));
+  keys.forEach(sfx => { const el = $(r.k+sfx); if (el && store[r.k+sfx] !== undefined) el.value = store[r.k+sfx]; });
 }
 // 把 store 的內容套回畫面。開頁時用，按「復原」把清掉的資料倒回來也用同一套。
 function applyStore(){
@@ -752,7 +786,10 @@ function clearAll(){
   // ⚠ 這裡原本用 confirm() 擋誤觸，但手機（LINE／FB 之類的內建瀏覽器）會直接把對話框吃掉，
   //    按鈕看起來像壞的 —— 老闆 2026-08-04 回報。改成：直接清空，提示裡給一顆「復原」。
   const backup = Object.assign({}, store);
-  store = {};   // save() 改成合併後，這裡要先把底稿倒掉，否則隱藏欄位的舊值會被留下來
+  // save() 改成合併後，這裡要先把底稿倒掉，否則隱藏欄位的舊值會被留下來。
+  // __sheetmode（已轉檔標記）要留著：清空不會把計價方式的選單重設，
+  // 倒光了下次開頁會再轉一次，把手動選成「× 數量」的加工列又翻回「× 張數」。
+  store = {__sheetmode:1};
   // 勾選回各自的預設（版費的「計入報價」不勾、貼銀箔的 A／B／C 全勾）
   document.querySelectorAll('input').forEach(el => { if (el.type === 'checkbox') el.checked = el.defaultChecked; else el.value = ''; });
   areaDefaults(true);
@@ -799,6 +836,7 @@ function snapshot(){ save(); return JSON.parse(JSON.stringify(store)); }
 // 快照 → 畫面。欄數不一樣要重畫整張表，再讓 applyStore() 把值倒回去。
 function applyState(data){
   store = JSON.parse(JSON.stringify(data));
+  migrateSheetMode(store);        // 2026-09-25 前存的草稿：貼膜那四列的計價代號要轉，不然乘錯基數
   const n = store.__ncol || 1;
   if (n !== NCOL) {
     setNCol(n);
