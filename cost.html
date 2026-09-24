@@ -224,11 +224,12 @@ button.primary:hover{opacity:.9; color:#fff}
   <h1><span class="mark">喜成</span>成本比價計算機</h1>
   <div class="sub">同一張單、多種數量一起算，直接比每張成本</div>
   <!-- 版本標示：手機常被快取擋住看到舊版，老闆對一下這個日期就知道有沒有拿到新的。改版時要一起更新。 -->
-  <div class="ver">版本 2026-09-25・加工可選 ×張數・版費 ×版數</div>
+  <div class="ver">版本 2026-09-25・方案庫・版費 ×版數・加工 ×張數</div>
 </header>
 
 <div class="card">
-  <h2>成本項目<span class="hdbtns"><button class="mini" id="addCol">＋ 新增方案</button><button class="mini" id="delCol">－ 移除末案</button><button class="mini" id="resetTop">全部歸零</button></span></h2>
+  <!-- 2026-09-25 老闆：「增加儲存方案」→ 這排多兩顆：儲存方案（存單獨一案的價格組）、存成草稿（整張表）。 -->
+  <h2>成本項目<span class="hdbtns"><button class="mini" id="addCol">＋ 新增方案</button><button class="mini" id="delCol">－ 移除末案</button><button class="mini" id="savePlanTop">儲存方案</button><button class="mini" id="saveDraftTop">存成草稿</button><button class="mini" id="resetTop">全部歸零</button></span></h2>
   <div class="scroll">
     <table>
       <thead>
@@ -306,7 +307,31 @@ button.primary:hover{opacity:.9; color:#fff}
     <b>叫回</b>＝把那份草稿整張蓋回上面的表（按錯了，提示列上有「復原」）；
     <b>覆寫</b>＝用現在畫面的內容更新那一份（改完價再存回同一份用這顆）；<b>刪除</b>也有「復原」。<br>
     草稿存在這台電腦／這支手機的瀏覽器裡（跟自動記憶分開存，按「全部清空」不會清掉草稿），
-    最多 40 份，換裝置或清瀏覽器資料就會不見 —— 要長期留存的，請用「列印 / 存 PDF」另外存檔。
+    最多 40 份，換裝置或清瀏覽器資料就會不見 —— 要長期留存的，請用「列印 / 存 PDF」另外存檔。<br>
+    只想留「某一家的價」、不含數量，下次換一張單再套？那個用下面的<b>方案庫</b>。
+  </div>
+</div>
+
+<!-- 2026-09-25 老闆：「增加儲存方案」。跟草稿分清楚 ——
+     草稿＝整張表（多案一起、含數量）；方案＝單獨一案的價格組（某家廠商的一組價），
+     換一張單、換個數量，把這組價叫回任何一欄就能馬上比。 -->
+<div class="card" id="planCard">
+  <h2>方案庫<span class="hdbtns"><span class="dcount" id="planCount"></span></span></h2>
+  <div class="bar nb">
+    <span class="sub" id="planTargetWrap" hidden>對象 <select id="planTarget"></select></span>
+    <button class="primary" id="savePlan">存成方案</button>
+    <span class="sub">名稱取自表頭那一案的「方案名稱」，沒填就用日期時間。</span>
+  </div>
+  <div class="drafts" id="planList"></div>
+  <div class="hint">
+    <b>存成方案</b>：只存<b>一案</b>的價格組 —— 那一欄填的單價／總價、每列的計價方式、
+    版費長寬版數、貼銀箔單價低消，還有這組要做哪些加工。<b>不存製作數量與印刷張數</b>，
+    所以下一張單量不一樣也能直接套。<br>
+    <b>叫回</b>＝把那組價蓋到「對象」選的那一案（開兩案以上才會出現選單，只開 A 案就一律進 A 案）；
+    <b>覆寫</b>＝用對象那一案現在的內容更新這組；<b>刪除</b>也一樣，三個動作都有「復原」。<br>
+    ⚠ 計價方式與版費長寬是<b>整列共用</b>的，叫回時會跟著換 —— 其他案的數字不會被清掉，
+    但乘的基數（數量／張數）會照這組方案走。<br>
+    存在這台電腦／這支手機的瀏覽器裡，跟草稿、自動記憶各存各的（按「全部清空」不會清掉），最多 40 組。
   </div>
 </div>
 
@@ -912,6 +937,130 @@ $('draftList').addEventListener('click', e => {
 });
 renderDrafts();
 
+/* ---------- 方案庫（localStorage，跟草稿再分開一支 key） ----------
+   2026-09-25 老闆：「增加儲存方案」。
+   草稿＝整張表的完整快照（多案、含數量）；方案＝單獨一案的價格組。
+   ⚠ 一個方案存三塊：
+     col    ＝ 那一欄自己的格子（分欄單價 _u、分欄總價 _、各欄勾選 _ck）
+     shared ＝ 整列共用的（計價方式、共用單價 _s、版費長寬版數、貼銀箔單價低消）
+     crafts ＝ 這組要做哪些加工
+   不存製作數量／印刷張數／方案名稱 —— 方案是「這家的價」，量跟著新的單走。 */
+const PKEY = 'xicheng-cost-plans-v1';
+const MAXPLAN = 40;
+let plans = [];
+try { const a = JSON.parse(localStorage.getItem(PKEY) || '[]'); plans = Array.isArray(a) ? a : []; } catch(e) { plans = []; }
+function savePlans(){
+  try { localStorage.setItem(PKEY, JSON.stringify(plans)); }
+  catch(e) { toast('方案存不下（瀏覽器空間滿了），先刪掉幾組舊的'); }
+}
+// 存／叫回／覆寫都對著這個「對象」欄；只開 A 案時選單收起來，一律當 A 案。
+function targetCol(){
+  const s = $('planTarget');
+  const v = s ? +s.value : 0;
+  return (v >= 0 && v < NCOL) ? v : 0;
+}
+function syncPlanTarget(){
+  const s = $('planTarget'); if (!s) return;
+  const cur = s.value;
+  $('planTargetWrap').hidden = NCOL <= 1;
+  // ⚠ 用 DOM 建選項不用字串拼：這支在開頁時（syncPlanSel）就會跑，
+  //    那時底下草稿區的 esc() 還沒宣告（const 的暫時死區），拼字串會直接噴錯。
+  s.innerHTML = '';
+  COLS.forEach(c => {
+    const o = document.createElement('option');
+    o.value = c; o.textContent = planName(c);
+    s.appendChild(o);
+  });
+  if (cur !== '' && +cur < NCOL) s.value = cur;
+}
+function planSnap(c){
+  save();
+  const d = {modes:{}, shared:{}, col:{}, crafts:{}};
+  ROWS.forEach(r => {
+    if (r.type) {
+      ['_L','_W','_N','_R','_M'].forEach(s => { if (store[r.k+s] !== undefined) d.shared[r.k+s] = store[r.k+s]; });
+    } else {
+      if (store[r.k+'_m'] !== undefined) d.modes[r.k] = store[r.k+'_m'];
+      if (store[r.k+'_s'] !== undefined) d.shared[r.k+'_s'] = store[r.k+'_s'];
+      ['_u','_'].forEach(p => { if (store[r.k+p+c] !== undefined) d.col[r.k+p] = store[r.k+p+c]; });
+    }
+    if (store[r.k+'_ck'+c] !== undefined) d.col[r.k+'_ck'] = store[r.k+'_ck'+c];
+  });
+  CRAFTS.forEach(f => { d.crafts['cf_'+f.c] = store['cf_'+f.c] === true; });
+  return d;
+}
+function planApply(p, c){
+  // 計價方式先驗過再套：舊方案存的代號如果那一列已經不收（例如糊工沒有 ×張數），就跳過不套。
+  Object.keys(p.modes || {}).forEach(k => {
+    const r = ROWS.find(x => x.k === k);
+    if (r && r.modes && r.modes.includes(p.modes[k])) store[k+'_m'] = p.modes[k];
+  });
+  Object.assign(store, p.shared || {}, p.crafts || {});
+  Object.keys(p.col || {}).forEach(k => { store[k+c] = p.col[k]; });   // k 結尾是 _u／_／_ck，接上欄號
+  applyStore();   // 選單、格子、勾選一起倒回畫面（欄數沒變，不用重畫整張表）
+  calc();
+}
+// 清單上那行小字：存自哪一案、這組要做哪些加工。
+function planMeta(c){
+  const on = CRAFTS.filter(f => craftOn(f.c)).map(f => f.n);
+  return COLNAME[c] + '・' + (on.length ? on.join('、') : '未勾加工');
+}
+function renderPlans(){
+  const box = $('planList');
+  box.innerHTML = plans.length
+    ? plans.map(p =>
+        '<div class="draft">'
+        + '<div class="dinfo"><b>'+esc(p.name)+'</b><small>'+esc(p.meta||'')+'　'+stamp(p.ts)+'</small></div>'
+        + '<div class="dbtn">'
+        +   '<button class="mini" data-act="load" data-id="'+p.id+'">叫回</button>'
+        +   '<button class="mini" data-act="over" data-id="'+p.id+'">覆寫</button>'
+        +   '<button class="mini" data-act="del"  data-id="'+p.id+'">刪除</button>'
+        + '</div></div>').join('')
+    : '<div class="empty">還沒有存過方案。把某一案的價填好、表頭那格取個名字（甲廠、乙廠…），按「存成方案」就收進來了。</div>';
+  $('planCount').textContent = plans.length ? plans.length + ' 組' : '';
+}
+function addPlan(){
+  if (plans.length >= MAXPLAN) { toast('方案最多 '+MAXPLAN+' 組，先刪掉幾組舊的'); return; }
+  const c = targetCol();
+  const el = $('pn'+c);
+  const name = ((el && el.value.trim()) || ('方案 ' + stamp())).slice(0, 24);
+  plans.unshift({ id:'p'+Date.now()+Math.random().toString(36).slice(2,6), name, ts:Date.now(), meta:planMeta(c), data:planSnap(c) });
+  savePlans(); renderPlans();
+  toast('已存方案「'+name+'」（'+COLNAME[c]+'）');
+}
+$('savePlan').addEventListener('click', addPlan);
+$('savePlanTop').addEventListener('click', addPlan);
+$('saveDraftTop').addEventListener('click', addDraft);
+
+$('planList').addEventListener('click', e => {
+  const b = e.target.closest('button[data-act]'); if (!b) return;
+  const i = plans.findIndex(x => x.id === b.dataset.id); if (i < 0) return;
+  const p = plans[i];
+  const c = targetCol();
+  if (b.dataset.act === 'load') {
+    // 叫回＝蓋掉那一欄（外加共用的計價方式）→ 一定要留復原
+    const backup = snapshot();
+    planApply(p.data, c);
+    // 叫回的同時把欄名也換成方案名稱，卡片／報表／工作單一眼看得出這欄是哪一家
+    const el = $('pn'+c); if (el) { el.value = p.name; save(); syncPlanSel(); calc(); }
+    toast('已把「'+p.name+'」叫回 '+COLNAME[c], '復原', () => { applyState(backup); toast('已復原'); });
+  } else if (b.dataset.act === 'over') {
+    const before = { meta:p.meta, ts:p.ts, data:p.data };
+    p.data = planSnap(c); p.meta = planMeta(c); p.ts = Date.now();
+    savePlans(); renderPlans();
+    toast('「'+p.name+'」已更新（取自 '+COLNAME[c]+'）', '復原', () => {
+      Object.assign(p, before); savePlans(); renderPlans(); toast('已復原');
+    });
+  } else if (b.dataset.act === 'del') {
+    plans.splice(i, 1);
+    savePlans(); renderPlans();
+    toast('已刪除「'+p.name+'」', '復原', () => {
+      plans.splice(i, 0, p); savePlans(); renderPlans(); toast('已復原');
+    });
+  }
+});
+renderPlans();
+
 /* ---------- 複製報表 ---------- */
 function copyReport(){
   const {qty, sheets, lines, totals, tools, makes, each, allEach} = calc();
@@ -937,6 +1086,7 @@ function copyReport(){
    走 localStorage 交件；#wp= 是備援（本機直接開檔或 localStorage 被鎖住時還帶得過去）。 */
 const WORKPIPE = 'xicheng-worksheet-payload';
 function syncPlanSel(){
+  syncPlanTarget();                           // 方案庫的「對象」選單跟這支一起更新（欄數／欄名一變就要換）
   const s = $('planSel'); if (!s) return;
   const cur = s.value;
   s.hidden = NCOL <= 1;                       // 只開 A 案時不用選
