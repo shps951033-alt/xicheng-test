@@ -120,6 +120,7 @@ select{
 }
 .formula{display:flex; align-items:center; gap:8px; flex-wrap:wrap}
 .formula input{max-width:96px}
+.formula input.nq{max-width:72px; min-width:56px}   /* 版數只會是個位數，別跟長寬一樣寬 */
 .formula .x{color:var(--muted); font-size:13px}
 .formula .cai{font-weight:700; font-variant-numeric:tabular-nums; color:var(--ink)}
 .ck{display:flex; align-items:center; gap:5px; cursor:pointer; font-size:11.5px; color:var(--muted)}
@@ -223,7 +224,7 @@ button.primary:hover{opacity:.9; color:#fff}
   <h1><span class="mark">喜成</span>成本比價計算機</h1>
   <div class="sub">同一張單、多種數量一起算，直接比每張成本</div>
   <!-- 版本標示：手機常被快取擋住看到舊版，老闆對一下這個日期就知道有沒有拿到新的。改版時要一起更新。 -->
-  <div class="ver">版本 2026-09-25・加工可選單價 ×張數</div>
+  <div class="ver">版本 2026-09-25・加工可選 ×張數・版費 ×版數</div>
 </header>
 
 <div class="card">
@@ -267,6 +268,8 @@ button.primary:hover{opacity:.9; color:#fff}
     燙金／打凸／軋型／局部光／磨砂／夜光油墨勾了會一次跳出「版費＋工繳」兩列（版費是模具，另記）。
     <b>燙金版費、打凸版費要各案自己勾才算</b>（預設都不勾，跟貼銀箔那排一樣一欄一個勾）——
     公式照樣算給你看，A 案要收版費、B 案客戶有舊版不收，就只勾 A —— 直接比出差多少。
+    <b>一張單開幾塊版就填幾</b>：版費＝長 × 寬 × 倍率（燙金 4、打凸 8）<b>× 版數</b>，
+    正反面各一塊、或分色分兩塊就填 2。版數留空＝1 塊，數字跟以前一樣。
     <b>貼膜</b>＝原本的上光那一列（換個名字，填過的數字還在）；<b>局部光</b>另外算，有自己的局部光版費。
     紙張費用、印刷版費、印刷費用不進勾選，維持常駐（不印就留空，算 0）。<br>
     計價方式：<b>分欄單價 ×數量</b>（預設）＝各欄各填各的單價，各自乘上該欄製作數量，格子下面直接顯示小計｜
@@ -332,7 +335,7 @@ function setNCol(n){
 }
 setNCol(store.__ncol || 1);
 
-// type: 'input' 一般費用｜'formula' 版費（長 × 寬 × 倍率）｜'area' 才數計費（長 × 寬 ÷ 900 才 × 每才單價 × 數量）
+// type: 'input' 一般費用｜'formula' 版費（長 × 寬 × 倍率 × 版數）｜'area' 才數計費（長 × 寬 ÷ 900 才 × 每才單價 × 數量）
 // 2026-07-27 老闆：「都改成分欄輸入單價」→ 會隨數量變的費用一律預設 unitsplit
 //   （三欄各填各的單價，各自 × 該欄數量）。量大單價本來就會降，共用一個單價比不出東西。
 //   版費類（印刷版費、刀模、兩個版費公式）是一次性費用，維持不隨數量變。
@@ -367,9 +370,9 @@ const ROWS = [
   {k:'print', n:'印刷費用',  def:'unitsplit', modes:ALL},
   // 2026-08-28 老闆：燙金版費加一個「計入報價」勾選，預設不勾 —— 客戶有舊版可以重出、這批不收版費。
   //   opt:true ＝ 這列要多長一個計入開關（目前只有燙金版費要）。
-  {k:'foilP', n:'燙金版費',  type:'formula', mult:4, note:'長 × 寬 × 4・勾才計入', tool:true, craft:'foil', opt:true},
+  {k:'foilP', n:'燙金版費',  type:'formula', mult:4, note:'長 × 寬 × 4 × 版數・勾才計入', tool:true, craft:'foil', opt:true},
   {k:'foil',  n:'燙金費用',  def:'unitsplit', modes:ALLS, craft:'foil'},
-  {k:'embP',  n:'打凸版費',  type:'formula', mult:8, note:'長 × 寬 × 8・勾才計入', tool:true, craft:'emb', opt:true},
+  {k:'embP',  n:'打凸版費',  type:'formula', mult:8, note:'長 × 寬 × 8 × 版數・勾才計入', tool:true, craft:'emb', opt:true},
   {k:'emb',   n:'打凸費用',  def:'unitsplit', modes:ALLS, craft:'emb'},
   // 2026-08-28 老闆：「貼膜＝上光」→ 原本的「上光單價」就是這一列，改名為貼膜。
   //   資料 key 維持 gloss，舊紀錄裡填過的數字才不會掉。
@@ -457,7 +460,10 @@ ROWS.forEach(r => {
           +   '<input type="number" inputmode="decimal" min="0" step="0.1" id="'+r.k+'_L" placeholder="長">'
           +   '<span class="x">×</span>'
           +   '<input type="number" inputmode="decimal" min="0" step="0.1" id="'+r.k+'_W" placeholder="寬">'
-          +   '<span class="x">× '+r.mult+' =</span>'
+          +   '<span class="x">× '+r.mult+' ×</span>'
+          // 2026-09-25 老闆：版數（一張單開幾塊版）。留空＝1 塊，數字跟以前一樣。
+          +   '<input type="number" inputmode="numeric" min="1" step="1" class="nq" id="'+r.k+'_N" placeholder="版數">'
+          +   '<span class="x">=</span>'
           +   '<span class="out" id="'+r.k+'_out">0</span>'
           + '</div>'
           // 2026-08-28 老闆：版費各案自己勾才計入（A 案要收版費、B 案客戶有舊版不收 —— 直接比差多少）。
@@ -595,7 +601,10 @@ function calc(){
     // 沒勾的工藝＝這批不做這道，整列不計費（列本身也是收起來的）
     if (r.craft && !craftOn(r.craft)) { lines.push({key:r.k, name:r.n, amounts:COLS.map(()=>0), tool:!!r.tool, active:COLS.map(()=>false)}); return; }
     if (r.type === 'formula') {
-      const v = num($(r.k+'_L').value) * num($(r.k+'_W').value) * r.mult;
+      // 2026-09-25 老闆：「長 × 寬 × 數量」＝ 一張單要開好幾塊版（正面一塊、反面一塊…）。
+      //   ×4／×8 的單價照留，後面再乘版數；空白或 0 一律當 1，不填就跟以前一樣一塊版。
+      const n = num($(r.k+'_N').value) || 1;
+      const v = num($(r.k+'_L').value) * num($(r.k+'_W').value) * r.mult * n;
       $(r.k+'_out').textContent = fmt(v);
       // opt 的版費：哪一案有勾才算進那一案 —— 公式照算給老闆看，沒勾的欄顯示「不計」。
       if (r.opt) {
