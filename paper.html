@@ -202,6 +202,21 @@
           <input type="number" id="w2" inputmode="decimal" min="0" step="any" placeholder="例：39.3">
         </div>
       </div>
+      <div class="row2">
+        <div>
+          <label>紙重</label>
+          <input type="number" id="wt2" inputmode="decimal" min="0" step="any" placeholder="例：80">
+        </div>
+        <div>
+          <label>紙重單位</label>
+          <select id="wtUnit2">
+            <option value="tw">台灣磅（lb）</option>
+            <option value="g">克重（g/m²）</option>
+          </select>
+        </div>
+      </div>
+      <label>每磅價格（元）</label>
+      <input type="number" id="lbPrice" inputmode="decimal" min="0" step="any" placeholder="例：60">
 
       <div class="result">
         <div class="tag">每張價格</div>
@@ -211,7 +226,11 @@
         <div class="tag">每 500 張價格</div>
         <div class="num" id="p500_2"><span class="empty">—</span></div>
       </div>
-      <div class="hint">※ 用第一欄算出的每平方公分單價 × 本欄面積。第一欄沒填齊時這裡不會出數字。</div>
+      <div class="result">
+        <div class="tag">500 張重量</div>
+        <div class="num" id="kg500_2"><span class="empty">—</span></div>
+      </div>
+      <div class="hint" id="basis2">※ 有填「紙重＋每磅價格」→ 用磅價算；沒填 → 用第一欄的每平方公分單價 × 本欄面積。<br>※ 紙重沒填會沿用第一欄的紙重。</div>
     </div>
   </div>
 
@@ -245,7 +264,7 @@
 
 <script>
 const $ = id => document.getElementById(id);
-const inputs = ['l1','w1','p500','wt','l2','w2'];
+const inputs = ['l1','w1','p500','wt','l2','w2','wt2','lbPrice'];
 // 紙張不可能超過 200cm → 超過就是填了 mm，自動 ÷10
 const toCm = v => (v > 200 ? v / 10 : v);
 const LB_KG = 0.45359237;
@@ -294,17 +313,46 @@ function calc(){
 
   const l2 = toCm(parseFloat($('l2').value));
   const w2 = toCm(parseFloat($('w2').value));
-  if(rate !== null && l2 > 0 && w2 > 0){
-    const perSheet2 = rate * l2 * w2;
+  // 本欄紙重沒填 → 沿用第一欄紙重
+  const wt2own = parseFloat($('wt2').value);
+  const wt2  = wt2own > 0 ? wt2own : wt;
+  const unit2 = wt2own > 0 ? $('wtUnit2').value : $('wtUnit').value;
+  const gsm2 = wt2 > 0 ? (unit2 === 'tw' ? wt2 * gPerLb('tw') : wt2) : null;
+  const kg500_2 = (gsm2 && l2 > 0 && w2 > 0) ? gsm2 * (l2 * w2 / 10000) * 500 / 1000 : null;
+  const lbP = parseFloat($('lbPrice').value);
+
+  let perSheet2 = null, basis = '';
+  if(kg500_2 && lbP > 0){
+    // 磅價算：500 張重（磅）× 每磅價 ÷ 500
+    perSheet2 = (kg500_2 / LB_KG) * lbP / 500;
+    basis = '※ 目前用「每磅 ' + fmt(lbP, 2) + ' 元」計算。';
+  }else if(rate !== null && l2 > 0 && w2 > 0){
+    perSheet2 = rate * l2 * w2;
+    basis = '※ 目前用第一欄的每平方公分單價計算（填了紙重＋每磅價格就會改用磅價算）。';
+  }else{
+    basis = '※ 填「紙重＋每磅價格」→ 用磅價算；或填齊第一欄 → 用每平方公分單價算。';
+  }
+  if(perSheet2 !== null){
     show('perSheet2', fmt(perSheet2, 4), '元／張');
     show('p500_2', fmt(perSheet2 * 500, 2), '元／500張');
   }else{
     show('perSheet2', null); show('p500_2', null);
   }
+  if(kg500_2){
+    show('kg500_2', fmt(kg500_2, 2), 'kg（' + fmt(kg500_2 / LB_KG, 1) + ' 磅）');
+  }else{
+    show('kg500_2', null);
+  }
+  if(l2 > 0 && w2 > 0 && (parseFloat($('l2').value) > 200 || parseFloat($('w2').value) > 200)){
+    basis += '<br>※ 長寬有超過 200 → 已當成 mm 換算（' + fmt(l2, 2) + ' × ' + fmt(w2, 2) + ' cm）。';
+  }
+  if(!(wt2own > 0) && wt > 0) basis += '<br>※ 紙重沿用第一欄。';
+  $('basis2').innerHTML = basis;
 }
 
 inputs.forEach(id => $(id).addEventListener('input', calc));
 $('wtUnit').addEventListener('change', calc);
+$('wtUnit2').addEventListener('change', calc);
 
 // 磅數換算：基準尺寸（吋）500 張重 1 磅 → 每平方公尺克重
 const LB = {
