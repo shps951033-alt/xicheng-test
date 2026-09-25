@@ -1204,15 +1204,59 @@ function serial(){
   var time = p(d.getHours()) + p(d.getMinutes());
   return 'XC-' + day + '-' + time;
 }
+/* ═══ 從成本比價計算機（cost.html）帶資料過來 ═══
+   2026-09-25 老闆：比價那頁按「生成報價單」→ 跳到這裡，把各案的數量帶成「數量方案」。
+   主要走 localStorage；#qp= 是備援（本機直接開檔、或 localStorage 被鎖住時還帶得過來）。
+   ⚠ 只「加一列」，不清掉原本填到一半的單 —— 客戶資料、其他品項都留著，不要那列按 × 刪掉就好。
+   ⚠ 單價不帶：比價算的是成本，這張是印給客戶的，成本每張只寫在狀態列提示。 */
+var CPIPE = 'xicheng-quote-payload';
+function readCostPayload(){
+  var raw = null;
+  try{ raw = localStorage.getItem(CPIPE); }catch(e){}
+  if(!raw && location.hash.indexOf('#qp=') === 0){
+    try{ raw = decodeURIComponent(location.hash.slice(4)); }catch(e){}
+  }
+  if(!raw) return null;
+  var p = null;
+  try{ p = JSON.parse(raw); }catch(e){ return null; }
+  try{ localStorage.removeItem(CPIPE); }catch(e){}
+  /* 網址上的 #qp= 一定要清掉：留著的話填到一半重新整理會再倒一次，變成重複的列 */
+  if(location.hash){ try{ history.replaceState(null, '', location.pathname + location.search); }catch(e){} }
+  return p;
+}
+function applyCostPayload(p){
+  var qs = p.qty || [];
+  var n = Math.max(1, Math.min(3, parseInt(p.tiers, 10) || qs.length || 1));
+  setTiers(n);
+  (p.plans || []).forEach(function(v, i){
+    var el = document.querySelectorAll('#multi .plan')[i];
+    if(el && v) el.value = v;
+  });
+  addRow(true);
+  var tr = document.querySelector('#items tbody').lastElementChild;
+  if(p.spec) tr.querySelector('.spec').innerText = p.spec;
+  if(p.unit) tr.querySelector('.unit').value = p.unit;
+  [].forEach.call(tr.querySelectorAll('.qty'), function(e, i){ if(qs[i] != null) e.value = qs[i]; });
+  renum(); calc(); saveLS();
+  /* 成本用 ①②③ 對上方案，跟表格裡的記號一致；沒填成本的方案不提 */
+  var hint = (p.cost || []).map(function(v, i){
+    return v ? (MARKS[i] || '') + v : '';
+  }).filter(Boolean).join(' ');
+  flash('已帶入比價數量，單價請自己填' + (hint ? '（成本每張 ' + hint + ' 元）' : ''));
+}
+
 (function init(){
+  var cp = readCostPayload();          /* 比價帶過來的資料，讀完就清掉 */
   var restored = loadLS();
   if(!restored){
     var d = new Date();
     var p = function(x){ return String(x).padStart(2,'0'); };
     document.querySelector('[data-k=q_date]').value = d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());
     document.querySelector('[data-k=q_no]').value = serial();
-    for(var i=0;i<3;i++) addRow();
+    /* 帶資料過來時不用先鋪三列空白，底下 applyCostPayload() 會加一列實的 */
+    for(var i=0;i<(cp?0:3);i++) addRow();
   }
+  if(cp) applyCostPayload(cp);
   document.getElementById('items').classList.toggle('solo', tierCount() === 1);
   document.getElementById('sumbox').classList.toggle('multi-mode', tierCount() > 1);
   if(!document.querySelector('#multi tbody tr')) buildMultiRows(tierCount());

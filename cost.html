@@ -253,6 +253,9 @@ button.primary:hover{opacity:.9; color:#fff}
          多開幾案時旁邊會跳出選單，選要用哪一案生成。 -->
     <button class="primary" id="toWork">生成工作單</button>
     <select id="planSel" hidden></select>
+    <!-- 2026-09-25 老闆：「生成報價單」→ 跳到通用報價單，把各案的數量帶成「數量方案」。
+         ⚠ 單價不帶：這邊算的是成本，報價單是印給客戶的，售價一律自己填。 -->
+    <button class="primary" id="toQuote">生成報價單</button>
     <button onclick="window.print()">列印 / 存 PDF</button>
     <button id="resetBottom">全部清空</button>
   </div>
@@ -261,6 +264,10 @@ button.primary:hover{opacity:.9; color:#fff}
     以及這批要做的工序（勾起來的加工＋有金額的紙張／印刷）照傳票排版列好。
     開了兩案以上，按鈕旁邊會多一個選單，選要用哪一案生成。
     廠商、規格、備註在傳票那頁自己填，填完按<b>生成 PDF ／ 列印</b>存檔或印出來。<br>
+    <b>生成報價單</b>：跳到「通用報價單」，把有填數量的案（最多 3 個）帶成報價單的<b>數量方案</b>，
+    並新增一列品項、帶好數量與這批要做的加工。
+    <b>單價不會帶過去</b> —— 這邊算的是成本，報價單是印給客戶的，售價自己填（成本每張會寫在那頁上面的狀態列給你參考）。
+    原本填到一半的報價單不會被蓋掉，只是多一列，不要就按那列的 × 刪掉。<br>
     <b>方案要幾個自己加</b>：預設只開 A 案，按右上「＋ 新增方案」加 B、C…最多到 Z 案；「－ 移除末案」收掉最後一個。
     移除掉的那欄數字會留著，加回來就還在。開幾案會記住，下次打開一樣。<br>
     <b>方案可以自己取名</b>：表頭「A 案」底下那格填名稱（甲廠、進口紙、含燙金…都行，14 字內），
@@ -1108,6 +1115,31 @@ function goWorksheet(){
   location.href = 'worksheet.html#wp=' + encodeURIComponent(raw);
 }
 $('toWork').addEventListener('click', goWorksheet);
+
+/* ---------- 生成報價單 ----------
+   2026-09-25 老闆：「生成報價單」。比價算完直接跳通用報價單，把各案的數量帶成「數量方案」
+   （報價單最多 3 個方案，開超過 3 案就取前 3 個有填數量的）。
+   ⚠ 單價一律不帶：這支算的是成本，報價單是印給客戶的東西 —— 成本填進去按了列印就出事。
+     成本每張只寫在報價單的狀態列提示一下，售價自己填。 */
+const QUOTEPIPE = 'xicheng-quote-payload';
+function goQuote(){
+  const {qty, sheets, allEach} = calc();
+  const cs = COLS.filter(c => qty[c] > 0).slice(0, 3);
+  if (!cs.length) { toast('先填製作數量，再生成報價單'); return; }
+  const crafts = CRAFTS.filter(f => craftOn(f.c)).map(f => f.n);
+  const raw = JSON.stringify({
+    v: 1, ts: Date.now(),
+    tiers: cs.length,
+    plans: cs.map(c => planName(c) + '　' + fmt(qty[c]) + ' 張'),
+    qty:   cs.map(c => qty[c]),
+    cost:  cs.map(c => allEach[c] === null ? '' : fmt(allEach[c])),   // 只給提示，不填進單價
+    unit:  '張',
+    spec:  crafts.length ? ('加工：' + crafts.join('、')) : ''
+  });
+  try { localStorage.setItem(QUOTEPIPE, raw); } catch(e) {}
+  location.href = 'q-8kt3mzr9wvpx/index.html#qp=' + encodeURIComponent(raw);
+}
+$('toQuote').addEventListener('click', goQuote);
 
 function toast(msg, actionLabel, action){
   const el = $('toast');
