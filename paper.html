@@ -138,19 +138,26 @@
 <body>
 <div class="wrap">
   <h1>紙張<span>單價</span>換算器</h1>
-  <div class="sub">左邊輸入基準紙價 → 右邊換算任意尺寸每張價格（單位：公分）</div>
+  <div class="sub">左邊輸入基準紙價 → 右邊換算任意尺寸每張價格（長寬單位可選 cm／mm／英吋／台吋）</div>
 
   <div class="grid">
     <!-- 第一欄：基準紙 -->
     <div class="card">
       <h2><span class="badge">1</span>基準紙（算每平方公分單價）</h2>
+      <label>長寬單位</label>
+      <select id="dimUnit1" class="dimUnit">
+        <option value="cm">公分 cm</option>
+        <option value="mm">公釐 mm</option>
+        <option value="in">英吋 inch</option>
+        <option value="tw">台吋（台寸）</option>
+      </select>
       <div class="row2">
         <div>
-          <label>長（cm）</label>
+          <label class="lenLbl1">長（cm）</label>
           <input type="number" id="l1" inputmode="decimal" min="0" step="any" placeholder="例：109.1">
         </div>
         <div>
-          <label>寬（cm）</label>
+          <label class="lenLbl1">寬（cm）</label>
           <input type="number" id="w1" inputmode="decimal" min="0" step="any" placeholder="例：78.7">
         </div>
       </div>
@@ -186,19 +193,26 @@
         <div class="tag">每公斤價格／500 張重量</div>
         <div class="num" id="perKg"><span class="empty">—</span></div>
       </div>
-      <div class="hint" id="unitNote">※ 長寬超過 200 會自動當成 mm（公釐）換算。</div>
+      <div class="hint" id="unitNote">※ 單位選 cm 時，長寬超過 200 會自動當成 mm 換算。</div>
     </div>
 
     <!-- 第二欄：換算尺寸 -->
     <div class="card">
       <h2><span class="badge">2</span>換算尺寸（算每張價格）</h2>
+      <label>長寬單位</label>
+      <select id="dimUnit2" class="dimUnit">
+        <option value="cm">公分 cm</option>
+        <option value="mm">公釐 mm</option>
+        <option value="in">英吋 inch</option>
+        <option value="tw">台吋（台寸）</option>
+      </select>
       <div class="row2">
         <div>
-          <label>長（cm）</label>
+          <label class="lenLbl2">長（cm）</label>
           <input type="number" id="l2" inputmode="decimal" min="0" step="any" placeholder="例：54.5">
         </div>
         <div>
-          <label>寬（cm）</label>
+          <label class="lenLbl2">寬（cm）</label>
           <input type="number" id="w2" inputmode="decimal" min="0" step="any" placeholder="例：39.3">
         </div>
       </div>
@@ -265,8 +279,18 @@
 <script>
 const $ = id => document.getElementById(id);
 const inputs = ['l1','w1','p500','wt','l2','w2','wt2','lbPrice'];
-// 紙張不可能超過 200cm → 超過就是填了 mm，自動 ÷10
-const toCm = v => (v > 200 ? v / 10 : v);
+// 長寬單位 → 公分。台吋＝台寸＝台尺／10＝3.03cm
+const DIM = {cm:{f:1, n:'cm'}, mm:{f:0.1, n:'mm'}, in:{f:2.54, n:'英吋'}, tw:{f:3.03, n:'台吋'}};
+// 選 cm 時紙張不可能超過 200cm → 超過就是填了 mm，自動 ÷10
+const toCm = (v, u) => (u === 'cm' && v > 200) ? v / 10 : v * DIM[u].f;
+function syncDimLabels(){
+  [1, 2].forEach(k => {
+    const n = DIM[$('dimUnit' + k).value].n;
+    const lbl = document.querySelectorAll('.lenLbl' + k);
+    lbl[0].textContent = '長（' + n + '）';
+    lbl[1].textContent = '寬（' + n + '）';
+  });
+}
 const LB_KG = 0.45359237;
 
 function fmt(n, maxDec){
@@ -280,8 +304,9 @@ function show(id, val, unit){
 }
 
 function calc(){
-  const l1 = toCm(parseFloat($('l1').value));
-  const w1 = toCm(parseFloat($('w1').value));
+  const u1 = $('dimUnit1').value, u2 = $('dimUnit2').value;
+  const l1 = toCm(parseFloat($('l1').value), u1);
+  const w1 = toCm(parseFloat($('w1').value), u1);
   const p  = parseFloat($('p500').value);
   const wt = parseFloat($('wt').value);
 
@@ -306,13 +331,15 @@ function calc(){
   }else{
     show('perLb', null); show('perKg', null);
   }
-  const mm = parseFloat($('l1').value) > 200 || parseFloat($('w1').value) > 200;
+  const mm = u1 === 'cm' && (parseFloat($('l1').value) > 200 || parseFloat($('w1').value) > 200);
   $('unitNote').textContent = mm
     ? '※ 長寬有超過 200 → 已當成 mm 換算（' + fmt(l1, 2) + ' × ' + fmt(w1, 2) + ' cm）。'
-    : '※ 長寬超過 200 會自動當成 mm（公釐）換算。';
+    : (u1 !== 'cm' && l1 > 0 && w1 > 0)
+      ? '※ 換算成公分：' + fmt(l1, 2) + ' × ' + fmt(w1, 2) + ' cm。'
+      : '※ 單位選 cm 時，長寬超過 200 會自動當成 mm 換算。';
 
-  const l2 = toCm(parseFloat($('l2').value));
-  const w2 = toCm(parseFloat($('w2').value));
+  const l2 = toCm(parseFloat($('l2').value), u2);
+  const w2 = toCm(parseFloat($('w2').value), u2);
   // 本欄紙重沒填 → 沿用第一欄紙重
   const wt2own = parseFloat($('wt2').value);
   const wt2  = wt2own > 0 ? wt2own : wt;
@@ -343,8 +370,10 @@ function calc(){
   }else{
     show('kg500_2', null);
   }
-  if(l2 > 0 && w2 > 0 && (parseFloat($('l2').value) > 200 || parseFloat($('w2').value) > 200)){
+  if(l2 > 0 && w2 > 0 && u2 === 'cm' && (parseFloat($('l2').value) > 200 || parseFloat($('w2').value) > 200)){
     basis += '<br>※ 長寬有超過 200 → 已當成 mm 換算（' + fmt(l2, 2) + ' × ' + fmt(w2, 2) + ' cm）。';
+  }else if(l2 > 0 && w2 > 0 && u2 !== 'cm'){
+    basis += '<br>※ 換算成公分：' + fmt(l2, 2) + ' × ' + fmt(w2, 2) + ' cm。';
   }
   if(!(wt2own > 0) && wt > 0) basis += '<br>※ 紙重沿用第一欄。';
   $('basis2').innerHTML = basis;
@@ -353,6 +382,7 @@ function calc(){
 inputs.forEach(id => $(id).addEventListener('input', calc));
 $('wtUnit').addEventListener('change', calc);
 $('wtUnit2').addEventListener('change', calc);
+['dimUnit1', 'dimUnit2'].forEach(id => $(id).addEventListener('change', () => { syncDimLabels(); calc(); }));
 
 // 磅數換算：基準尺寸（吋）500 張重 1 磅 → 每平方公尺克重
 const LB = {
