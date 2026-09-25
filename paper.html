@@ -117,6 +117,22 @@
     line-height:1.6;
   }
   .empty{color:#c0b8a8;}
+  .card.full{margin-top:20px;}
+  select{
+    width:100%;
+    padding:10px 12px;
+    font-size:1rem;
+    border:1px solid var(--line);
+    border-radius:8px;
+    background:#fffdf8;
+    color:var(--ink);
+  }
+  select:focus{outline:none;border-color:var(--gold-light);box-shadow:0 0 0 3px rgba(184,134,11,.12);}
+  .lbtable{width:100%;margin-top:16px;border-collapse:collapse;font-size:.85rem;}
+  .lbtable th,.lbtable td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:left;}
+  .lbtable th{color:var(--muted);font-weight:normal;}
+  .lbtable td.n{text-align:right;color:var(--gold);font-weight:bold;}
+  .lbtable tr.on td{background:#fdf8ec;}
 </style>
 </head>
 <body>
@@ -176,6 +192,33 @@
       <div class="hint">※ 用第一欄算出的每平方公分單價 × 本欄面積。第一欄沒填齊時這裡不會出數字。</div>
     </div>
   </div>
+
+  <!-- 第三欄：磅數換算 -->
+  <div class="card full">
+    <h2><span class="badge">3</span>磅數換算（lb ↔ g/m²）</h2>
+    <label>紙種基準（不同紙種，同樣磅數克重不一樣）</label>
+    <select id="lbType">
+      <option value="cover">美規 Cover 封面紙／卡紙（20×26 吋）</option>
+      <option value="text">美規 Text／Book 內頁紙（25×38 吋）</option>
+      <option value="bristol">美規 Bristol（22.5×28.5 吋）</option>
+      <option value="index">美規 Index（25.5×30.5 吋）</option>
+      <option value="bond">美規 Bond／Writing（17×22 吋）</option>
+      <option value="tw">台灣磅（全開 31×43 吋）</option>
+    </select>
+    <div class="row2">
+      <div>
+        <label>磅數（lb）</label>
+        <input type="number" id="lbIn" inputmode="decimal" min="0" step="any" placeholder="例：110">
+      </div>
+      <div>
+        <label>克重（g/m²）</label>
+        <input type="number" id="gIn" inputmode="decimal" min="0" step="any" placeholder="例：298">
+      </div>
+    </div>
+    <table class="lbtable" id="lbTable"></table>
+    <div class="hint">※ 兩格擇一填，另一格自動換算。下表列出同一數字在各紙種的對照。<br>
+    ※ 美規紙（Neenah／Mohawk 等）多標 lb，例：110lb Cover ≈ 298g、80lb Text ≈ 118g。</div>
+  </div>
 </div>
 
 <script>
@@ -219,6 +262,46 @@ function calc(){
 }
 
 inputs.forEach(id => $(id).addEventListener('input', calc));
+
+// 磅數換算：基準尺寸（吋）500 張重 1 磅 → 每平方公尺克重
+const LB = {
+  cover:  {name:'Cover 封面紙',  w:20,   h:26},
+  text:   {name:'Text 內頁紙',   w:25,   h:38},
+  bristol:{name:'Bristol',       w:22.5, h:28.5},
+  index:  {name:'Index',         w:25.5, h:30.5},
+  bond:   {name:'Bond',          w:17,   h:22},
+  tw:     {name:'台灣磅',        w:31,   h:43}
+};
+const gPerLb = k => 453.59237 / (500 * LB[k].w * LB[k].h * 0.00064516);
+
+function lbTable(lb, g){
+  const cur = $('lbType').value;
+  let html = '<tr><th>紙種</th><th style="text-align:right">磅數 lb</th><th style="text-align:right">克重 g/m²</th></tr>';
+  for(const k in LB){
+    const f = gPerLb(k);
+    const l = (lb !== null) ? lb : g / f;
+    html += '<tr' + (k === cur ? ' class="on"' : '') + '><td>' + LB[k].name +
+      '</td><td class="n">' + fmt(l, 1) + '</td><td class="n">' + fmt(l * f, 1) + '</td></tr>';  }
+  $('lbTable').innerHTML = html;
+}
+function fromLb(){
+  const lb = parseFloat($('lbIn').value);
+  if(lb > 0){
+    $('gIn').value = +(lb * gPerLb($('lbType').value)).toFixed(1);
+    lbTable(lb, null);
+  }else{ $('gIn').value = ''; $('lbTable').innerHTML = ''; }
+}
+function fromG(){
+  const g = parseFloat($('gIn').value);
+  if(g > 0){
+    const lb = g / gPerLb($('lbType').value);
+    $('lbIn').value = +lb.toFixed(1);
+    lbTable(null, g);
+  }else{ $('lbIn').value = ''; $('lbTable').innerHTML = ''; }
+}
+$('lbIn').addEventListener('input', fromLb);
+$('gIn').addEventListener('input', fromG);
+$('lbType').addEventListener('change', fromLb);
 </script>
 </body>
 </html>
