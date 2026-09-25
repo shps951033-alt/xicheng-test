@@ -156,6 +156,19 @@
       </div>
       <label>每 500 張價格（元）</label>
       <input type="number" id="p500" inputmode="decimal" min="0" step="any" placeholder="例：1200">
+      <div class="row2">
+        <div>
+          <label>紙重（算每磅價格用）</label>
+          <input type="number" id="wt" inputmode="decimal" min="0" step="any" placeholder="例：80">
+        </div>
+        <div>
+          <label>紙重單位</label>
+          <select id="wtUnit">
+            <option value="tw">台灣磅（lb）</option>
+            <option value="g">克重（g/m²）</option>
+          </select>
+        </div>
+      </div>
 
       <div class="result">
         <div class="tag">每張價格</div>
@@ -165,6 +178,15 @@
         <div class="tag">每平方公分單價</div>
         <div class="num" id="perCm2"><span class="empty">—</span></div>
       </div>
+      <div class="result">
+        <div class="tag">每磅價格</div>
+        <div class="num" id="perLb"><span class="empty">—</span></div>
+      </div>
+      <div class="result">
+        <div class="tag">每公斤價格／500 張重量</div>
+        <div class="num" id="perKg"><span class="empty">—</span></div>
+      </div>
+      <div class="hint" id="unitNote">※ 長寬超過 200 會自動當成 mm（公釐）換算。</div>
     </div>
 
     <!-- 第二欄：換算尺寸 -->
@@ -223,7 +245,10 @@
 
 <script>
 const $ = id => document.getElementById(id);
-const inputs = ['l1','w1','p500','l2','w2'];
+const inputs = ['l1','w1','p500','wt','l2','w2'];
+// 紙張不可能超過 200cm → 超過就是填了 mm，自動 ÷10
+const toCm = v => (v > 200 ? v / 10 : v);
+const LB_KG = 0.45359237;
 
 function fmt(n, maxDec){
   if(!isFinite(n)) return null;
@@ -236,9 +261,10 @@ function show(id, val, unit){
 }
 
 function calc(){
-  const l1 = parseFloat($('l1').value);
-  const w1 = parseFloat($('w1').value);
+  const l1 = toCm(parseFloat($('l1').value));
+  const w1 = toCm(parseFloat($('w1').value));
   const p  = parseFloat($('p500').value);
+  const wt = parseFloat($('wt').value);
 
   let rate = null; // 每平方公分單價
   if(l1 > 0 && w1 > 0 && p > 0){
@@ -250,8 +276,24 @@ function calc(){
     show('perSheet1', null); show('perCm2', null);
   }
 
-  const l2 = parseFloat($('l2').value);
-  const w2 = parseFloat($('w2').value);
+  // 每磅價格：500 張總價 ÷ 500 張總重
+  // 台灣磅＝全開 31×43 吋 500 張的磅數 → 先換成 g/m²，再乘本張面積
+  if(l1 > 0 && w1 > 0 && p > 0 && wt > 0){
+    const gsm = $('wtUnit').value === 'tw' ? wt * gPerLb('tw') : wt;
+    const kg500 = gsm * (l1 * w1 / 10000) * 500 / 1000;
+    const lb500 = kg500 / LB_KG;
+    show('perLb', fmt(p / lb500, 2), '元／磅');
+    show('perKg', fmt(p / kg500, 2) + ' <span class="unit">元／kg</span>　' + fmt(kg500, 2), 'kg（' + fmt(lb500, 1) + ' 磅）');
+  }else{
+    show('perLb', null); show('perKg', null);
+  }
+  const mm = parseFloat($('l1').value) > 200 || parseFloat($('w1').value) > 200;
+  $('unitNote').textContent = mm
+    ? '※ 長寬有超過 200 → 已當成 mm 換算（' + fmt(l1, 2) + ' × ' + fmt(w1, 2) + ' cm）。'
+    : '※ 長寬超過 200 會自動當成 mm（公釐）換算。';
+
+  const l2 = toCm(parseFloat($('l2').value));
+  const w2 = toCm(parseFloat($('w2').value));
   if(rate !== null && l2 > 0 && w2 > 0){
     const perSheet2 = rate * l2 * w2;
     show('perSheet2', fmt(perSheet2, 4), '元／張');
@@ -262,6 +304,7 @@ function calc(){
 }
 
 inputs.forEach(id => $(id).addEventListener('input', calc));
+$('wtUnit').addEventListener('change', calc);
 
 // 磅數換算：基準尺寸（吋）500 張重 1 磅 → 每平方公尺克重
 const LB = {
