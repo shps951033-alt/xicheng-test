@@ -138,31 +138,31 @@ td.tools button:hover{color:var(--accent); border-color:var(--accent)}
 }
 .toast.on{opacity:1; transform:translateX(-50%) translateY(0)}
 
-/* ---------- 列印：回到乾淨的黑白表單 ---------- */
+/* ---------- 列印：跟螢幕一樣的全彩 ----------
+   2026-09-30 老闆指定改全彩。原本這裡把印章、段落名、勾選全部壓成黑白
+   （考量發包單多半黑白雷射印），老闆要彩色 → 顏色一律照螢幕走，
+   這一段只剩「調尺寸」跟「收掉螢幕才要的元件」。
+   ⚠ print-color-adjust:exact 一定要留：不加的話瀏覽器預設會把底色丟掉 ——
+     紅印章、段落名的淡紅底、表頭底色全印成白的，老闆還得自己去勾「背景圖形」。 */
 @page{size:A4 portrait; margin:9mm 10mm}
 @media print{
-  body{background:#fff; font-size:12px}
+  body{
+    background:#fff; font-size:12px;
+    -webkit-print-color-adjust:exact; print-color-adjust:exact;
+  }
   .wrap{max-width:none; padding:0}
   .toolbar,.addbar,.toast,td.tools,.sechd button{display:none !important}
   .sheet{border:0; border-radius:0; box-shadow:none; padding:0}
   .sheet h1{font-size:20px}
-  .sheet h1 .mark{background:none; color:var(--ink); border:1.4px solid #000; padding:1px 7px; font-size:15px}
-  .tel{margin-bottom:10px; color:#000}
-  td,th{border-color:#000; height:26px}
-  .lb{background:#f2f2f2; color:#000; font-size:11.5px}
-  input[type=text]{color:#000; font-size:12px; height:24px}
-  input::placeholder{color:transparent}
-  .sechd .nm{color:#000; background:none; border:1.2px solid #000; font-size:11.5px; padding:0 9px}
-  /* 勾選類在列印時一律回黑白：.chip.on 的紅字／紅框特異性比 .chip 高，要指名蓋掉，
-     accent-color 也要一起改，不然紙上會印出一顆紅勾。 */
-  .chip,.chip.on{border-color:#000; color:#000; background:none; font-size:11.5px; padding:2px 10px}
-  .chip.on{background:#f2f2f2; font-weight:700}
-  .chip input,.subrow .ck input{accent-color:#000}
-  .agent input{border-bottom-color:#000}
-  .subrow td{background:#fafafa}
-  .subrow .ck{color:#000}
+  .sheet h1 .mark{padding:1px 7px; font-size:15px}
+  .tel{margin-bottom:10px}
+  td,th{height:26px}
+  .lb{font-size:11.5px}
+  input[type=text]{font-size:12px; height:24px}
+  input::placeholder{color:transparent}   /* 沒填的格子不要把提示字印出來 */
+  .sechd .nm{font-size:11.5px; padding:0 9px}
+  .chip{font-size:11.5px; padding:2px 10px}
   .sec{margin-top:9px}
-  .foot textarea{border-color:#000}
 }
 </style>
 </head>
