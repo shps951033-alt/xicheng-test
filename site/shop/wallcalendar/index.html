@@ -207,6 +207,18 @@ footer .fnote{line-height:1.9}
 .stycard .qty em{font-style:normal;font-size:12.5px;color:var(--ink-soft);flex:none}
 .stycard .qty input{padding:7px 6px;font-size:15px;text-align:center;border-radius:8px;min-width:0}
 .stycard.sel .qty input{border-color:var(--gold-2);background:#FFF9EC;font-weight:700}
+/* 售完／僅剩 標記（對照廠商 2027 系列庫存圖：紅圈「售完」、「僅剩」） */
+.stycard .stamp{position:absolute;left:50%;top:38%;transform:translate(-50%,-50%) rotate(-12deg);
+  width:84px;height:84px;border-radius:50%;background:rgba(180,40,40,.93);color:#fff;
+  font-family:'Noto Serif TC',serif;font-weight:900;font-size:21px;letter-spacing:.08em;
+  display:flex;align-items:center;justify-content:center;border:3px dashed rgba(255,255,255,.75);
+  box-shadow:0 2px 8px rgba(0,0,0,.28);pointer-events:none;z-index:2}
+.stycard .tag-low{position:absolute;top:8px;right:8px;background:#C8862A;color:#fff;font-size:12px;
+  font-weight:700;padding:3px 10px;border-radius:999px;z-index:2;pointer-events:none}
+.stycard.is-sold{cursor:default;opacity:.92}
+.stycard.is-sold img{filter:grayscale(.7);opacity:.6}
+.stycard.is-sold .nm{color:#8A7B62}
+.stycard.is-sold .qty input{background:#EFEAE0;cursor:not-allowed}
 </style>
 </head>
 <body>
@@ -400,10 +412,24 @@ STYLES.forEach(function(st){
   el.appendChild(q);
   qtyIn[st.c]=ip;
 
+  // 庫存狀態：sold＝售完（不能下單）、low＝僅剩（可下單，提醒訂貨前先詢問）
+  if(st.status==='sold'){
+    el.classList.add('is-sold');
+    var stp=document.createElement('div'); stp.className='stamp'; stp.textContent='售完';
+    el.appendChild(stp);
+    ip.disabled=true; ip.placeholder='售完';
+  } else if(st.status==='low'){
+    var tg=document.createElement('div'); tg.className='tag-low'; tg.textContent='僅剩';
+    el.appendChild(tg);
+  }
+
   grid.appendChild(el);
   cards[st.c]=el;
 
-  el.addEventListener('click',function(){ selectStyle(st); });
+  el.addEventListener('click',function(){
+    if(st.status==='sold') return;
+    selectStyle(st);
+  });
 });
 
 function getQty(c){ var v=qtyIn[c]?parseInt(qtyIn[c].value,10):0; return (v>0)?v:0; }

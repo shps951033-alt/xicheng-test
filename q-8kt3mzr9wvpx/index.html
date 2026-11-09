@@ -128,6 +128,17 @@ input.kindtext{font-size:11.5px;text-align:center;padding:5px 2px;min-width:0}
 .kindback:hover{background:#efe4cc;border-color:var(--gold2)}
 .del{border:0;background:transparent;color:#c07a7a;cursor:pointer;font-size:15px;line-height:1;padding:6px}
 .del:hover{color:#a33}
+/* 每列的拖曳把手＝調整品項順序（新增的品項一律加在最後，按住這顆往上下拖）。
+   ⚠️ touch-action:none 不能拿掉：手機上沒有它，手指一動會變成捲頁面、拖不動列。
+   只有把手能拖 → 其他地方照常可以捲動、可以點欄位打字。 */
+.rowtools{display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 0}
+.grip{border:1px solid var(--line);background:#fff;color:var(--ink2);
+      cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;
+      font-size:11px;line-height:1;width:22px;height:24px;padding:0;border-radius:3px}
+.grip:hover{background:var(--gold);color:#fff;border-color:var(--gold)}
+tr.dragging{background:#fdf3dd !important;box-shadow:0 3px 12px rgba(0,0,0,.18);cursor:grabbing}
+tr.dragging .grip{cursor:grabbing;background:var(--gold);color:#fff;border-color:var(--gold)}
+body.row-dragging{cursor:grabbing;user-select:none;-webkit-user-select:none}
 /* 表頭最後一格的「＋」＝就地新增品項（跟下面那排 × 同一直行，手機上不必捲回工具列） */
 th.addcol{padding:2px}
 .addrow{border:1px solid var(--gold2);background:#fff;color:var(--gold);cursor:pointer;
@@ -340,7 +351,7 @@ th.addcol{padding:2px}
         <th style="width:46px">單位</th>
         <th style="width:78px">單價</th>
         <th style="width:90px">金額</th>
-        <th style="width:26px" class="noprint addcol"><button type="button" class="addrow" title="新增品項" onclick="addRow()">+</button></th>
+        <th style="width:30px" class="noprint addcol"><button type="button" class="addrow" title="新增品項" onclick="addRow()">+</button></th>
       </tr>
     </thead>
     <tbody></tbody>
@@ -743,7 +754,10 @@ function rowHTML(){
     '<td><input class="unit" value="個" style="text-align:center"></td>' +
     '<td class="tcell pricecell"></td>' +
     '<td class="tcell amtcell"></td>' +
-    '<td class="c noprint"><button class="del" title="刪除此列" onclick="delRow(this)">×</button></td>';
+    '<td class="c noprint"><div class="rowtools">' +
+      '<button type="button" class="grip" title="按住往上下拖，可以調整品項順序">⠿</button>' +
+      '<button class="del" title="刪除此列" onclick="delRow(this)">×</button>' +
+    '</div></td>';
 }
 function addRow(silent){
   var tr = document.createElement('tr');
@@ -762,6 +776,49 @@ function delRow(btn){
   if(!tb.children.length) addRow();
   renum(); calc(); saveLS();
 }
+/* ═══ 拖曳調整品項順序 ═══
+   用 pointer 事件（不是 HTML5 的 draggable）：同一套程式碼滑鼠和手指都能用，
+   HTML5 drag 在手機上完全沒反應。拖的是整個 <tr>，規格、數量、單價、
+   各數量方案的值全部跟著走。 */
+var dragTR = null;
+function dragStart(e){
+  var grip = e.target.closest ? e.target.closest('.grip') : null;
+  if(!grip) return;
+  dragTR = grip.closest('tr');
+  if(!dragTR) return;
+  dragTR.classList.add('dragging');
+  document.body.classList.add('row-dragging');
+  try{ grip.setPointerCapture(e.pointerId); }catch(err){}
+  e.preventDefault();   /* 擋掉手機的捲頁與長按選取 */
+}
+function dragMove(e){
+  if(!dragTR) return;
+  e.preventDefault();
+  var tb = dragTR.parentNode;
+  var y = e.clientY;
+  var others = [].filter.call(tb.children, function(r){ return r !== dragTR; });
+  var placed = false;
+  for(var i = 0; i < others.length; i++){
+    var box = others[i].getBoundingClientRect();
+    if(y < box.top + box.height / 2){ tb.insertBefore(dragTR, others[i]); placed = true; break; }
+  }
+  if(!placed) tb.appendChild(dragTR);
+  renum();
+  /* 拖到畫面上下緣時自動捲動，長的單子才拖得到頭尾 */
+  if(y < 90) window.scrollBy(0, -14);
+  else if(y > window.innerHeight - 90) window.scrollBy(0, 14);
+}
+function dragEnd(){
+  if(!dragTR) return;
+  dragTR.classList.remove('dragging');
+  document.body.classList.remove('row-dragging');
+  dragTR = null;
+  renum(); saveLS();
+}
+document.addEventListener('pointerdown', dragStart);
+document.addEventListener('pointermove', dragMove);
+document.addEventListener('pointerup', dragEnd);
+document.addEventListener('pointercancel', dragEnd);
 /* 品項改成自己打：下拉換成文字框。規格欄不動——自訂品項沒有範本可帶。 */
 function kindToText(tr, txt, silent){
   tr.querySelector('.kind').style.display = 'none';
@@ -954,6 +1011,7 @@ function apply(d){
   if(!tb.children.length) addRow(true);
   if(d.discount != null) document.getElementById('discount').value = d.discount;
   if(d.taxmode) document.getElementById('taxmode').value = d.taxmode;
+  renum();   /* 還原完要重排序號，順便讓第一／最後一列的 ▲▼ 變灰 */
   return true;
 }
 /* 舊版草稿（整份 HTML）→ 新版資料

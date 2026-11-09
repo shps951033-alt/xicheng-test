@@ -235,6 +235,18 @@ footer .fnote{line-height:1.9}
 .stycard .qty input{padding:7px 6px;font-size:15px;text-align:center;border-radius:8px;min-width:0}
 .stycard.sel .qty input{border-color:var(--gold-2);background:#FFF9EC;font-weight:700}
 /* 授權審核中：可看內頁，不可下單 */
+/* 售完／僅剩 標記（對照廠商 2027 系列庫存圖：紅圈「售完」、「即將售完」） */
+.stycard .stamp{position:absolute;left:50%;top:38%;transform:translate(-50%,-50%) rotate(-12deg);
+  width:84px;height:84px;border-radius:50%;background:rgba(180,40,40,.93);color:#fff;
+  font-family:'Noto Serif TC',serif;font-weight:900;font-size:21px;letter-spacing:.08em;
+  display:flex;align-items:center;justify-content:center;border:3px dashed rgba(255,255,255,.75);
+  box-shadow:0 2px 8px rgba(0,0,0,.28);pointer-events:none;z-index:2}
+.stycard .tag-low{position:absolute;top:8px;right:8px;background:#C8862A;color:#fff;font-size:12px;
+  font-weight:700;padding:3px 10px;border-radius:999px;z-index:2;pointer-events:none}
+.stycard.is-sold{cursor:default}
+.stycard.is-sold img{filter:grayscale(.7);opacity:.6}
+.stycard.is-sold .nm{color:#8A7B62}
+.stycard.is-sold .qty input{background:#EFEAE0;cursor:not-allowed}
 .stycard.pending{cursor:default}
 .stycard.pending img{filter:saturate(.55) brightness(.94)}
 .stycard.pending::after{content:"授權審核中 · 敬請期待";position:absolute;top:8px;left:8px;right:8px;background:rgba(58,48,32,.9);color:#F2E6C8;font-size:11.5px;font-weight:700;padding:4px 8px;border-radius:999px;text-align:center}
@@ -421,6 +433,8 @@ var selStyle = null;
    2026-07-17 白爛貓(25009)、超人力霸王(25011) 授權下來，已全數開賣 → 目前無審核中款式。 */
 var PENDING = {};
 function isPending(st){ return !!(st && PENDING[st.c]); }
+/* 庫存狀態（data.js 的 status）：sold＝售完不能下單；low＝僅剩／即將售完，仍可下單 */
+function isSold(st){ return !!(st && st.status==='sold'); }
 
 /* 桌曆單價（元／本，2026-07-17 老闆提供）。放這裡不放 data.js，因為 data.js 由
    build_site.ps1 自動產生，重跑會被蓋掉。改價直接改這張表。 */
@@ -483,12 +497,22 @@ STYLES.forEach(function(st){
     el.appendChild(q);
     qtyIn[st.c]=ip;
   }
+  // 售完：蓋紅圈「售完」、數量欄停用；僅剩：右上角橘標（仍可下單）
+  if(isSold(st)){
+    el.classList.add('is-sold');
+    var stp=document.createElement('div'); stp.className='stamp'; stp.textContent='售完';
+    el.appendChild(stp);
+    if(qtyIn[st.c]){ qtyIn[st.c].disabled=true; qtyIn[st.c].placeholder='售完'; }
+  } else if(st.status==='low'){
+    var tg=document.createElement('div'); tg.className='tag-low'; tg.textContent='僅剩';
+    el.appendChild(tg);
+  }
   grid.appendChild(el);
   cards[st.c]=el;
 
   el.addEventListener('click',function(e){
     if(e.target.classList.contains('view')){ openLb(st); return; }
-    if(isPending(st)) return;
+    if(isPending(st) || isSold(st)) return;
     selectStyle(st);
   });
 });
@@ -511,7 +535,7 @@ function onQty(st){
 
 /* 點卡片＝選這款：沒填數量就先帶 1 本，並設為燙金示意款 */
 function selectStyle(st){
-  if(isPending(st)) return;
+  if(isPending(st) || isSold(st)) return;
   selStyle=st;
   var ip=qtyIn[st.c];
   if(ip){
@@ -559,10 +583,10 @@ function openLb(st){
   st.pages.forEach(function(p){ lbSlides.push({label:pageLabel(p),src:p.src}); });
   lbName.textContent=st.n; lb.classList.add('show'); showSlide();
   var pk=document.getElementById('lbPick');
-  pk.textContent=isPending(st)?'授權審核中':'選這款';
-  pk.disabled=isPending(st);
-  pk.style.opacity=isPending(st)?'.45':'';
-  pk.style.cursor=isPending(st)?'default':'pointer';
+  pk.textContent=isPending(st)?'授權審核中':(isSold(st)?'已售完':'選這款');
+  pk.disabled=isPending(st)||isSold(st);
+  pk.style.opacity=(isPending(st)||isSold(st))?'.45':'';
+  pk.style.cursor=(isPending(st)||isSold(st))?'default':'pointer';
   document.body.style.overflow='hidden';
 }
 function showSlide(){

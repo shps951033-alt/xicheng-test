@@ -1,6 +1,7 @@
 window.STYLES = [
     {
         "c":  "25001",
+        "status":  "sold",
         "n":  "米奇家族",
         "cover":  "img/25001/cover.jpg",
         "pages":  [
@@ -58,6 +59,7 @@ window.STYLES = [
     },
     {
         "c":  "25002",
+        "status":  "sold",
         "n":  "動物方程式",
         "cover":  "img/25002/cover.jpg",
         "pages":  [
@@ -120,6 +122,7 @@ window.STYLES = [
     },
     {
         "c":  "25003",
+        "status":  "sold",
         "n":  "小熊維尼",
         "cover":  "img/25003/cover.jpg",
         "pages":  [
@@ -177,6 +180,7 @@ window.STYLES = [
     },
     {
         "c":  "25004",
+        "status":  "sold",
         "n":  "航海王",
         "cover":  "img/25004/cover.jpg",
         "pages":  [
@@ -249,6 +253,7 @@ window.STYLES = [
     },
     {
         "c":  "25005",
+        "status":  "low",
         "n":  "北境晨光．風景",
         "cover":  "img/25005/cover.jpg",
         "pages":  [
@@ -321,6 +326,7 @@ window.STYLES = [
     },
     {
         "c":  "25006",
+        "status":  "low",
         "n":  "世界名畫",
         "cover":  "img/25006/cover.jpg",
         "pages":  [
@@ -393,6 +399,7 @@ window.STYLES = [
     },
     {
         "c":  "25007",
+        "status":  "low",
         "n":  "豐時四季．水果",
         "cover":  "img/25007/cover.jpg",
         "pages":  [
@@ -465,6 +472,7 @@ window.STYLES = [
     },
     {
         "c":  "25008",
+        "status":  "low",
         "n":  "水豚寶",
         "cover":  "img/25008/cover.jpg",
         "pages":  [
@@ -537,6 +545,7 @@ window.STYLES = [
     },
     {
         "c":  "25010",
+        "status":  "sold",
         "n":  "柴語錄",
         "cover":  "img/25010/cover.jpg",
         "pages":  [
@@ -753,6 +762,7 @@ window.STYLES = [
     },
     {
         "c":  "25011",
+        "status":  "low",
         "n":  "超人力霸王",
         "cover":  "img/25011/cover.jpg",
         "pages":  [
