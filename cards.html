@@ -265,7 +265,9 @@
     <div id="groupArt" hidden>
       <div class="field">
         <label class="label" for="artPaper">紙張</label>
+        <input id="artSearch" type="text" placeholder="🔍 搜尋紙名，例如：萊妮、黑卡、棉卡、300g" autocomplete="off" style="margin-bottom:10px">
         <select id="artPaper"></select>
+        <p class="hint" id="artSearchHint"></p>
         <p class="hint">高端美術紙質感，最適合燙金、打凸。</p>
       </div>
       <div class="field">
@@ -280,6 +282,7 @@
           <span class="txt">兩張美術紙背貼成厚卡</span>
         </label>
         <div id="mountBack" hidden style="margin-top:12px;display:flex;flex-direction:column;gap:10px">
+          <input id="artSearch2" type="text" placeholder="🔍 搜尋背紙紙名" autocomplete="off">
           <select id="artPaper2"></select>
           <select id="artGrade2"></select>
         </div>
@@ -483,6 +486,8 @@
      下拉選單改 optgroup 分組（精選美術紙／美術紙／文化印書用紙／卡紙厚卡／環保再生紙／銅版紙／描圖紙／和紙）。
      原有三筆改官網現價：德國馬諦斯（300g 155→105，補 100/120/200/240g）、黑武士（40/60/70/100→20/35/40/60）、英國史密斯補 350g 130。
      區塊由 營運部/廠商/牌價整合腳本.py 產生（勿手改區塊內容，改腳本重跑）
+   - 2026-11-12d：再併峻揚 76 款（官網不公開價格 → 取 Vault 紙張牌價-峻揚紙業.md 紙樣冊牌價，腳本回查）；共 386 款。
+     美術紙／裱紙背紙下拉加「搜尋框」：空白隔開多個關鍵字、比對紙名＋分組＋克數，即時篩選；目前選的紙不在結果就自動換第一筆
    ========================================================= */
 const BOXES = [3,5,10,15,20,25,30];                          // 3盒起訂盒數
 const BOXES_25 = [2.5,5,10,15,20,25,30];                     // 2.5盒起訂盒數
@@ -734,8 +739,8 @@ const ART_PAPERS = [
   { name:"一般黑卡", grades:[       // 濬宇永續環保黑卡，31"×43"→143落版
     {g:"110g",price:16,perBig:143},{g:"180g",price:26,perBig:143},{g:"250g",price:36,perBig:143},{g:"350g",price:50,perBig:143},{g:"400g",price:57,perBig:143},{g:"500g",price:70,perBig:143}
   ]},
-  // ===== 紙廠官網牌價（2026-11-12 全抓：恆成／長瑩／大亞／聯美；每克數取最高色號價、令價÷500、含稅÷1.05、自動選每張名片最省大紙）=====
-  // 正本：營運部/紙張牌價-恆成紙業.md、紙張牌價-長盈紙業.md、紙張牌價-大亞紙業.md、紙張牌價-聯美紙業.md；grp＝下拉選單分組
+  // ===== 紙廠官網牌價（2026-11-12 全抓：恆成／長瑩／大亞／聯美＋峻揚（官網無價，取 Vault 紙樣冊牌價）；每克數取最高色號價、令價÷500、含稅÷1.05、自動選每張名片最省大紙）=====
+  // 正本：營運部/紙張牌價-恆成紙業.md、紙張牌價-長盈紙業.md、紙張牌價-大亞紙業.md、紙張牌價-聯美紙業.md、紙張牌價-峻揚紙業.md；grp＝下拉選單分組
   { grp:"美術紙", name:"黎石紙", grades:[ // 恆成
     {g:"120g",price:25,perBig:120},{g:"180g",price:37,perBig:120},{g:"250g",price:50,perBig:120}
   ]},
@@ -858,6 +863,120 @@ const ART_PAPERS = [
   ]},
   { grp:"美術紙", name:"黑太子", grades:[ // 長瑩
     {g:"100g",price:90,perBig:110}
+  ]},
+  { grp:"美術紙", name:"德國純棉卡", grades:[ // 峻揚
+    {g:"110g",price:130,perBig:110},{g:"300g",price:350,perBig:110},{g:"310g",price:400,perBig:110},{g:"450g",price:500,perBig:110},{g:"600g",price:700,perBig:110},{g:"610g",price:800,perBig:110},{g:"900g",price:1000,perBig:110}
+  ]},
+  { grp:"美術紙", name:"義大利紗蘿紙", grades:[ // 峻揚
+    {g:"100g",price:48,perBig:110},{g:"140g",price:85,perBig:110},{g:"200g",price:96,perBig:110},{g:"240g",price:115,perBig:110},{g:"250g",price:100,perBig:110},{g:"300g",price:145,perBig:110}
+  ]},
+  { grp:"美術紙", name:"日本水蜜桃紙", grades:[ // 峻揚
+    {g:"99g",price:70,perBig:143},{g:"100g",price:80,perBig:143},{g:"122g",price:100,perBig:143},{g:"157g",price:95,perBig:143},{g:"204g",price:110,perBig:143},{g:"250g",price:135,perBig:143}
+  ]},
+  { grp:"美術紙", name:"麻纖紙", grades:[ // 峻揚
+    {g:"112g",price:55,perBig:143},{g:"253g",price:125,perBig:143}
+  ]},
+  { grp:"美術紙", name:"麻烙紙", grades:[ // 峻揚
+    {g:"112g",price:55,perBig:143},{g:"192g",price:95,perBig:143}
+  ]},
+  { grp:"美術紙", name:"雪烙紙", grades:[ // 峻揚
+    {g:"90g",price:80,perBig:143},{g:"120g",price:120,perBig:143},{g:"150g",price:165,perBig:143}
+  ]},
+  { grp:"美術紙", name:"素紙", grades:[ // 峻揚
+    {g:"100g",price:45,perBig:143},{g:"220g",price:99,perBig:143}
+  ]},
+  { grp:"美術紙", name:"Super晶旋紙", grades:[ // 峻揚
+    {g:"100g",price:34,perBig:143},{g:"150g",price:50,perBig:143},{g:"220g",price:70,perBig:143},{g:"260g",price:88,perBig:143}
+  ]},
+  { grp:"美術紙", name:"雲絲紙", grades:[ // 峻揚
+    {g:"135g",price:75,perBig:143},{g:"220g",price:120,perBig:143}
+  ]},
+  { grp:"美術紙", name:"森巴紙", grades:[ // 峻揚
+    {g:"120g",price:100,perBig:143}
+  ]},
+  { grp:"美術紙", name:"森波紙", grades:[ // 峻揚
+    {g:"120g",price:60,perBig:143}
+  ]},
+  { grp:"美術紙", name:"棉緊紙", grades:[ // 峻揚
+    {g:"100g",price:32,perBig:143},{g:"105g",price:45,perBig:143},{g:"150g",price:48,perBig:143},{g:"200g",price:64,perBig:143},{g:"300g",price:96,perBig:143}
+  ]},
+  { grp:"美術紙", name:"日本古月紙", grades:[ // 峻揚
+    {g:"105g",price:65,perBig:143}
+  ]},
+  { grp:"美術紙", name:"毯紋紙", grades:[ // 峻揚
+    {g:"100g",price:80,perBig:110}
+  ]},
+  { grp:"美術紙", name:"美國雅通紙", grades:[ // 峻揚
+    {g:"270g",price:50,perBig:143}
+  ]},
+  { grp:"美術紙", name:"綢紋紙", grades:[ // 峻揚
+    {g:"120g",price:70,perBig:143}
+  ]},
+  { grp:"美術紙", name:"日本再生金莎紙", grades:[ // 峻揚
+    {g:"93g",price:100,perBig:143},{g:"128g",price:130,perBig:143}
+  ]},
+  { grp:"美術紙", name:"星幻紙", grades:[ // 峻揚
+    {g:"120g",price:40,perBig:143},{g:"180g",price:60,perBig:143}
+  ]},
+  { grp:"美術紙", name:"炫采紙", grades:[ // 峻揚
+    {g:"225g",price:73,perBig:143},{g:"250g",price:83,perBig:143}
+  ]},
+  { grp:"美術紙", name:"義大利絲紋紙", grades:[ // 峻揚
+    {g:"90g",price:45,perBig:143},{g:"100g",price:45,perBig:143},{g:"160g",price:68,perBig:143},{g:"200g",price:90,perBig:143},{g:"215g",price:100,perBig:143},{g:"240g",price:66,perBig:120},{g:"280g",price:110,perBig:120},{g:"300g",price:110,perBig:143},{g:"350g",price:110,perBig:120}
+  ]},
+  { grp:"美術紙", name:"隕石黑卡", grades:[ // 峻揚
+    {g:"120g",price:30,perBig:143},{g:"240g",price:60,perBig:143},{g:"345g",price:86,perBig:143}
+  ]},
+  { grp:"美術紙", name:"CP色萊妮", grades:[ // 峻揚
+    {g:"90g",price:20,perBig:143},{g:"120g",price:30,perBig:143},{g:"180g",price:40,perBig:143},{g:"240g",price:60,perBig:143}
+  ]},
+  { grp:"美術紙", name:"牛津紙", grades:[ // 峻揚
+    {g:"120g",price:60,perBig:143}
+  ]},
+  { grp:"美術紙", name:"錦紋紙", grades:[ // 峻揚
+    {g:"140g",price:90,perBig:143}
+  ]},
+  { grp:"美術紙", name:"日本丹迪紙", grades:[ // 峻揚
+    {g:"116g",price:50,perBig:143}
+  ]},
+  { grp:"美術紙", name:"優雅美闊", grades:[ // 峻揚
+    {g:"70g",price:55,perBig:143}
+  ]},
+  { grp:"美術紙", name:"日本風雲紙（平面）", grades:[ // 峻揚
+    {g:"128g",price:35,perBig:143},{g:"157g",price:40,perBig:143},{g:"203g",price:50,perBig:143},{g:"250g",price:60,perBig:143},{g:"307g",price:90,perBig:143},{g:"352g",price:100,perBig:143}
+  ]},
+  { grp:"美術紙", name:"日本風雲紙（條紋／波紋）", grades:[ // 峻揚
+    {g:"128g",price:47,perBig:143},{g:"157g",price:58,perBig:143},{g:"203g",price:75,perBig:143},{g:"250g",price:92,perBig:143},{g:"307g",price:113,perBig:143},{g:"352g",price:130,perBig:143}
+  ]},
+  { grp:"美術紙", name:"義大利永采紙", grades:[ // 峻揚
+    {g:"120g",price:38,perBig:143},{g:"160g",price:50,perBig:143},{g:"200g",price:64,perBig:143},{g:"240g",price:77,perBig:143}
+  ]},
+  { grp:"美術紙", name:"極光彩紙", grades:[ // 峻揚
+    {g:"300g",price:45,perBig:72},{g:"410g",price:60,perBig:72},{g:"550g",price:80,perBig:72}
+  ]},
+  { grp:"美術紙", name:"紅吱吱", grades:[ // 峻揚
+    {g:"120g",price:24,perBig:143},{g:"190g",price:30,perBig:143},{g:"240g",price:38,perBig:143},{g:"300g",price:48,perBig:143},{g:"350g",price:60,perBig:143}
+  ]},
+  { grp:"美術紙", name:"瀟爛紙", grades:[ // 峻揚
+    {g:"100g",price:45,perBig:143},{g:"200g",price:90,perBig:143}
+  ]},
+  { grp:"美術紙", name:"醇萃紙", grades:[ // 峻揚
+    {g:"100g",price:45,perBig:143},{g:"200g",price:90,perBig:143},{g:"300g",price:135,perBig:143}
+  ]},
+  { grp:"美術紙", name:"凝石紙", grades:[ // 峻揚
+    {g:"133g",price:85,perBig:143}
+  ]},
+  { grp:"美術紙", name:"尿布紙", grades:[ // 峻揚
+    {g:"120g",price:56,perBig:143},{g:"200g",price:95,perBig:143},{g:"300g",price:140,perBig:143}
+  ]},
+  { grp:"美術紙", name:"珍珠紙 Metallic", grades:[ // 峻揚
+    {g:"124g",price:35,perBig:143},{g:"186g",price:48,perBig:143},{g:"246g",price:62,perBig:143},{g:"316g",price:80,perBig:143},{g:"370g",price:95,perBig:143}
+  ]},
+  { grp:"美術紙", name:"黑嚕嚕", grades:[ // 峻揚
+    {g:"90g",price:19,perBig:143},{g:"120g",price:24,perBig:143},{g:"150g",price:30,perBig:143},{g:"200g",price:40,perBig:143},{g:"250g",price:50,perBig:143},{g:"300g",price:60,perBig:143},{g:"350g",price:70,perBig:143},{g:"400g",price:80,perBig:143},{g:"480g",price:90,perBig:143}
+  ]},
+  { grp:"美術紙", name:"新隕石黑", grades:[ // 峻揚
+    {g:"240g",price:60,perBig:143},{g:"360g",price:80,perBig:143}
   ]},
   { grp:"美術紙", name:"波恩斯", grades:[ // 大亞
     {g:"105g",price:28,perBig:120},{g:"350g",price:85,perBig:120}
@@ -1153,6 +1272,36 @@ const ART_PAPERS = [
   { grp:"文化／印書用紙", name:"韓國壓紋輕塗紙", grades:[ // 長瑩
     {g:"128g",price:21,perBig:143},{g:"256g",price:42,perBig:143}
   ]},
+  { grp:"文化／印書用紙", name:"中性柔彩紙", grades:[ // 峻揚
+    {g:"120g",price:18,perBig:143},{g:"150g",price:22.5,perBig:143},{g:"180g",price:27,perBig:143},{g:"210g",price:31.5,perBig:143},{g:"250g",price:38,perBig:143}
+  ]},
+  { grp:"文化／印書用紙", name:"中性高彩紙", grades:[ // 峻揚
+    {g:"100g",price:14,perBig:143},{g:"120g",price:18,perBig:143},{g:"140g",price:20,perBig:143},{g:"170g",price:23,perBig:143},{g:"200g",price:29,perBig:143},{g:"240g",price:35,perBig:143},{g:"290g",price:41,perBig:143}
+  ]},
+  { grp:"文化／印書用紙", name:"美彩壓紋系列", grades:[ // 峻揚
+    {g:"120g",price:21,perBig:143},{g:"140g",price:24,perBig:143},{g:"170g",price:29,perBig:143},{g:"200g",price:34,perBig:143},{g:"240g",price:42,perBig:143},{g:"290g",price:55,perBig:143}
+  ]},
+  { grp:"文化／印書用紙", name:"超白棉彩紙", grades:[ // 峻揚
+    {g:"105g",price:14,perBig:143},{g:"128g",price:17.5,perBig:143},{g:"157g",price:21.5,perBig:143},{g:"186g",price:25.5,perBig:143},{g:"209g",price:28.5,perBig:143},{g:"256g",price:35,perBig:143}
+  ]},
+  { grp:"文化／印書用紙", name:"日本滑面象牙紙", grades:[ // 峻揚
+    {g:"105g",price:27,perBig:143},{g:"128g",price:33,perBig:143},{g:"157g",price:40,perBig:143},{g:"186g",price:47,perBig:143},{g:"209g",price:53,perBig:143},{g:"233g",price:60,perBig:143},{g:"262g",price:67,perBig:143},{g:"290g",price:75,perBig:143}
+  ]},
+  { grp:"文化／印書用紙", name:"CP象牙紙", grades:[ // 峻揚
+    {g:"100g",price:14,perBig:143},{g:"120g",price:18,perBig:143},{g:"150g",price:22,perBig:143},{g:"180g",price:27,perBig:143},{g:"220g",price:33,perBig:143},{g:"270g",price:40,perBig:143}
+  ]},
+  { grp:"文化／印書用紙", name:"CP萊妮紙", grades:[ // 峻揚
+    {g:"100g",price:17,perBig:143},{g:"120g",price:22,perBig:143},{g:"150g",price:27,perBig:143},{g:"180g",price:31,perBig:143},{g:"220g",price:40,perBig:143},{g:"270g",price:48,perBig:143}
+  ]},
+  { grp:"文化／印書用紙", name:"好印紙", grades:[ // 峻揚
+    {g:"100g",price:12,perBig:143},{g:"120g",price:16,perBig:143},{g:"150g",price:20,perBig:143},{g:"180g",price:24,perBig:143},{g:"210g",price:30,perBig:143}
+  ]},
+  { grp:"文化／印書用紙", name:"美階晶彩", grades:[ // 峻揚
+    {g:"105g",price:14.4,perBig:143},{g:"120g",price:16.3,perBig:143},{g:"140g",price:19,perBig:143},{g:"170g",price:23,perBig:143},{g:"200g",price:27,perBig:143},{g:"240g",price:33,perBig:143},{g:"290g",price:41,perBig:143}
+  ]},
+  { grp:"文化／印書用紙", name:"藍帶晶彩", grades:[ // 峻揚
+    {g:"90g",price:12.3,perBig:143},{g:"105g",price:14.4,perBig:143}
+  ]},
   { grp:"卡紙／厚卡", name:"單面壹級卡", grades:[ // 恆成
     {g:"220g",price:19.8,perBig:143},{g:"240g",price:21.6,perBig:143},{g:"280g",price:25.2,perBig:143},{g:"300g",price:27,perBig:143},{g:"330g",price:29.6,perBig:143},{g:"380g",price:34.6,perBig:143}
   ]},
@@ -1197,6 +1346,21 @@ const ART_PAPERS = [
   ]},
   { grp:"卡紙／厚卡", name:"酒墊卡", grades:[ // 長瑩
     {g:"300g",price:55,perBig:88}
+  ]},
+  { grp:"卡紙／厚卡", name:"日本和牛卡", grades:[ // 峻揚
+    {g:"260g",price:70,perBig:143},{g:"310g",price:85,perBig:143},{g:"370g",price:100,perBig:143},{g:"465g",price:125,perBig:143}
+  ]},
+  { grp:"卡紙／厚卡", name:"華儷卡", grades:[ // 峻揚
+    {g:"250g",price:27,perBig:143},{g:"310g",price:34,perBig:143},{g:"370g",price:42,perBig:143},{g:"430g",price:50,perBig:143},{g:"470g",price:53,perBig:143}
+  ]},
+  { grp:"卡紙／厚卡", name:"原儷卡", grades:[ // 峻揚
+    {g:"105g",price:10.5,perBig:143},{g:"128g",price:13,perBig:143},{g:"157g",price:16,perBig:143},{g:"186g",price:20,perBig:143},{g:"225g",price:24,perBig:143},{g:"250g",price:27,perBig:143},{g:"310g",price:34,perBig:143},{g:"370g",price:42,perBig:143},{g:"430g",price:50,perBig:143},{g:"470g",price:53,perBig:143}
+  ]},
+  { grp:"卡紙／厚卡", name:"美階雪紡", grades:[ // 峻揚
+    {g:"260g",price:24,perBig:143},{g:"300g",price:29,perBig:143},{g:"370g",price:36,perBig:143},{g:"430g",price:42,perBig:143}
+  ]},
+  { grp:"卡紙／厚卡", name:"雪紡琉麗", grades:[ // 峻揚
+    {g:"260g",price:31,perBig:143},{g:"300g",price:36,perBig:143},{g:"370g",price:45,perBig:143},{g:"430g",price:52,perBig:143}
   ]},
   { grp:"卡紙／厚卡", name:"雪柔紙", grades:[ // 大亞
     {g:"90g",price:22,perBig:143},{g:"150g",price:38,perBig:143},{g:"200g",price:50,perBig:143},{g:"250g",price:40,perBig:110}
@@ -1380,6 +1544,18 @@ const ART_PAPERS = [
   ]},
   { grp:"環保／再生紙", name:"蔗素紙", grades:[ // 長瑩
     {g:"70g",price:8.7,perBig:143},{g:"90g",price:10.86,perBig:143},{g:"150g",price:18.1,perBig:143},{g:"200g",price:24,perBig:143},{g:"263g",price:31.8,perBig:143},{g:"295g",price:35.6,perBig:143}
+  ]},
+  { grp:"環保／再生紙", name:"日本再生源環保卡", grades:[ // 峻揚
+    {g:"450g",price:54,perBig:143},{g:"500g",price:60,perBig:143},{g:"550g",price:66,perBig:143},{g:"600g",price:72,perBig:143},{g:"650g",price:78,perBig:143},{g:"750g",price:90,perBig:143},{g:"850g",price:110,perBig:143},{g:"950g",price:123,perBig:143}
+  ]},
+  { grp:"環保／再生紙", name:"再生源綠能薄卡", grades:[ // 峻揚
+    {g:"130g",price:21,perBig:143},{g:"160g",price:24,perBig:143},{g:"210g",price:32,perBig:143},{g:"260g",price:38,perBig:143}
+  ]},
+  { grp:"環保／再生紙", name:"日本節能卡", grades:[ // 峻揚
+    {g:"300g",price:25,perBig:143},{g:"350g",price:26,perBig:143},{g:"400g",price:30,perBig:143},{g:"450g",price:34,perBig:143},{g:"550g",price:42,perBig:143},{g:"650g",price:50,perBig:143},{g:"750g",price:58,perBig:143}
+  ]},
+  { grp:"環保／再生紙", name:"日本再生源鋼西卡", grades:[ // 峻揚
+    {g:"210g",price:19,perBig:143},{g:"350g",price:30,perBig:143},{g:"400g",price:34.5,perBig:143},{g:"450g",price:39,perBig:143}
   ]},
   { grp:"環保／再生紙", name:"奇萊紙", grades:[ // 大亞
     {g:"120g",price:22,perBig:90},{g:"150g",price:38,perBig:143},{g:"210g",price:55,perBig:143}
@@ -1573,6 +1749,15 @@ const ART_PAPERS = [
   { grp:"銅版紙", name:"美雪環保超特銅", grades:[ // 長瑩
     {g:"300g",price:23,perBig:143}
   ]},
+  { grp:"銅版紙", name:"韓國哥倫布特銅／雪銅", grades:[ // 峻揚
+    {g:"120g",price:8,perBig:143},{g:"150g",price:10,perBig:143},{g:"180g",price:12,perBig:143},{g:"200g",price:13.2,perBig:143},{g:"250g",price:16.8,perBig:143},{g:"300g",price:20,perBig:143}
+  ]},
+  { grp:"銅版紙", name:"日本雙面鏡銅", grades:[ // 峻揚
+    {g:"192g",price:50,perBig:143}
+  ]},
+  { grp:"銅版紙", name:"歐洲象牙超雪銅", grades:[ // 峻揚
+    {g:"135g",price:18.4,perBig:143},{g:"170g",price:23,perBig:143},{g:"250g",price:34,perBig:143},{g:"300g",price:32,perBig:110}
+  ]},
   { grp:"銅版紙", name:"IT皇家超特", grades:[ // 大亞
     {g:"150g",price:11.2,perBig:143},{g:"170g",price:12.7,perBig:143},{g:"200g",price:15,perBig:143},{g:"250g",price:18.8,perBig:143},{g:"300g",price:14.8,perBig:90}
   ]},
@@ -1609,11 +1794,59 @@ const ART_PAPERS = [
   { grp:"描圖紙", name:"義大利描圖紙", grades:[ // 長瑩
     {g:"73g",price:29,perBig:143},{g:"90g",price:35,perBig:143},{g:"112g",price:44,perBig:143},{g:"145g",price:58,perBig:143},{g:"180g",price:78,perBig:143}
   ]},
+  { grp:"描圖紙", name:"描圖紙", grades:[ // 峻揚
+    {g:"70g",price:20,perBig:143},{g:"90g",price:25,perBig:143},{g:"110g",price:30,perBig:143},{g:"140g",price:42,perBig:143},{g:"180g",price:57,perBig:143},{g:"230g",price:110,perBig:143}
+  ]},
+  { grp:"描圖紙", name:"彩色描圖紙（黑）", grades:[ // 峻揚
+    {g:"90g",price:80,perBig:110}
+  ]},
   { grp:"描圖紙", name:"美國描圖紙", grades:[ // 聯美
     {g:"64g",price:16,perBig:81}
   ]},
   { grp:"和紙", name:"日本雲龍和紙", grades:[ // 長瑩
     {g:"75g",price:76.19,perBig:143},{g:"240g",price:133.33,perBig:143}
+  ]},
+  { grp:"和紙", name:"和風紙", grades:[ // 峻揚
+    {g:"70g",price:45,perBig:143},{g:"90g",price:80,perBig:143},{g:"105g",price:65,perBig:143},{g:"135g",price:80,perBig:143}
+  ]},
+  { grp:"和紙", name:"和風之花彩", grades:[ // 峻揚
+    {g:"90g",price:100,perBig:80}
+  ]},
+  { grp:"和紙", name:"雙面和風卡", grades:[ // 峻揚
+    {g:"200g",price:150,perBig:90}
+  ]},
+  { grp:"和紙", name:"鳳羽紙", grades:[ // 峻揚
+    {g:"70g",price:70,perBig:143},{g:"90g",price:140,perBig:143}
+  ]},
+  { grp:"和紙", name:"彩光紙", grades:[ // 峻揚
+    {g:"80g",price:120,perBig:143}
+  ]},
+  { grp:"和紙", name:"雨音紙", grades:[ // 峻揚
+    {g:"70g",price:120,perBig:143}
+  ]},
+  { grp:"和紙", name:"柳絲紙", grades:[ // 峻揚
+    {g:"240g",price:200,perBig:143}
+  ]},
+  { grp:"和紙", name:"紅梅紙", grades:[ // 峻揚
+    {g:"95g",price:180,perBig:143}
+  ]},
+  { grp:"和紙", name:"雪菊紙", grades:[ // 峻揚
+    {g:"100g",price:130,perBig:143}
+  ]},
+  { grp:"和紙", name:"稻禾紙", grades:[ // 峻揚
+    {g:"95g",price:150,perBig:143}
+  ]},
+  { grp:"和紙", name:"紅花染紙", grades:[ // 峻揚
+    {g:"90g",price:200,perBig:143}
+  ]},
+  { grp:"和紙", name:"高砂紙", grades:[ // 峻揚
+    {g:"90g",price:60,perBig:90}
+  ]},
+  { grp:"和紙", name:"杉皮紙", grades:[ // 峻揚
+    {g:"100g",price:150,perBig:143}
+  ]},
+  { grp:"和紙", name:"京都紙", grades:[ // 峻揚
+    {g:"150g",price:150,perBig:143}
   ]}
 ];
 
@@ -1795,15 +2028,37 @@ $("artQtyCustom").addEventListener("input",e=>{
 // 美術紙下拉（紙名 + 克數）
 const artPaperSel=$("artPaper");
 // 依 grp 分組成 optgroup（沒標 grp 的原有精選紙歸「精選美術紙」）；option value 仍是 ART_PAPERS 索引
-function fillArtPaperSelect(sel){
-  const groups={};
+// q＝搜尋字（空白隔開多個關鍵字，全部要符合；比對紙名＋分組名＋克數）；回傳符合的款數
+function fillArtPaperSelect(sel, q){
+  const terms=String(q||"").toLowerCase().split(/\s+/).filter(Boolean);
+  const keep=sel.value;
+  sel.innerHTML="";
+  const groups={}; let n=0;
   ART_PAPERS.forEach((p,i)=>{
     const g=p.grp||"精選美術紙";
+    const hay=(p.name+" "+g+" "+p.grades.map(x=>x.g).join(" ")).toLowerCase();
+    if(terms.length && !terms.every(t=>hay.includes(t))) return;
     if(!groups[g]){ groups[g]=document.createElement("optgroup"); groups[g].label=g; sel.appendChild(groups[g]); }
-    const o=document.createElement("option");o.value=i;o.textContent=p.name;groups[g].appendChild(o);
+    const o=document.createElement("option");o.value=i;o.textContent=p.name;groups[g].appendChild(o); n++;
   });
+  if(!n){ const o=document.createElement("option");o.disabled=true;o.selected=true;o.textContent="找不到符合的紙，換個關鍵字試試";sel.appendChild(o); }
+  else if([...sel.options].some(o=>o.value===keep)) sel.value=keep;
+  return n;
+}
+// 搜尋框：輸入時篩選下拉；目前選的紙不在結果裡就自動換成第一筆
+function attachPaperSearch(input, sel, hint){
+  const total=ART_PAPERS.length;
+  const upd=()=>{
+    const before=sel.value;
+    const n=fillArtPaperSelect(sel, input.value);
+    if(hint) hint.textContent = input.value.trim() ? `找到 ${n} 款（共 ${total} 款）` : `共 ${total} 款紙，可直接輸入關鍵字搜尋`;
+    if(n && sel.value!==before) sel.dispatchEvent(new Event("change"));
+  };
+  input.addEventListener("input",upd);
+  if(hint) hint.textContent=`共 ${total} 款紙，可直接輸入關鍵字搜尋`;
 }
 fillArtPaperSelect(artPaperSel);
+attachPaperSearch($("artSearch"), artPaperSel, $("artSearchHint"));
 function fillArtGrade(){
   const sel=$("artGrade");sel.innerHTML="";
   ART_PAPERS[state.artPaper].grades.forEach((gr,i)=>{
@@ -1817,6 +2072,7 @@ $("artGrade").addEventListener("change",e=>{state.artGrade=+e.target.value;rende
 // 裱紙：第二張紙（背紙）下拉，資料同 ART_PAPERS
 const artPaper2Sel=$("artPaper2");
 fillArtPaperSelect(artPaper2Sel);
+attachPaperSearch($("artSearch2"), artPaper2Sel, null);
 function fillArtGrade2(){
   const sel=$("artGrade2");sel.innerHTML="";
   ART_PAPERS[state.artPaper2].grades.forEach((gr,i)=>{
@@ -2206,6 +2462,10 @@ function syncControls(){
   $("reuseDie").checked=state.reuseDie;
   $("dieL").value=state.dieL; $("dieW").value=state.dieW;
   $("sizeSel").closest(".field").hidden=state.diecut;
+  // 搜尋框清空、下拉還原成完整清單，再對齊 state（防瀏覽器還原表單時留著搜尋字卻顯示不一致）
+  $("artSearch").value=""; $("artSearch2").value="";
+  fillArtPaperSelect(artPaperSel); fillArtPaperSelect(artPaper2Sel);
+  $("artSearchHint").textContent=`共 ${ART_PAPERS.length} 款紙，可直接輸入關鍵字搜尋`;
   artPaperSel.value=state.artPaper; artPaper2Sel.value=state.artPaper2;
 }
 // 初始化
