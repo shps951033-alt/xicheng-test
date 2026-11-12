@@ -285,6 +285,15 @@
         </div>
       </div>
       <div class="field">
+        <label class="label">數位印刷</label>
+        <div class="seg" id="digi">
+          <button type="button" data-v="none" aria-pressed="true">不印刷</button>
+          <button type="button" data-v="單面" aria-pressed="false">單面</button>
+          <button type="button" data-v="雙面" aria-pressed="false">雙面</button>
+        </div>
+        <p class="hint" id="digiHint">美術紙上印彩色圖文；只燙金不印刷就選「不印刷」。</p>
+      </div>
+      <div class="field">
         <label class="label">數量</label>
         <div class="seg qty" id="artQty"></div>
         <input id="artQtyCustom" type="number" inputmode="numeric" placeholder="或自訂張數" min="1" style="margin-top:10px">
@@ -463,6 +472,13 @@
    - 2026-07-01b：導圓角改下拉選單（無/3.6R/5R/7.5R/10R/15R，價格不隨R變）；標籤改「名片導圓角」。新增「裱紙」工藝（僅美術紙）：勾選後多開第二張紙選單；落版取兩張較小者；紙料＝正紙＋背紙各依大紙數；裱紙工資＝對貼大紙數×120（MOUNT_PER_BIG）。後加工積木 裱紙.md
    - 2026-07-01c：裱紙提示文字移除（不對客顯示計價內規）；裱紙/軋型/導圓角預設皆關。新增「軋型」工藝（塑膠刀，積木 軋型.md）：勾選跳出完成尺寸長/寬，dieCutCost=刀模400×模數+工資max(1×模數加成×張數,基本費階梯)。完成尺寸決定有效印刷模數 effectiveMod：合版 長≥90 或 寬≥54→2模、長≤89且寬≤53→1模（90×50、89×54皆2模）；美術紙走標準模數(90×50仍1模)；燙金面積不受影響。軋型時隱藏名片尺寸選單、改用完成尺寸
    - 2026-07-01d：軋型加「沿用舊刀（三年內軋過同圖形）」子選項，預設關；勾選 dieCutCost reuseDie=true → 免刀模費(knife=0)、只收工資
+   - 2026-11-12：美術紙名片新增「數位印刷」選項（不印刷／單面／雙面，預設不印刷＝與舊版同價）。老闆定規則：
+     紙裁 6K（330×393mm）、可印範圍 300×380、成品間距 6mm（出血各3）、全部同方向（兩種擺法取多者）；
+     6K 張數＝⌈數量÷每張排數⌉＋放損（3%、最少 5 張）；印工＝6K 張數×單面15／雙面22；紙價沿用原大紙算法不變。
+     90×54 → 每張 6K 排 20 個。見 DIGI／digiCost()
+   - 2026-11-12b：美術紙清單併入恆成紙業官網全部牌價（54 個子系列／228 克數檔；每克數取最高色號價、令價÷500 換每張、
+     同克數多種大紙規格自動選「每張名片紙料最省」者）；移除清單尾端重複的「黑武士」「美國皮革紙」兩筆（價格不變）。
+     牌價正本 營運部/紙張牌價-恆成紙業.md；重抓腳本 營運部/廠商/恆成牌價抓取.py
    ========================================================= */
 const BOXES = [3,5,10,15,20,25,30];                          // 3盒起訂盒數
 const BOXES_25 = [2.5,5,10,15,20,25,30];                     // 2.5盒起訂盒數
@@ -714,11 +730,168 @@ const ART_PAPERS = [
   { name:"一般黑卡", grades:[       // 濬宇永續環保黑卡，31"×43"→143落版
     {g:"110g",price:16,perBig:143},{g:"180g",price:26,perBig:143},{g:"250g",price:36,perBig:143},{g:"350g",price:50,perBig:143},{g:"400g",price:57,perBig:143},{g:"500g",price:70,perBig:143}
   ]},
-  { name:"黑武士", grades:[       // 長盈，31"×43"→143落版
-    {g:"120g",price:40,perBig:143},{g:"200g",price:60,perBig:143},{g:"240g",price:70,perBig:143},{g:"360g",price:100,perBig:143}
+  // ===== 恆成紙業（2026-11-12 官網全抓；每克數取最高色號牌價、自動選每張名片紙料最省的大紙規格）=====
+  { name:"維納斯象牙", grades:[     // 恆成，43"×31"
+    {g:"100g",price:12,perBig:143},{g:"120g",price:16,perBig:143},{g:"150g",price:20,perBig:143},{g:"180g",price:24,perBig:143},{g:"220g",price:30,perBig:143},{g:"270g",price:40,perBig:143}
   ]},
-  { name:"美國皮革紙", grades:[   // 長盈 NEENAH Jeans Label，27"×39"→112、 31"×43"→143落版
-    {g:"303.4g｜27×39",price:185,perBig:112},{g:"303.4g｜31×43",price:220,perBig:143}
+  { name:"維納斯淺米象牙", grades:[     // 恆成，43"×31"
+    {g:"100g",price:14,perBig:143},{g:"120g",price:18,perBig:143},{g:"150g",price:22,perBig:143},{g:"180g",price:27,perBig:143},{g:"220g",price:33,perBig:143}
+  ]},
+  { name:"維納斯萊妮紙", grades:[     // 恆成，43"×31"
+    {g:"100g",price:17,perBig:143},{g:"120g",price:22,perBig:143},{g:"150g",price:27,perBig:143},{g:"180g",price:31,perBig:143},{g:"220g",price:40,perBig:143},{g:"270g",price:48,perBig:143}
+  ]},
+  { name:"維納斯細紋紙", grades:[     // 恆成，43"×31"
+    {g:"100g",price:17,perBig:143},{g:"120g",price:22,perBig:143},{g:"150g",price:27,perBig:143},{g:"180g",price:31,perBig:143},{g:"220g",price:40,perBig:143}
+  ]},
+  { name:"維納斯麗綺紙", grades:[     // 恆成，43"×31"
+    {g:"120g",price:20,perBig:143},{g:"220g",price:36,perBig:143},{g:"270g",price:48,perBig:143}
+  ]},
+  { name:"維納斯安格紙", grades:[     // 恆成，43"×31"
+    {g:"120g",price:20,perBig:143},{g:"220g",price:36,perBig:143},{g:"270g",price:48,perBig:143}
+  ]},
+  { name:"維納斯錦紋紙", grades:[     // 恆成，43"×31"
+    {g:"100g",price:15,perBig:143},{g:"150g",price:24,perBig:143},{g:"220g",price:36,perBig:143}
+  ]},
+  { name:"維納斯沐光紙", grades:[     // 恆成，43"×31"
+    {g:"120g",price:16,perBig:143},{g:"150g",price:20,perBig:143},{g:"200g",price:27,perBig:143},{g:"240g",price:33,perBig:143}
+  ]},
+  { name:"凝雪映畫", grades:[     // 恆成，43"×31"
+    {g:"100g",price:13.6,perBig:143},{g:"120g",price:16.3,perBig:143},{g:"140g",price:19,perBig:143},{g:"170g",price:23,perBig:143},{g:"200g",price:27,perBig:143},{g:"240g",price:33,perBig:143},{g:"290g",price:41,perBig:143}
+  ]},
+  { name:"米色映畫", grades:[     // 恆成，43"×31"
+    {g:"120g",price:17.2,perBig:143},{g:"140g",price:20,perBig:143},{g:"200g",price:29,perBig:143},{g:"240g",price:35,perBig:143}
+  ]},
+  { name:"凝雪歐采", grades:[     // 恆成，43"×31"
+    {g:"100g",price:13.6,perBig:143}
+  ]},
+  { name:"雪韻", grades:[     // 恆成，43"×31"
+    {g:"120g",price:19,perBig:143},{g:"150g",price:23,perBig:143},{g:"180g",price:27,perBig:143},{g:"210g",price:31,perBig:143},{g:"250g",price:37,perBig:143}
+  ]},
+  { name:"雪莎", grades:[     // 恆成，43"×31"
+    {g:"100g",price:14.3,perBig:143},{g:"140g",price:20,perBig:143},{g:"200g",price:29,perBig:143},{g:"240g",price:35,perBig:143}
+  ]},
+  { name:"安格映畫", grades:[     // 恆成，43"×31"
+    {g:"120g",price:21,perBig:143},{g:"140g",price:24,perBig:143},{g:"170g",price:29,perBig:143},{g:"200g",price:34,perBig:143},{g:"240g",price:42,perBig:143}
+  ]},
+  { name:"六玉映畫", grades:[     // 恆成，43"×31"
+    {g:"140g",price:24,perBig:143},{g:"200g",price:34,perBig:143},{g:"240g",price:42,perBig:143}
+  ]},
+  { name:"萊妮映畫", grades:[     // 恆成，43"×31"
+    {g:"120g",price:21,perBig:143},{g:"140g",price:24,perBig:143},{g:"170g",price:29,perBig:143},{g:"200g",price:34,perBig:143},{g:"240g",price:42,perBig:143}
+  ]},
+  { name:"細紋映畫", grades:[     // 恆成，43"×31"
+    {g:"120g",price:21,perBig:143},{g:"140g",price:24,perBig:143},{g:"170g",price:29,perBig:143},{g:"200g",price:34,perBig:143},{g:"240g",price:42,perBig:143}
+  ]},
+  { name:"雅紋映畫", grades:[     // 恆成，43"×31"
+    {g:"120g",price:21,perBig:143},{g:"140g",price:24,perBig:143},{g:"170g",price:29,perBig:143},{g:"200g",price:34,perBig:143},{g:"240g",price:42,perBig:143}
+  ]},
+  { name:"麗奇映畫", grades:[     // 恆成，43"×31"
+    {g:"120g",price:21,perBig:143},{g:"140g",price:24,perBig:143},{g:"170g",price:29,perBig:143},{g:"200g",price:34,perBig:143},{g:"240g",price:42,perBig:143}
+  ]},
+  { name:"ProLUX 春日雪", grades:[     // 恆成，43"×31"
+    {g:"84g",price:11,perBig:143},{g:"98g",price:13,perBig:143},{g:"125g",price:18,perBig:143},{g:"160g",price:23,perBig:143},{g:"185g",price:27,perBig:143},{g:"230g",price:33,perBig:143},{g:"275g",price:40,perBig:143}
+  ]},
+  { name:"ProLUX 秋月吟", grades:[     // 恆成，43"×31"
+    {g:"84g",price:11,perBig:143},{g:"98g",price:13,perBig:143},{g:"125g",price:18,perBig:143},{g:"160g",price:23,perBig:143},{g:"185g",price:27,perBig:143},{g:"230g",price:33,perBig:143},{g:"275g",price:40,perBig:143}
+  ]},
+  { name:"新浪潮V系列", grades:[     // 恆成，43"×31"
+    {g:"122g",price:36,perBig:143},{g:"151g",price:46,perBig:143},{g:"175g",price:55,perBig:143},{g:"227g",price:73,perBig:143},{g:"273g",price:85,perBig:143},{g:"320g",price:105,perBig:143}
+  ]},
+  { name:"新浪潮G系列", grades:[     // 恆成，43"×31"
+    {g:"151g",price:44,perBig:143},{g:"175g",price:52,perBig:143},{g:"227g",price:70,perBig:143}
+  ]},
+  { name:"新浪潮F系列", grades:[     // 恆成，43"×31"
+    {g:"105g",price:34,perBig:143},{g:"128g",price:42,perBig:143},{g:"157g",price:51,perBig:143},{g:"209g",price:69,perBig:143}
+  ]},
+  { name:"艾若薇", grades:[     // 恆成，43"×31"
+    {g:"105g",price:29,perBig:143},{g:"128g",price:35,perBig:143},{g:"151g",price:42,perBig:143},{g:"186g",price:51,perBig:143},{g:"233g",price:64,perBig:143}
+  ]},
+  { name:"日標 B7", grades:[     // 恆成，43"×31"
+    {g:"92g",price:14,perBig:143},{g:"100g",price:15.5,perBig:143}
+  ]},
+  { name:"日標 HUWA HUWA", grades:[     // 恆成，43"×31"
+    {g:"75g",price:12,perBig:143},{g:"80g",price:13,perBig:143},{g:"85g",price:13.9,perBig:143},{g:"105g",price:18,perBig:143}
+  ]},
+  { name:"日本王子美樂紙", grades:[     // 恆成，43"×31"
+    {g:"105g",price:21,perBig:143},{g:"128g",price:26,perBig:143},{g:"157g",price:32,perBig:143},{g:"209g",price:42,perBig:143},{g:"233g",price:49,perBig:143},{g:"262g",price:56,perBig:143}
+  ]},
+  { name:"彩畫紙", grades:[     // 恆成，1010×720mm/43"×31"
+    {g:"120g",price:20,perBig:120},{g:"160g",price:33,perBig:143},{g:"220g",price:45,perBig:143},{g:"320g",price:56,perBig:120}
+  ]},
+  { name:"日本AP中性紙", grades:[     // 恆成，43"×31"
+    {g:"80g",price:16,perBig:143},{g:"120g",price:24,perBig:143},{g:"157g",price:31,perBig:143},{g:"186g",price:38,perBig:143}
+  ]},
+  { name:"肯特紙", grades:[     // 恆成，43"×31"/1010×710mm
+    {g:"115g",price:18,perBig:143},{g:"200g",price:30,perBig:143},{g:"250g",price:38,perBig:143},{g:"300g",price:48,perBig:143},{g:"350g",price:58,perBig:143},{g:"400g",price:62,perBig:110}
+  ]},
+  { name:"黎石紙", grades:[     // 恆成，1020×720mm
+    {g:"120g",price:25,perBig:120},{g:"180g",price:37,perBig:120},{g:"250g",price:50,perBig:120}
+  ]},
+  { name:"羅紗紙", grades:[     // 恆成，1091×788mm
+    {g:"81g",price:33,perBig:143},{g:"116g",price:47,perBig:143},{g:"151g",price:62,perBig:143},{g:"198g",price:81,perBig:143},{g:"244g",price:100,perBig:143},{g:"320g",price:131,perBig:143}
+  ]},
+  { name:"蒝織超白", grades:[     // 恆成，43"×31"
+    {g:"116g",price:42,perBig:143},{g:"151g",price:54,perBig:143},{g:"198g",price:70,perBig:143},{g:"244g",price:86,perBig:143},{g:"291g",price:102,perBig:143}
+  ]},
+  { name:"蒝織色紙", grades:[     // 恆成，43"×31"
+    {g:"116g",price:60,perBig:143},{g:"198g",price:100,perBig:143}
+  ]},
+  { name:"格蒙德裱紙", grades:[     // 恆成，1092×788mm
+    {g:"120g",price:70,perBig:143},{g:"130g",price:100,perBig:143}
+  ]},
+  { name:"晨紙", grades:[     // 恆成，1092×787mm
+    {g:"90g",price:21,perBig:143},{g:"115g",price:29,perBig:143},{g:"225g",price:56,perBig:143},{g:"350g",price:86,perBig:143},{g:"425g",price:100,perBig:143}
+  ]},
+  { name:"麗革紙", grades:[     // 恆成，43"×31"
+    {g:"116g",price:50,perBig:143}
+  ]},
+  { name:"勒斯緹", grades:[     // 恆成，43"×31"
+    {g:"140g",price:28,perBig:143},{g:"200g",price:40,perBig:143},{g:"240g",price:48,perBig:143},{g:"280g",price:56,perBig:143}
+  ]},
+  { name:"水彩紙 Cottage", grades:[     // 恆成，43"×31"
+    {g:"160g",price:39,perBig:143},{g:"220g",price:54,perBig:143},{g:"320g",price:80,perBig:143}
+  ]},
+  { name:"絲紋白紙", grades:[     // 恆成，43"×31"/1010×720mm
+    {g:"120g",price:24,perBig:143},{g:"160g",price:31,perBig:143},{g:"240g",price:52,perBig:120},{g:"300g",price:62,perBig:120},{g:"350g",price:75,perBig:120}
+  ]},
+  { name:"絲紋色紙", grades:[     // 恆成，43"×31"/1010×720mm
+    {g:"90g",price:28,perBig:143},{g:"100g",price:31,perBig:143},{g:"160g",price:40,perBig:143},{g:"215g",price:45,perBig:120},{g:"280g",price:76,perBig:120}
+  ]},
+  { name:"慕里洛", grades:[     // 恆成，1000×700mm
+    {g:"190g",price:58,perBig:110},{g:"260g",price:79,perBig:110},{g:"360g",price:85,perBig:110}
+  ]},
+  { name:"單面壹級卡", grades:[     // 恆成，43"×31"
+    {g:"220g",price:19.8,perBig:143},{g:"240g",price:21.6,perBig:143},{g:"280g",price:25.2,perBig:143},{g:"300g",price:27,perBig:143},{g:"330g",price:29.6,perBig:143},{g:"380g",price:34.6,perBig:143}
+  ]},
+  { name:"雙面壹級卡", grades:[     // 恆成，43"×31"
+    {g:"220g",price:20.8,perBig:143},{g:"240g",price:22.6,perBig:143},{g:"260g",price:24,perBig:143},{g:"300g",price:28,perBig:143},{g:"350g",price:34.2,perBig:143},{g:"400g",price:40.8,perBig:143}
+  ]},
+  { name:"亮面頂級卡", grades:[     // 恆成，43"×31"
+    {g:"250g",price:23.8,perBig:143},{g:"350g",price:35,perBig:143}
+  ]},
+  { name:"雙威卡", grades:[     // 恆成，43"×31"
+    {g:"450g",price:53,perBig:143},{g:"610g",price:72,perBig:143},{g:"770g",price:92,perBig:143}
+  ]},
+  { name:"林感卡", grades:[     // 恆成，43"×31"
+    {g:"330g",price:34,perBig:143}
+  ]},
+  { name:"芬蘭安索白卡", grades:[     // 恆成，43"×31"
+    {g:"230g",price:15.5,perBig:143},{g:"300g",price:19.5,perBig:143},{g:"350g",price:22.5,perBig:143}
+  ]},
+  { name:"西岩森活卡", grades:[     // 恆成，43"×31"
+    {g:"244g",price:18,perBig:143},{g:"285g",price:21,perBig:143},{g:"301g",price:22.4,perBig:143}
+  ]},
+  { name:"新浪厚卡", grades:[     // 恆成，1100×800mm
+    {g:"180g",price:48,perBig:143},{g:"240g",price:64,perBig:143},{g:"280g",price:75,perBig:143},{g:"310g",price:83,perBig:143},{g:"350g",price:94,perBig:143}
+  ]},
+  { name:"凝雪厚卡", grades:[     // 恆成，43"×31"
+    {g:"330g",price:50,perBig:143},{g:"360g",price:56,perBig:143},{g:"390g",price:60,perBig:143},{g:"470g",price:78,perBig:143}
+  ]},
+  { name:"韻久日本灰卡", grades:[     // 恆成，1100×800mm
+    {g:"350g",price:30,perBig:143},{g:"400g",price:34,perBig:143},{g:"450g",price:38,perBig:143}
+  ]},
+  { name:"墨山日本灰卡", grades:[     // 恆成，1100×800mm
+    {g:"350g",price:25,perBig:143},{g:"400g",price:28,perBig:143},{g:"450g",price:32,perBig:143},{g:"650g",price:46,perBig:143},{g:"750g",price:53,perBig:143},{g:"850g",price:60,perBig:143}
   ]}
 ];
 
@@ -746,10 +919,31 @@ function quoteArt(paper, sheets, foilF, foilB, emboss, mod, bigFoil, foilAreas, 
   return { pre, tax: Math.round(pre*1.05) };
 }
 
+// ===== 美術紙數位印刷（2026-11-12 老闆定）=====
+// 紙先裁 6K（330×393mm）再上數位機；可印範圍 300×380；成品之間留 6mm（出血各 3mm）；全部同方向
+const DIGI = { areaW:300, areaL:380, gap:6, price:{"單面":15,"雙面":22}, spoilRate:0.03, spoilMin:5 };
+// 一邊能排幾個：n×成品 + (n−1)×間距 ≤ 可印長
+function digiFit(len, piece){ return (piece>0 && len>=piece) ? Math.floor((len+DIGI.gap)/(piece+DIGI.gap)) : 0; }
+// 一張 6K 排幾個：兩種擺法（不混排）取多者
+function digiPerSheet(L, W){
+  const a = digiFit(DIGI.areaW, L) * digiFit(DIGI.areaL, W);
+  const b = digiFit(DIGI.areaW, W) * digiFit(DIGI.areaL, L);
+  return Math.max(a, b);
+}
+// size=[長,寬] mm（已知完成尺寸）；未知時用標準 90×54 的排數 ÷ 模數
+function digiCost(side, qty, size, mod){
+  const per = size ? digiPerSheet(size[0], size[1]) : Math.floor(digiPerSheet(90,54)/Math.max(1,mod));
+  if(per<1) return { ok:false, per:0, need:0, spoil:0, sheets:0, cost:0 };
+  const need  = Math.ceil(qty/per);
+  const spoil = Math.max(DIGI.spoilMin, Math.ceil(need*DIGI.spoilRate));
+  const sheets = need + spoil;
+  return { ok:true, per, need, spoil, sheets, cost: sheets*DIGI.price[side] };
+}
+
 /* =========================================================
    介面狀態與綁定
    ========================================================= */
-const state = { mode:"offset", name:"", cat:"一般常用名片", paperBase:"一級卡 250g", side:"雙面", box:10, artPaper:0, artGrade:0, artQty:500, mounting:false, artPaper2:0, artGrade2:0, foilF:0, foilB:0, emboss:false, roundCorner:"", diecut:false, dieL:"", dieW:"", reuseDie:false, bigFoil:false, foilAreas:[], mod:1, sizeText:"標準名片", pre:0, tax:0,
+const state = { mode:"offset", name:"", cat:"一般常用名片", paperBase:"一級卡 250g", side:"雙面", box:10, artPaper:0, artGrade:0, artQty:500, mounting:false, artPaper2:0, artGrade2:0, foilF:0, foilB:0, emboss:false, roundCorner:"", diecut:false, dieL:"", dieW:"", reuseDie:false, digi:"none", digiInfo:null, bigFoil:false, foilAreas:[], mod:1, sizeText:"標準名片", pre:0, tax:0,
   delivery:"self", rcvName:"", rcvTel:"", rcvAddr:"", shipFee:0 };
 const ART_QTY=[300,500,1000,2000,3000,5000];
 
@@ -906,6 +1100,28 @@ function fillArtGrade2(){
 artPaper2Sel.addEventListener("change",e=>{state.artPaper2=+e.target.value;fillArtGrade2();render();});
 $("artGrade2").addEventListener("change",e=>{state.artGrade2=+e.target.value;render();});
 $("mounting").addEventListener("change",e=>{state.mounting=e.target.checked;$("mountBack").hidden=!state.mounting;render();});
+
+// 美術紙數位印刷（不印刷／單面／雙面）
+const digiWrap=$("digi");
+[...digiWrap.children].forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    state.digi=btn.dataset.v;
+    [...digiWrap.children].forEach(x=>x.setAttribute("aria-pressed", x===btn));
+    render();
+  });
+});
+// 數位印刷排版用的完成尺寸：軋型尺寸 > 自訂尺寸 > 標準 90×54；加大 2～4 模回傳 null（改用標準排數÷模數）
+function digiSize(){
+  if(state.diecut){
+    const L=parseFloat(state.dieL), W=parseFloat(state.dieW);
+    if(L>0&&W>0) return [L,W];
+  }
+  if($("sizeSel").value==="custom"){
+    const L=parseFloat($("sizeL").value), W=parseFloat($("sizeW").value);
+    if(L>0&&W>0) return [L,W];
+  }
+  return state.mod===1 ? [90,54] : null;
+}
 
 // 姓名 / 暱稱
 $("cust").addEventListener("input",e=>{state.name=e.target.value;});
@@ -1106,6 +1322,7 @@ function specText(){
       parts=[`<span>${ap.name} ${ap.grades[state.artGrade].g}</span>`, `<span>${fmt(state.artQty)} 張</span>`];
     }
   }
+  if(state.mode==="art" && state.digi!=="none") parts.push(`<span>數位印刷 ${state.digi}</span>`);
   if(state.mod>1) parts.push(`<span>${state.sizeText}</span>`);
   const ft=foilText(); if(ft) parts.push(ft);
   if(state.emboss) parts.push(`<span>打凸</span>`);
@@ -1126,6 +1343,18 @@ function render(){
     ({pre,tax}=quoteOffset(state.cat,currentPaperKey(),state.box,state.foilF,state.foilB,state.emboss,effMod,state.bigFoil,state.foilAreas,state.roundCorner));
   }else{
     ({pre,tax}=quoteArt(ART_PAPERS[state.artPaper].grades[state.artGrade],state.artQty,state.foilF,state.foilB,state.emboss,effMod,state.bigFoil,state.foilAreas,state.roundCorner,state.mounting,state.mounting?ART_PAPERS[state.artPaper2].grades[state.artGrade2]:null));
+  }
+  // 美術紙數位印刷：6K 張數（含放損）× 單面15／雙面22
+  state.digiInfo = null;
+  const dgh=$("digiHint");
+  if(state.mode==="art" && state.digi!=="none"){
+    const d = digiCost(state.digi, state.artQty, digiSize(), effMod);
+    state.digiInfo = d;
+    if(d.ok){ pre += d.cost; tax = Math.round(pre*1.05); }
+    if(dgh) dgh.textContent = d.ok ? "美術紙上印彩色圖文；只燙金不印刷就選「不印刷」。"
+                                   : "⚠ 完成尺寸超過數位印刷範圍，印刷費未計入，請與喜成聯絡。";
+  } else if(dgh){
+    dgh.textContent = "美術紙上印彩色圖文；只燙金不印刷就選「不印刷」。";
   }
   // 軋型費（塑膠刀）：刀模＋工資，獨立計
   if(state.diecut){
@@ -1191,6 +1420,7 @@ function buildSummary(){
     "【喜成名片估價單】",
     "姓名："+state.name.trim(),
     "名片："+(state.mode==="offset"?"合版印刷名片":"美術紙名片")+" / "+paper,
+    ...(state.mode==="art" ? ["數位印刷："+(state.digi==="none"?"無":state.digi)] : []),
     "數量："+qty,
     "尺寸："+state.sizeText,
     "燙金："+foilPlain(),
