@@ -281,7 +281,7 @@ section[id]{ scroll-margin-top:76px }
         </a>
       </div>
       <div class="mt-8 flex flex-wrap gap-x-7 gap-y-2 text-[13px] text-[#8F8674]">
-        <span>✦ 燙金 100 份 / 數位 10 份起</span><span>✦ 8 種箔色</span><span>✦ 工廠直營不轉包</span><span>✦ 8～15 個工作天</span>
+        <span>✦ 燙金 100 份 / 數位 10 份起</span><span>✦ 8 種箔色</span><span>✦ 工廠直營不轉包</span><span>✦ 8～15 個工作天</span><span class="text-crimson-soft font-bold">✦ 最後接單日 <span class="last-order">2027/1/25</span></span>
       </div>
     </div>
 
@@ -760,7 +760,7 @@ section[id]{ scroll-margin-top:76px }
     <div id="sampleFoils" class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-12"></div>
 
     <h3 class="text-[13px] tracking-[.16em] text-gold-dim font-bold mb-4">紙材質感</h3>
-    <div id="sampleMats" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3"></div>
+    <div id="sampleMats" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3"></div>
   </div>
 </section>
 
@@ -789,6 +789,10 @@ section[id]{ scroll-margin-top:76px }
         <span class="font-serif font-black text-[34px] foil-text foil-bright">肆</span>
         <h3 class="font-bold text-[16px] mt-3 mb-2 text-gold-light">宅配到府</h3>
         <p class="text-[13.5px] leading-7 text-[#8F8674]">完工檢查後包裝出貨，約 8～15 個工作天（年前旺季請提早）。</p>
+        <!-- 最後接單日（老闆 2026-11-17 給）。每年都要改，搜尋 LAST_ORDER_DAY 一次改掉所有出現的地方 -->
+        <p class="mt-3 pt-3 border-t border-ink-3 text-[13.5px] font-bold text-gold-light">
+          最後接單日：<span class="last-order text-crimson-soft">2027/1/25</span>
+        </p>
       </div>
     </div>
   </div>
@@ -1051,10 +1055,11 @@ var PRICE = {
                    desc:'珠光紙面，沉穩的酒紅帶細緻光澤，適合企業送禮。' },
       mantian:   { name:'滿天星紅',       unit:5.5, f:1.00, css:'m-mantian',  stock:true, media:'mantian',
                    desc:'最經典的紅包紙，紅底帶細碎金點，喜氣足。' },
-      laini:     { name:'質感萊妮紙',     f:1.15, css:'m-laini',     desc:'表面細直紋理，手感內斂，燙金反差漂亮。（非現貨，需另詢）' },
-      xiangshui: { name:'高級香水紅包紙', f:1.35, css:'m-xiangshui', desc:'紙面平滑帶微珠光，可加香。（非現貨，需另詢）' },
-      jinka:     { name:'炫光金卡紙',     f:1.60, css:'m-jinka',     desc:'金屬鏡面卡紙，整張本身就會反光，建議搭配黑箔或亮銀。（非現貨，需另詢）' },
-      nest:      { name:'巢織紋',         f:1.00, css:'m-laini',     desc:'表面有細緻織紋。（非現貨，需另詢）' }
+      /* ⚠️ 2026-11-17 老闆：「非現貨的全刪」——
+         質感萊妮紙／高級香水紅包紙／炫光金卡紙／巢織紋 這四個紙名是我 09-15 建站時自己擬的，
+         工廠根本沒有實物，已整筆刪除（不要再自己加回來，也不要再編紙名）。
+         要新增紙材就等老闆給實際紙名與每個單價，照上面六款的格式加一筆（含 unit）。
+         對應的 CSS .m-laini／.m-xiangshui／.m-jinka 先留著沒刪，之後要用還有底圖可以接。 */
     }
   },
   chunlian: {
@@ -1200,7 +1205,8 @@ var FAQS = [
   ['可以只給 Logo，其他版面交給你們排嗎？',
    '可以。把 Logo（向量檔最佳）與想要的文字用 LINE 傳給我們，排版我們處理，會先回電子打樣給您校稿，確認後才開版。'],
   ['交期要多久？年前來得及嗎？',
-   '一般 8～15 個工作天（校稿確認後起算）。<strong>年前是燙金旺季，建議提早 1 個月以上</strong>下單，越接近農曆年排程越滿。'],
+   '一般 8～15 個工作天（校稿確認後起算）。<strong>最後接單日為 2027/1/25</strong>，之後就來不及在年前交件。' +
+   '年前是燙金旺季，建議提早 1 個月以上下單，越接近農曆年排程越滿。'],
   ['紅包袋可以雙面燙金嗎？',
    '可以，正反面各算一面版費與一次上機。雙面的套準要求較高，我們會在打樣時特別確認位置。']
 ];
@@ -1485,10 +1491,12 @@ function buildMaterialSelect(){
   applyMedia();
 }
 function buildSampleMats(){
+  /* 2026-11-17 老闆：「非現貨的全刪」→ 這一排只放工廠真的有實物的紙（stock:true），
+     我自己擬的紙名與春聯那三款草稿紙都不在這裡出現，免得客人看到卻買不到。 */
   var all = [];
   ['hongbao','chunlian'].forEach(function(p){
     var ms = PRICE[p].materials;
-    Object.keys(ms).forEach(function(k){ all.push({ g:PRICE[p].label, m:ms[k], k:k }) });
+    Object.keys(ms).forEach(function(k){ if(ms[k].stock) all.push({ g:PRICE[p].label, m:ms[k], k:k }) });
   });
   // 有實拍照（img\samples\paper-<紙材代號>.jpg）就用照片，沒有就用 CSS 畫的質感
   $('sampleMats').innerHTML = all.map(function(o){
