@@ -699,14 +699,14 @@ section[id]{ scroll-margin-top:76px }
 
       <div>
         <label class="lbl" for="invSel">發票</label>
-        <!-- ⚠️ 老闆 2026-11-17：「我們沒有電子發票」→ 電子發票與手機載具整個拿掉，
-             只留二聯式（個人）與三聯式（公司統編）兩種紙本發票。別再加回載具欄位。 -->
+        <!-- ⚠️ 老闆 2026-11-17：(1)「我們沒有電子發票」→ 電子發票與手機載具整個拿掉；
+             (2)「發票選項只出現三聯式（公司統編）的就好」→ 二聯式那一項也拿掉，只剩這一種。
+             別再把載具或二聯式加回來。 -->
         <select id="invSel" class="fld">
-          <option value="personal" selected>二聯式（個人）</option>
-          <option value="company">三聯式（公司統編）</option>
+          <option value="company" selected>三聯式（公司統編）</option>
         </select>
       </div>
-      <div id="invBox" class="hidden">
+      <div id="invBox">
         <label class="lbl" for="oVat">統一編號</label>
         <input id="oVat" class="fld" inputmode="numeric" maxlength="8" placeholder="8 碼">
       </div>
@@ -1248,7 +1248,7 @@ var S = {
   logo:null, logoRaw:null, logoType:'', logoName:'', knock:true, logoSize:46, logoDemo:false, logoAR:0.55,
   sides:'single', plate:'zinc', area:25, qty:500,
   emboss:false, diecut:false, aiConv:false, aiQty:1,
-  ship:'home', inv:'personal',
+  ship:'home', inv:'company',   // 發票只剩三聯式（老闆 2026-11-17）
   darkStage:false, motion:true
 };
 var TXT = { main:'恭賀新禧', sub:'喜成企業社', flap:'春', dofang:'福', tiaopi:'大展鴻圖', up:'金羊獻瑞財源廣', down:'玉燕迎春福運長', cross:'迎春納福' };
@@ -2720,8 +2720,7 @@ function orderText(no){
   L.push('‧收件方式：' + PRICE.shipName[S.ship]);
   if(S.ship === 'home') L.push('‧地址：' + (val('oAddr') || '（待填）'));
   if(S.ship === 'cvs')  L.push('‧門市：' + (val('oCvs') || '（待填）'));
-  L.push('‧發票：' + (S.inv === 'company' ? '三聯式　統編 ' + (val('oVat') || '（待填）')
-                                          : '二聯式（個人）'));
+  L.push('‧發票：三聯式　統編 ' + (val('oVat') || '（待填）'));
   var note = val('oNote');
   if(note){ L.push(''); L.push('■ 校稿備註／特殊加工'); L.push(note) }
 
