@@ -588,8 +588,12 @@ section[id]{ scroll-margin-top:76px }
 
     <!-- ── 右：即時預覽（老闆 2026-11-17 指定擺在公版款式右邊）──
          電腦版黏在視窗上緣，改選項時一直看得到；手機版就排在設定底下。
-         它在自己的欄位裡，不會再蓋到價格明細。 -->
-    <div class="lg:sticky lg:top-24 self-start">
+         ⚠️ 一定要「外層撐滿整列(self-stretch)＋內層才 sticky」這個寫法：
+            若直接把 sticky 放在格子本身，Chrome 會讓它滑出自己那一列、
+            蓋住底下橫跨兩欄的價格明細（老闆 2026-11-17 回報「這邊擋到了」）。
+            外層撐滿後，sticky 的活動範圍就被鎖在設定欄那一列裡，到底就停住。 -->
+    <div class="self-stretch">
+    <div class="lg:sticky lg:top-24">
       <div class="rounded-2xl border border-ink-3 bg-ink-2 overflow-hidden">
         <div class="flex items-center justify-between px-4 py-3 border-b border-ink-3">
           <h2 class="text-[13px] tracking-[.16em] text-gold-dim font-bold">即時預覽</h2>
@@ -609,6 +613,8 @@ section[id]{ scroll-margin-top:76px }
         </div>
       </div>
     </div>
+    </div>
+    <!-- ／即時預覽結束 -->
 
     <!-- ── 價格明細：橫跨兩欄、放最下面，固定在版面裡不浮動 ── -->
       <div class="lg:col-span-2 rounded-2xl border border-gold-dark/50 bg-gradient-to-b from-[#221D14] to-ink-2 p-5">
