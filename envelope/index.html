@@ -119,7 +119,7 @@ body{ background:#12100C; color:#EDE4D3 }
   repeating-linear-gradient(-42deg,rgba(0,0,0,.05) 0 2px,transparent 2px 5px),
   linear-gradient(158deg,#A81414,#7E0505 70%,#950B0B) }
 
-/* 金沙系列：紙面有細閃，像撒了一層沙。三款只差底色 */
+/* 金沙黃金／珠光麥金／珠光酒紅：紙面有細閃，三款只差底色（2026-11-17 後兩款改名，CSS 代號不動） */
 .m-jsgold,.m-jsliu,.m-jsred{ background-blend-mode:screen,screen,screen,normal }
 .m-jsgold{ background:
   radial-gradient(circle at 18% 24%,rgba(255,255,230,.55) 0 .9px,transparent 1.4px),
@@ -992,32 +992,37 @@ var PRICE = {
                  spec:'18 × 9 公分（不含蓋頭）' },
       jsgold:  { name:'金沙黃金', paper:'jsgold',  layout:'portrait', size:'s175', flap:'floral',
                  spec:'17.5 × 9 公分（不含蓋頭）' },
-      jsliu:   { name:'金沙流金', paper:'jsliu',   layout:'portrait', size:'s176', flap:'round',
+      jsliu:   { name:'珠光麥金', paper:'jsliu',   layout:'portrait', size:'s176', flap:'round',
                  spec:'17.6 × 9 公分（不含蓋頭）' },
-      jsred:   { name:'金沙酒紅', paper:'jsred',   layout:'portrait', size:'s176', flap:'round',
+      jsred:   { name:'珠光酒紅', paper:'jsred',   layout:'portrait', size:'s176', flap:'round',
                  spec:'17.6 × 9 公分（不含蓋頭）' },
       mantian: { name:'滿天星紅', paper:'mantian', layout:'portrait', size:'s176', flap:'round',
                  spec:'17.6 × 9 公分（不含蓋頭）' }
     },
-    /* 前六筆 stock:true ＝ 2026-11-05 老闆確認的公版用紙，名稱照老闆寫的（是「金沙」不是「金莎」）。
-       價格係數老闆還沒給，全部先 1.00 待核。
+    /* 前六筆 stock:true ＝ 2026-11-05 老闆確認的公版用紙。
+       ★ unit ＝ 老闆 2026-11-17 給的「每個固定單價」（確定值，不是暫估）：
+           鳳花紋 1.5／仿絨 2.5／金沙黃金 4／珠光酒紅 5.7／珠光麥金 5.7／滿天星紅 5.5
+         有 unit 的紙：紙材底價直接用這個數字，**不走數量級距、不乘紙材係數、不乘蓋型係數**
+         （老闆講的就是成品空白袋的每個價，形狀與數量都已含在裡面）。f 留著只是為了沒給價的紙。
+       ⚠️ 2026-11-17 老闆改名：金沙酒紅 → 珠光酒紅、金沙流金 → 珠光麥金
+         （程式代號 jsred／jsliu 與影片檔名不動，只改對客人顯示的名稱）。
        後四筆沒有 stock 標記的是我 09-15 建站時自己擬的紙名，老闆從未確認，
        標成「非現貨，需另詢」留著給全客製參考，去留待老闆決定。 */
     materials: {
       /* media ＝ img\materials\<代號>.mp4 ＋ 同名 .jpg 封面。
          有填就會在款式／紙材選單下面出現「紙材實拍」小視窗，沒有就整區不顯示。
          新增影片：放檔案進去、在這裡加 media 欄位即可。 */
-      fenghua:   { name:'鳳花紋',         f:1.00, css:'m-fenghua',  stock:true, media:'fenghua',
+      fenghua:   { name:'鳳花紋',         unit:1.5, f:1.00, css:'m-fenghua',  stock:true, media:'fenghua',
                    desc:'紅底帶鳳花壓紋，燙金壓下去紋理會更明顯。' },
-      fangrong:  { name:'仿絨',           f:1.00, css:'m-fangrong', stock:true, media:'fangrong',
+      fangrong:  { name:'仿絨',           unit:2.5, f:1.00, css:'m-fangrong', stock:true, media:'fangrong',
                    desc:'絨面觸感、摸起來像絨布，燙金的浮凸感最明顯。' },
-      jsgold:    { name:'金沙黃金',       f:1.00, css:'m-jsgold',   stock:true, media:'jsgold',
+      jsgold:    { name:'金沙黃金',       unit:4.0, f:1.00, css:'m-jsgold',   stock:true, media:'jsgold',
                    desc:'金沙系列，金色底帶細閃，整張會跟著光線變化。' },
-      jsliu:     { name:'金沙流金',       f:1.00, css:'m-jsliu',    stock:true, media:'jsliu',
-                   desc:'金沙系列，紅金交融的流動感，喜氣又不俗。' },
-      jsred:     { name:'金沙酒紅',       f:1.00, css:'m-jsred',    stock:true, media:'jsred',
-                   desc:'金沙系列，沉穩的酒紅底帶細閃，適合企業送禮。' },
-      mantian:   { name:'滿天星紅',       f:1.00, css:'m-mantian',  stock:true, media:'mantian',
+      jsliu:     { name:'珠光麥金',       unit:5.7, f:1.00, css:'m-jsliu',    stock:true, media:'jsliu',
+                   desc:'珠光紙面，麥金色帶流動光澤，喜氣又不俗。' },
+      jsred:     { name:'珠光酒紅',       unit:5.7, f:1.00, css:'m-jsred',    stock:true, media:'jsred',
+                   desc:'珠光紙面，沉穩的酒紅帶細緻光澤，適合企業送禮。' },
+      mantian:   { name:'滿天星紅',       unit:5.5, f:1.00, css:'m-mantian',  stock:true, media:'mantian',
                    desc:'最經典的紅包紙，紅底帶細碎金點，喜氣足。' },
       laini:     { name:'質感萊妮紙',     f:1.15, css:'m-laini',     desc:'表面細直紋理，手感內斂，燙金反差漂亮。（非現貨，需另詢）' },
       xiangshui: { name:'高級香水紅包紙', f:1.35, css:'m-xiangshui', desc:'紙面平滑帶微珠光，可加香。（非現貨，需另詢）' },
@@ -1764,7 +1769,12 @@ function calc(){
 
   // ① 紙材底價
   var tier = tierOf(PRICE[S.product].blank, qty);
-  var paperUnit = tier.unit * sizeF2 * paperOnlyF;
+  /* mat.unit ＝ 老闆 2026-11-17 給的「每個固定單價」（六款公版紙，確定值）。
+     有這個數字就直接用，不走數量級距、不乘紙材係數、不乘蓋型係數
+     —— 老闆報的就是成品空白袋的每個價，紙與形狀都已經含在裡面。
+     沒給價的紙（非現貨那幾款）才回去走「級距表 × 係數」的暫估算法。 */
+  var fixedPaper = mat.unit || 0;
+  var paperUnit = fixedPaper ? fixedPaper * sizeF2 : tier.unit * sizeF2 * paperOnlyF;
 
   // ② 每道工序的每份工費（燙金另計箔材加價與面積補價）
   var procRows = [], procUnitSum = 0;
@@ -1896,7 +1906,7 @@ function calc(){
   var total = sub + ship;
 
   return {
-    qty:qty, tier:tier, unit:unit, paperUnit:paperUnit, matF:mat.f, typeF:tf,
+    qty:qty, tier:tier, unit:unit, paperUnit:paperUnit, fixedPaper:fixedPaper, matF:mat.f, typeF:tf,
     procRows:procRows, regUnit:regUnit, plateRows:plateRows, layers:layers, spoilQty:spoilQty,
     printCost:printCost, oneOff:oneOff, aiN:aiN, aiCost:aiCost,
     sub:sub, ship:ship, total:total, tax:total * PRICE.taxRate
@@ -1952,7 +1962,10 @@ function renderPrice(){
   if(q.regUnit) parts.push('＋套準 ' + q.regUnit.toFixed(2));
   $('unitLine').textContent = parts.join('') + '）';
 
-  $('qtyTierHint').textContent = '套用 ' + q.tier.q + ' 份級距單價';
+  // 紙材是固定單價時不要講「紙也套級距」，級距只影響工費
+  $('qtyTierHint').textContent = q.fixedPaper
+    ? '紙材固定每個 ' + q.fixedPaper + ' 元；工費套用 ' + q.tier.q + ' 份級距'
+    : '套用 ' + q.tier.q + ' 份級距單價';
 }
 
 /* ── 全部重繪 ─────────────────────────────────────────────────────── */
@@ -2576,7 +2589,8 @@ function orderText(no){
 
   L.push('');
   L.push('■ 費用試算' + (DRAFT_PRICING ? '（草稿價，待確認）' : ''));
-  L.push('‧數量：' + q.qty.toLocaleString('en-US') + ' 份（套用 ' + q.tier.q + ' 份級距）');
+  L.push('‧數量：' + q.qty.toLocaleString('en-US') + ' 份（' +
+         (q.fixedPaper ? '紙材固定單價，工費套用 ' : '套用 ') + q.tier.q + ' 份級距）');
   if(q.spoilQty) L.push('‧放損：另備 ' + q.spoilQty + ' 張（' + q.layers + ' 層加工，每層 ' +
                         PRICE.spoil.min + '～' + PRICE.spoil.max + ' 張），客人實拿仍是 ' +
                         q.qty.toLocaleString('en-US') + ' 份');
