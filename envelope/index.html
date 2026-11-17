@@ -276,8 +276,9 @@ section[id]{ scroll-margin-top:76px }
         <a href="#workspace" class="inline-flex items-center gap-2 bg-gradient-to-br from-crimson to-crimson-deep hover:from-crimson-soft hover:to-crimson text-gold-light font-bold px-6 py-3.5 rounded-xl shadow-lg shadow-crimson-deep/30 transition">
           開始客製設計 →
         </a>
-        <a href="#swatches" class="inline-flex items-center gap-2 border border-gold-dim/50 hover:border-gold text-gold-light font-bold px-6 py-3.5 rounded-xl transition">
-          看燙金樣品
+        <!-- 2026-11-17 老闆把「燙金箔色與紙材」整區刪了，這顆原本連過去的按鈕改連作品案例 -->
+        <a href="#works" class="inline-flex items-center gap-2 border border-gold-dim/50 hover:border-gold text-gold-light font-bold px-6 py-3.5 rounded-xl transition">
+          看作品案例
         </a>
       </div>
       <div class="mt-8 flex flex-wrap gap-x-7 gap-y-2 text-[13px] text-[#8F8674]">
@@ -707,8 +708,12 @@ section[id]{ scroll-margin-top:76px }
         </select>
       </div>
       <div id="invBox">
-        <label class="lbl" for="oVat">統一編號</label>
-        <input id="oVat" class="fld" inputmode="numeric" maxlength="8" placeholder="8 碼">
+        <label class="lbl" for="oVat">統一編號（可留空）</label>
+        <input id="oVat" class="fld" inputmode="numeric" maxlength="8" placeholder="8 碼，不開發票請留空">
+        <!-- 老闆 2026-11-17：留空＝不開發票＝收未稅價；填了統編才開三聯式、加 5% 稅 -->
+        <p class="text-[12px] text-[#8F8674] mt-2 leading-5">
+          填統編＝開三聯式發票，金額另加 5% 稅；<span class="text-gold-light">留空＝不開發票，就收未稅價</span>。
+        </p>
       </div>
 
       <div class="md:col-span-2">
@@ -747,20 +752,6 @@ section[id]{ scroll-margin-top:76px }
     <h2 class="font-serif font-black text-[26px] sm:text-[32px] mt-3 mb-3 tracking-[.06em]">作品案例 · 效果示範</h2>
     <p class="text-[14px] text-[#8F8674] mb-8">實際做過的案子與燙印效果特寫。想看更多或同類型的參考，用 LINE 跟我們說品項，我們再挑給您看。</p>
     <div id="worksGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
-  </div>
-</section>
-
-<section id="swatches" class="border-t border-ink-3">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
-    <p class="text-[11px] tracking-[.4em] text-gold-dim font-bold">SAMPLES</p>
-    <h2 class="font-serif font-black text-[26px] sm:text-[32px] mt-3 mb-8 tracking-[.06em]">燙金箔色與紙材</h2>
-    <!-- 2026-11-17 老闆要求刪掉「以下為螢幕示意。需要實體樣品卡請用 LINE 告訴我們，可寄送。」那一行 -->
-
-    <h3 class="text-[13px] tracking-[.16em] text-gold-dim font-bold mb-4">八種燙金箔色</h3>
-    <div id="sampleFoils" class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-12"></div>
-
-    <h3 class="text-[13px] tracking-[.16em] text-gold-dim font-bold mb-4">紙材質感</h3>
-    <div id="sampleMats" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3"></div>
   </div>
 </section>
 
@@ -1404,19 +1395,6 @@ function buildFoils(){
              '<span class="swatch" style="background:' + f.sw + '"></span>' + f.name + '</button>';
     }).join('');
   }
-  // 有實拍照（img\samples\foil-<箔色代號>.jpg）就用照片，沒有就用 CSS 畫的示意
-  $('sampleFoils').innerHTML = FOILS.map(function(f){
-    return '<div class="' + f.css + ' glare relative rounded-xl border border-ink-3 overflow-hidden">' +
-             '<div class="h-24 m-velvet grid place-items-center relative">' +
-               '<span class="foil-text font-cal text-[40px] leading-none">金</span>' +
-               '<div class="absolute inset-0">' +
-                 photoSlot('img/samples/foil-' + f.k + '.jpg', f.name + ' 實拍', '') +
-               '</div>' +
-             '</div>' +
-             '<div class="px-3 py-2.5 bg-ink-2"><span class="block text-[13px] font-bold text-gold-light">' + f.name + '</span>' +
-             '<span class="block text-[11px] text-[#7E7565] mt-0.5">燙金箔</span></div>' +
-           '</div>';
-  }).join('');
 }
 function buildPatterns(){
   $('patGrid').innerHTML = Object.keys(PATTERNS).map(function(k){
@@ -1504,38 +1482,6 @@ function buildMaterialSelect(){
     $('matDesc').textContent = ms[S.material].desc;
   }
   applyMedia();
-}
-function buildSampleMats(){
-  /* 2026-11-17 老闆：「非現貨的全刪」→ 這一排只放工廠真的有實物的紙（stock:true），
-     我自己擬的紙名與春聯那三款草稿紙都不在這裡出現，免得客人看到卻買不到。 */
-  var all = [];
-  ['hongbao','chunlian'].forEach(function(p){
-    var ms = PRICE[p].materials;
-    Object.keys(ms).forEach(function(k){ if(ms[k].stock) all.push({ g:PRICE[p].label, m:ms[k], k:k }) });
-  });
-  /* 老闆 2026-11-17：「這邊的示意圖直接用影片裡的截圖」
-     → 有實拍影片的紙，就直接拿影片封面（img\materials\<代號>.jpg，ffmpeg 從影片第 2 秒截的那張）
-       當示意圖，不要再用 CSS 畫的假質感。
-     → 想單獨換成別張照片，就放 img\samples\paper-<紙材代號>.jpg，它會蓋過影片截圖。
-     → 兩個都沒有才退回 CSS 底圖。 */
-  $('sampleMats').innerHTML = all.map(function(o){
-    var poster = o.m.media ? 'img/materials/' + o.m.media + '.jpg' : '';
-    var own    = 'img/samples/paper-' + o.k + '.jpg';
-    // 先試專屬照片，載不到就換影片截圖，再載不到才讓 CSS 底圖露出來
-    var fallback = poster
-      ? 'onerror="if(this.dataset.alt){this.remove()}else{this.dataset.alt=1;this.src=\'' + poster + '\'}"'
-      : 'onerror="this.remove()"';
-    return '<div class="rounded-xl border border-ink-3 overflow-hidden">' +
-             '<div class="h-28 relative ' + o.m.css + '">' +
-               '<div class="absolute inset-0">' +
-                 '<img src="' + own + '" alt="' + esc(o.m.name) + ' 實拍" decoding="async" ' +
-                   'class="absolute inset-0 w-full h-full object-cover" ' + fallback + '>' +
-               '</div>' +
-             '</div>' +
-             '<div class="px-3 py-2.5 bg-ink-2"><span class="block text-[12.5px] font-bold text-gold-light leading-tight">' + o.m.name + '</span>' +
-             '<span class="block text-[11px] text-[#7E7565] mt-1">' + o.g + '</span></div>' +
-           '</div>';
-  }).join('');
 }
 /* 照片欄位：檔案在就顯示照片，不在就留虛線空位（img 自己 onerror 移除）。
    這樣老闆把照片丟進資料夾就會出現，不用改任何程式。 */
@@ -1993,6 +1939,9 @@ function calc(){
     sub:sub, ship:ship, total:total, tax:total * PRICE.taxRate
   };
 }
+/* 有填（且填對）統編＝要開三聯式發票，金額要加 5% 稅；
+   留空＝不開發票，收未稅價（老闆 2026-11-17）。 */
+function wantInvoice(){ return /^\d{8}$/.test(val('oVat')) }
 function renderPrice(){
   var q = calc();
   var rows = [];
@@ -2043,7 +1992,11 @@ function renderPrice(){
     $('totalNum').classList.remove('!text-[19px]');
     $('totalNum').textContent = money(q.total);
     $('barTotal').textContent = money(q.total);
-    $('taxLine').textContent  = '含 5% 稅：' + money(q.total + q.tax);
+    /* 稅金那行跟著統編走（老闆 2026-11-17）：
+       填了統編＝開三聯式、要加 5%；留空＝不開發票，就是這個未稅價。 */
+    $('taxLine').textContent  = wantInvoice()
+      ? '開三聯式發票，含 5% 稅：' + money(q.total + q.tax)
+      : '未開發票，不另加稅（填統編可開三聯式）';
     $('perUnit').textContent  = '平均每份 ' + (q.total / q.qty).toFixed(2) + ' 元';
   }
 
@@ -2630,6 +2583,8 @@ $('invSel').addEventListener('change', function(){
   S.inv = this.value;
   $('invBox').classList.toggle('hidden', S.inv !== 'company');
 });
+// 統編打了沒、打對沒，會影響上面要不要加 5% 稅 → 邊打邊重算那一行
+$('oVat').addEventListener('input', renderPrice);
 
 /* ── 訂單明細文字 ─────────────────────────────────────────────────── */
 function orderText(no){
@@ -2709,7 +2664,8 @@ function orderText(no){
            ' 個，屬大量訂製，網站不計總價，請客服專人報價。');
   } else {
     L.push('‧合計（未稅）：' + money(q.total));
-    L.push('‧含 5% 稅：' + money(q.total + q.tax));
+    if(wantInvoice()) L.push('‧開三聯式發票，含 5% 稅：' + money(q.total + q.tax));
+    else              L.push('‧不開發票，以上為未稅價');
   }
 
   L.push('');
@@ -2720,7 +2676,7 @@ function orderText(no){
   L.push('‧收件方式：' + PRICE.shipName[S.ship]);
   if(S.ship === 'home') L.push('‧地址：' + (val('oAddr') || '（待填）'));
   if(S.ship === 'cvs')  L.push('‧門市：' + (val('oCvs') || '（待填）'));
-  L.push('‧發票：三聯式　統編 ' + (val('oVat') || '（待填）'));
+  L.push('‧發票：' + (val('oVat') ? '三聯式　統編 ' + val('oVat') : '不開發票（依未稅價計算）'));
   var note = val('oNote');
   if(note){ L.push(''); L.push('■ 校稿備註／特殊加工'); L.push(note) }
 
@@ -2771,7 +2727,9 @@ $('orderForm').addEventListener('submit', function(e){
   if(!val('oMail'))  miss.push('Email');
   if(S.ship === 'home' && !val('oAddr')) miss.push('收件地址');
   if(S.ship === 'cvs'  && !val('oCvs'))  miss.push('超商門市');
-  if(S.inv === 'company' && !/^\d{8}$/.test(val('oVat'))) miss.push('8 碼統一編號');
+  /* 統編可留空（老闆 2026-11-17）＝不開發票、收未稅價。
+     但如果填了就一定要是 8 碼，免得打錯開不出發票。 */
+  if(val('oVat') && !/^\d{8}$/.test(val('oVat'))) miss.push('正確的 8 碼統一編號（不開發票請留空）');
   if(miss.length){
     msg.textContent = '請補齊：' + miss.join('、');
     msg.classList.remove('hidden');
@@ -2831,7 +2789,7 @@ applyModeUI();           // 公版／全客製要先定，底下才知道哪些�
 applyCraftUI();          // 內含 buildFoils()、buildQty() 與 applyFlapUI()
 buildMaterialSelect();
 buildWorks();
-buildSampleMats();
+// 2026-11-17 老闆：「燙金箔色與紙材」整區刪掉 → 樣品牆的 builder 一併移除
 buildFaq();
 syncTextFields();
 pressGroup('hblayout', S.hbLayout);
