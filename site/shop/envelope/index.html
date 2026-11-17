@@ -1213,6 +1213,15 @@ var FAQS = [
   ['交期要多久？年前來得及嗎？',
    '一般 8～15 個工作天（校稿確認後起算）。<strong>最後接單日為 2027/1/25</strong>，之後就來不及在年前交件。' +
    '年前是燙金旺季，建議提早 1 個月以上下單，越接近農曆年排程越滿。'],
+  /* 老闆 2026-11-17 口述的規則，兩件事一起講：公版不能打凸、正面燙金背面會有輕微壓印。
+     第三、四個欄位＝照片檔名與圖說：老闆說之後會拍一張「背面有壓印」的範例照，
+     放到 img\samples\faq-back-press.jpg 就會自動出現在這題底下，沒放就不顯示。 */
+  ['現成（公版）紅包袋可以打凸嗎？背面有一點壓印痕跡正常嗎？',
+   '公版是已經糊好的成品袋，<strong>沒辦法打凸、打凹</strong>——要壓凸必須是平張的紙才進得了壓力機，' +
+   '成品袋硬壓會把袋子壓壞。需要打凸打凹請改選「全客製」。<br>' +
+   '另外，公版<strong>正面燙金之後，背面可能會留下極輕微的壓印痕跡</strong>，' +
+   '幾乎看不出來、要很仔細觀察才會發現。這是熱壓上機的<strong>正常現象，不是瑕疵</strong>。',
+   'faq-back-press.jpg', '正面燙金後，背面會有的輕微壓印痕跡'],
   ['紅包袋可以雙面燙金嗎？',
    '可以，正反面各算一面版費與一次上機。雙面的套準要求較高，我們會在打樣時特別確認位置。']
 ];
@@ -1549,11 +1558,22 @@ function buildWorks(){
 
 function buildFaq(){
   $('faqList').innerHTML = FAQS.map(function(f){
+    /* f[2] ＝ 這題要附的照片檔名（放 img\samples\ 底下），f[3] ＝ 圖說。
+       照片還沒放進去時整個 figure 會自己移除，客人不會看到破圖或空框。
+       ⚠️ 答案用 <div> 不用 <p>，<p> 裡面不能塞圖，瀏覽器會自動把圖踢出去。 */
+    var pic = f[2]
+      ? '<figure class="mt-3 max-w-[320px]">' +
+          '<img src="img/samples/' + f[2] + '" alt="' + esc(f[3] || '') + '" loading="lazy" decoding="async" ' +
+            'class="w-full rounded-xl border border-ink-4" ' +
+            'onerror="this.closest(\'figure\').remove()">' +
+          (f[3] ? '<figcaption class="text-[12px] text-[#6E6558] mt-2 leading-5">' + esc(f[3]) + '</figcaption>' : '') +
+        '</figure>'
+      : '';
     return '<details class="rounded-xl border border-ink-3 bg-ink-2 px-5">' +
              '<summary class="flex items-center gap-3 py-4 text-[15px] font-bold text-gold-light">' +
                '<span class="faq-plus shrink-0 w-5 h-5 grid place-items-center text-gold-dim transition-transform">＋</span>' + f[0] +
              '</summary>' +
-             '<p class="pb-5 pl-8 text-[13.5px] leading-7 text-[#8F8674]">' + f[1] + '</p>' +
+             '<div class="pb-5 pl-8 text-[13.5px] leading-7 text-[#8F8674]">' + f[1] + pic + '</div>' +
            '</details>';
   }).join('');
 }
