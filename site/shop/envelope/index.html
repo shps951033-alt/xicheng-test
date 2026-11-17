@@ -1491,8 +1491,10 @@ function buildMaterialSelect(){
   var keys = Object.keys(ms);
   if(keys.indexOf(S.material) < 0) S.material = keys[0];
   $('matSel').innerHTML = keys.map(function(k){
+    // 有定價的紙把每個單價一起寫進選單（老闆 2026-11-17），沒定價的就只出名字
     return '<option value="' + k + '"' + (k === S.material ? ' selected' : '') + '>' +
-           ms[k].name + (ms[k].stock ? '（公版現貨）' : '') + '</option>';
+           ms[k].name + (ms[k].unit ? '｜每個 ' + ms[k].unit + ' 元' : '') +
+           (ms[k].stock ? '（公版現貨）' : '') + '</option>';
   }).join('');
   // 公版時這行要講整款（紙＋蓋型＋尺寸），不是只講紙
   if(S.product === 'hongbao' && isStock()){
@@ -2243,8 +2245,11 @@ function buildStockList(){
   var ss = PRICE.hongbao.stock;
   $('stockSel').innerHTML = stockKeys().map(function(k){
     var s = ss[k];
+    // 老闆 2026-11-17：選單裡要直接看得到每個單價（＝紙材空白袋的價，不含加工）
+    var u = PRICE.hongbao.materials[s.paper].unit;
     return '<option value="' + k + '"' + (k === S.hbStock ? ' selected' : '') + '>' +
-           s.name + '｜' + PRICE.hongbao.layouts[s.layout].name + '・' +
+           s.name + (u ? '｜每個 ' + u + ' 元' : '') + '｜' +
+           PRICE.hongbao.layouts[s.layout].name + '・' +
            PRICE.hongbao.flaps[s.flap].name + '｜' + s.spec + '</option>';
   }).join('');
 }
