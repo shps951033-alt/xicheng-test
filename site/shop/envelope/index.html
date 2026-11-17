@@ -313,11 +313,14 @@ section[id]{ scroll-margin-top:76px }
     <button class="tab" role="tab" aria-selected="false" data-product="chunlian">客製化春聯</button>
   </div>
 
-  <!-- 2026-10-12 老闆要求：訂製方式擺最上面、預覽移到下面 → 改單欄，由上往下填
-       （原本是左預覽右選項的雙欄 sticky 版面） -->
-  <div class="max-w-3xl mx-auto mt-6">
+  <!-- 版面沿革：10-12 老闆要「訂製方式最上面、預覽放下面」→ 改成單欄；
+       11-17 老闆再要「即時預覽放到公版款式右邊」→ 電腦版改成左設定／右預覽兩欄，
+       手機仍是單欄（設定 → 預覽 → 價格），順序不變。
+       ⚠️ 價格試算明細改成「橫跨兩欄、放最下面」，而且**不再 sticky**
+          —— 之前預覽卡是 sticky，單欄時價格明細會從它底下滑過去，老闆說不好看。 -->
+  <div class="max-w-6xl mx-auto mt-6 grid lg:grid-cols-[minmax(0,1fr),minmax(0,440px)] gap-5 lg:gap-6 items-start">
 
-    <!-- ── 設定區（由上往下）── -->
+    <!-- ── 左：設定區（由上往下）── -->
     <div class="space-y-5">
 
       <!-- 公版／全客製：最上層的分野，決定底下哪些東西能選（老闆 2026-10-12） -->
@@ -580,9 +583,13 @@ section[id]{ scroll-margin-top:76px }
         </div>
       </div>
 
-      <!-- 即時預覽（老闆指定擺在設定項目之後）-->
-    <!-- ── 左：即時預覽 ── -->
-    <div class="lg:sticky lg:top-24 self-start z-30">
+    </div>
+    <!-- ／設定區結束 -->
+
+    <!-- ── 右：即時預覽（老闆 2026-11-17 指定擺在公版款式右邊）──
+         電腦版黏在視窗上緣，改選項時一直看得到；手機版就排在設定底下。
+         它在自己的欄位裡，不會再蓋到價格明細。 -->
+    <div class="lg:sticky lg:top-24 self-start">
       <div class="rounded-2xl border border-ink-3 bg-ink-2 overflow-hidden">
         <div class="flex items-center justify-between px-4 py-3 border-b border-ink-3">
           <h2 class="text-[13px] tracking-[.16em] text-gold-dim font-bold">即時預覽</h2>
@@ -591,7 +598,7 @@ section[id]{ scroll-margin-top:76px }
             <button id="motionToggle" class="chip !py-1.5 !px-2.5 text-[12px]" aria-pressed="true">光影</button>
           </div>
         </div>
-        <div id="stage" class="relative grid place-items-center transition-colors duration-300 h-[300px] sm:h-[440px] p-4"
+        <div id="stage" class="relative grid place-items-center transition-colors duration-300 h-[300px] sm:h-[440px] lg:h-[520px] p-4"
              style="background:radial-gradient(70% 60% at 50% 40%,#2A2118,#141210)">
           <!-- stageInner 是「縮放後的版面框」，stageArt 才是原尺寸作品（見 fitStage） -->
           <div id="stageInner"><div id="stageArt"><!-- JS 產生作品 --></div></div>
@@ -603,12 +610,26 @@ section[id]{ scroll-margin-top:76px }
       </div>
     </div>
 
-      <!-- 價格明細 -->
-      <div class="rounded-2xl border border-gold-dark/50 bg-gradient-to-b from-[#221D14] to-ink-2 p-5">
+    <!-- ── 價格明細：橫跨兩欄、放最下面，固定在版面裡不浮動 ── -->
+      <div class="lg:col-span-2 rounded-2xl border border-gold-dark/50 bg-gradient-to-b from-[#221D14] to-ink-2 p-5">
         <div class="flex items-baseline justify-between mb-4">
           <h3 class="text-[13px] tracking-[.16em] text-gold-dim font-bold">價格試算明細</h3>
           <span id="unitLine" class="text-[12px] text-[#8F8674]"></span>
         </div>
+
+        <!-- 超過 5,000 個：不給線上自動價，請客人找官方 LINE 客服（老闆 2026-11-17） -->
+        <div id="bigBox" class="hidden mb-4 rounded-xl border border-crimson-soft/45 bg-crimson-deep/15 p-4">
+          <p class="text-[14px] font-bold text-gold-light">單筆超過 5,000 個，請讓客服幫您報價</p>
+          <p class="text-[12.5px] text-[#CFC3AC] mt-2 leading-6">
+            這個量級的紙材進貨、上機方式與工費都要重新安排，線上級距算出來的數字不準。
+            請用官方 LINE 告訴我們「款式、數量、要做的加工」，專人會直接回您一份正式報價。
+          </p>
+          <a href="https://line.me/R/ti/p/%40623bfkyg" target="_blank" rel="noopener"
+             class="inline-flex items-center gap-2 mt-3 bg-[#06C755] text-[#05331A] font-bold text-[13.5px] px-4 py-2.5 rounded-xl">
+            用官方 LINE 詢問大量報價 →
+          </a>
+        </div>
+
         <div id="priceRows" class="space-y-2.5 text-[13.5px]"></div>
         <div class="mt-4 pt-4 border-t border-ink-4 flex items-end justify-between">
           <div>
@@ -625,8 +646,8 @@ section[id]{ scroll-margin-top:76px }
           燙金製版費為固定報價，<span class="text-gold-light">依實際燙印面積另行增減費用</span>。<br>
         </p>
       </div>
+      <!-- ／價格明細結束 -->
 
-    </div>
   </div>
 </section>
 
@@ -1091,7 +1112,11 @@ var PRICE = {
   shipFee: { home:160, cvs:90, self:0 },
   shipName:{ home:'宅配到府', cvs:'超商取貨', self:'工廠自取' },
   freeShipOver: 5000,
-  taxRate: 0.05
+  taxRate: 0.05,
+  /* ★ 大量訂製門檻（老闆 2026-11-17）：單筆超過這個數量就不給線上自動試算，
+       改請客人用官方 LINE 找客服，由專人報價。線上級距最高只到 2000，
+       量再大紙價、工費、上機方式都要重談，自動算出來的數字會失真。 */
+  bigOrderQty: 5000
 };
 
 /* 數位印刷的顏色：走跟燙金同一套 --foil 機制，但給「平的」色，
@@ -1906,7 +1931,8 @@ function calc(){
   var total = sub + ship;
 
   return {
-    qty:qty, tier:tier, unit:unit, paperUnit:paperUnit, fixedPaper:fixedPaper, matF:mat.f, typeF:tf,
+    qty:qty, big:qty > PRICE.bigOrderQty,
+    tier:tier, unit:unit, paperUnit:paperUnit, fixedPaper:fixedPaper, matF:mat.f, typeF:tf,
     procRows:procRows, regUnit:regUnit, plateRows:plateRows, layers:layers, spoilQty:spoilQty,
     printCost:printCost, oneOff:oneOff, aiN:aiN, aiCost:aiCost,
     sub:sub, ship:ship, total:total, tax:total * PRICE.taxRate
@@ -1948,10 +1974,23 @@ function renderPrice(){
       quoted.map(function(p){ return p.name }).join('、') + '」，該項需另行報價。';
   }
 
-  $('totalNum').textContent = money(q.total);
-  $('barTotal').textContent = money(q.total);
-  $('taxLine').textContent  = '含 5% 稅：' + money(q.total + q.tax);
-  $('perUnit').textContent  = '平均每份 ' + (q.total / q.qty).toFixed(2) + ' 元';
+  /* 超過 5,000 個＝大量訂製：不給線上金額，整區換成「請洽官方 LINE」（老闆 2026-11-17）。
+     明細那幾列還是留著讓客人知道費用怎麼組成，但不出總價，免得客人拿去當報價。 */
+  $('bigBox').classList.toggle('hidden', !q.big);
+  $('priceRows').classList.toggle('opacity-45', q.big);
+  if(q.big){
+    $('totalNum').textContent = '請洽官方 LINE';
+    $('totalNum').classList.add('!text-[19px]');
+    $('barTotal').textContent = '請洽 LINE';
+    $('taxLine').textContent  = '超過 5,000 個由專人報價';
+    $('perUnit').textContent  = '';
+  } else {
+    $('totalNum').classList.remove('!text-[19px]');
+    $('totalNum').textContent = money(q.total);
+    $('barTotal').textContent = money(q.total);
+    $('taxLine').textContent  = '含 5% 稅：' + money(q.total + q.tax);
+    $('perUnit').textContent  = '平均每份 ' + (q.total / q.qty).toFixed(2) + ' 元';
+  }
 
   var parts = ['每份合計 ' + q.unit.toFixed(2) + ' 元（紙 ' + q.paperUnit.toFixed(2)];
   // 另行報價的項目不要列進「每份合計」的算式，不然會出現「＋合版印 0.00」誤導人
@@ -1960,10 +1999,13 @@ function renderPrice(){
     parts.push('＋' + PRICE.processes[p.k].short + ' ' + p.unit.toFixed(2));
   });
   if(q.regUnit) parts.push('＋套準 ' + q.regUnit.toFixed(2));
-  $('unitLine').textContent = parts.join('') + '）';
+  $('unitLine').textContent = q.big ? '大量訂製・專人報價' : parts.join('') + '）';
 
   // 紙材是固定單價時不要講「紙也套級距」，級距只影響工費
-  $('qtyTierHint').textContent = q.fixedPaper
+  $('qtyTierHint').classList.toggle('!text-crimson-soft', q.big);
+  $('qtyTierHint').textContent = q.big
+    ? '超過 5,000 個，請用官方 LINE 洽詢專人報價'
+    : q.fixedPaper
     ? '紙材固定每個 ' + q.fixedPaper + ' 元；工費套用 ' + q.tier.q + ' 份級距'
     : '套用 ' + q.tier.q + ' 份級距單價';
 }
@@ -2604,8 +2646,14 @@ function orderText(no){
   L.push('‧運費：' + (q.ship === 0 ? '0（' + (S.ship === 'self' ? '自取' : '滿額免運') + '）' : money(q.ship)));
   var qn = q.procRows.filter(function(p){ return p.quote });
   if(qn.length) L.push('※ 以下金額尚未包含「' + qn.map(function(p){ return p.name }).join('、') + '」，該項需另行報價');
-  L.push('‧合計（未稅）：' + money(q.total));
-  L.push('‧含 5% 稅：' + money(q.total + q.tax));
+  if(q.big){
+    // 超過 5,000 個不給線上總價，明細留著給客服看（老闆 2026-11-17）
+    L.push('※ 數量超過 ' + PRICE.bigOrderQty.toLocaleString('en-US') +
+           ' 個，屬大量訂製，網站不計總價，請客服專人報價。');
+  } else {
+    L.push('‧合計（未稅）：' + money(q.total));
+    L.push('‧含 5% 稅：' + money(q.total + q.tax));
+  }
 
   L.push('');
   L.push('■ 訂購資料');
