@@ -1958,7 +1958,19 @@ function renderPrice(){
   });
   if(q.regUnit) rows.push(['套準', '每份 ' + q.regUnit.toFixed(2) + ' 元 × ' + n + ' 份', q.regUnit * q.qty]);
   q.plateRows.forEach(function(p){ rows.push([p.name, p.note, p.v]) });
-  rows.push(['運費', S.ship === 'self' ? '工廠自取' : (q.ship === 0 ? '滿 ' + money(PRICE.freeShipOver) + ' 免運' : PRICE.shipName[S.ship]), q.ship]);
+  /* 老闆 2026-11-17：運費這一列要把**每一種收件方式的費用都列出來**，
+     客人一眼看得到選別的要多少，目前選的那個標亮。 */
+  var shipNote = Object.keys(PRICE.shipFee).map(function(k){
+    var fee  = PRICE.shipFee[k];
+    var free = (k === 'self') || (q.sub >= PRICE.freeShipOver);   // q.sub 本來就不含運費，直接比
+    var txt  = PRICE.shipName[k] + ' ' + (fee === 0 ? '免費' : (free ? '免運' : money(fee)));
+    return k === S.ship
+      ? '<span class="text-gold-light font-bold">✓ ' + txt + '</span>'
+      : '<span class="text-[#6E6558]">' + txt + '</span>';
+  }).join('<span class="text-[#4A443A] mx-1.5">|</span>');
+  if(q.sub >= PRICE.freeShipOver) shipNote += '<br>已滿 ' + money(PRICE.freeShipOver) + '，運費全免';
+  else shipNote += '<br>滿 ' + money(PRICE.freeShipOver) + ' 免運費';
+  rows.push(['運費', shipNote, q.ship]);
 
   $('priceRows').innerHTML = rows.map(function(r){
     return '<div class="flex items-start justify-between gap-4">' +
