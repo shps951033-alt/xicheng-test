@@ -1513,12 +1513,23 @@ function buildSampleMats(){
     var ms = PRICE[p].materials;
     Object.keys(ms).forEach(function(k){ if(ms[k].stock) all.push({ g:PRICE[p].label, m:ms[k], k:k }) });
   });
-  // 有實拍照（img\samples\paper-<紙材代號>.jpg）就用照片，沒有就用 CSS 畫的質感
+  /* 老闆 2026-11-17：「這邊的示意圖直接用影片裡的截圖」
+     → 有實拍影片的紙，就直接拿影片封面（img\materials\<代號>.jpg，ffmpeg 從影片第 2 秒截的那張）
+       當示意圖，不要再用 CSS 畫的假質感。
+     → 想單獨換成別張照片，就放 img\samples\paper-<紙材代號>.jpg，它會蓋過影片截圖。
+     → 兩個都沒有才退回 CSS 底圖。 */
   $('sampleMats').innerHTML = all.map(function(o){
+    var poster = o.m.media ? 'img/materials/' + o.m.media + '.jpg' : '';
+    var own    = 'img/samples/paper-' + o.k + '.jpg';
+    // 先試專屬照片，載不到就換影片截圖，再載不到才讓 CSS 底圖露出來
+    var fallback = poster
+      ? 'onerror="if(this.dataset.alt){this.remove()}else{this.dataset.alt=1;this.src=\'' + poster + '\'}"'
+      : 'onerror="this.remove()"';
     return '<div class="rounded-xl border border-ink-3 overflow-hidden">' +
-             '<div class="h-24 relative ' + o.m.css + '">' +
+             '<div class="h-28 relative ' + o.m.css + '">' +
                '<div class="absolute inset-0">' +
-                 photoSlot('img/samples/paper-' + o.k + '.jpg', o.m.name + ' 實拍', '') +
+                 '<img src="' + own + '" alt="' + esc(o.m.name) + ' 實拍" decoding="async" ' +
+                   'class="absolute inset-0 w-full h-full object-cover" ' + fallback + '>' +
                '</div>' +
              '</div>' +
              '<div class="px-3 py-2.5 bg-ink-2"><span class="block text-[12.5px] font-bold text-gold-light leading-tight">' + o.m.name + '</span>' +
