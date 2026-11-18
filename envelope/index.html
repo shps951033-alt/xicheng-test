@@ -165,11 +165,12 @@ body{ background:#12100C; color:#EDE4D3 }
 /* 全客製挑美術紙時的預覽紙色（2026-11-18）。
    美術紙有 293 款、顏色千百種，沒辦法每款畫一個底圖 → 統一用「中性紙感」的米白紙，
    預覽旁邊會寫明紙色以實際紙材為準。帶一點纖維紋，看起來才像美術紙不像印刷紙。 */
+/* 底色由 JS 設三個變數（客人選的紙色 → colorHex()），沒設就用預設米白 */
 .m-art{ background:
   repeating-linear-gradient(74deg,rgba(0,0,0,.028) 0 1px,transparent 1px 3px),
   repeating-linear-gradient(-16deg,rgba(255,255,255,.05) 0 1px,transparent 1px 4px),
   radial-gradient(85% 70% at 32% 14%,rgba(255,255,255,.1),transparent 68%),
-  linear-gradient(152deg,#E8DCC4,#D8C8A8 58%,#E2D4BA) }
+  linear-gradient(152deg,var(--art1),var(--art2) 58%,var(--art3)) }
 .m-laini{ background:
   repeating-linear-gradient(90deg,rgba(0,0,0,.1) 0 1px,transparent 1px 4px),
   repeating-linear-gradient(0deg,rgba(255,255,255,.055) 0 1px,transparent 1px 4px),
@@ -218,7 +219,9 @@ details[open] .faq-plus{ transform:rotate(45deg) }
 .stage-grid{ background-image:radial-gradient(rgba(255,255,255,.05) 1px,transparent 1px); background-size:18px 18px }
 
 /* 作品本體照原尺寸排（不要被外層拉寬），縮放交給 fitStage */
-#stageArt{ width:max-content }
+/* 美術紙預設示意色；選了顏色後由 JS 覆寫這三個變數（.m-art 讀它們）。
+   ⚠️ 預設值要寫在這裡（父層），不能寫在 .m-art 自己身上——寫在自己身上會蓋掉繼承進來的值。 */
+#stageArt{ width:max-content; --art1:#E8DCC4; --art2:#D8C8A8; --art3:#E2D4BA }
 
 /* 錨點跳轉時別被固定頁首蓋住標題 */
 section[id]{ scroll-margin-top:76px }
@@ -482,6 +485,12 @@ section[id]{ scroll-margin-top:76px }
             <div class="flex gap-2 items-center">
               <select id="artGradeSel" class="fld" style="flex:1 1 0;min-width:0"></select>
               <span id="artUps" class="shrink-0 text-[11.5px] text-gold-dim tabular-nums"></span>
+            </div>
+            <!-- 顏色（老闆 2026-11-18）：有色卡資料的紙才出現；選了預覽的紙色會跟著換 -->
+            <div id="artColorBox" class="hidden flex gap-2 items-center">
+              <span id="artColorChip" class="shrink-0 rounded-md border border-ink-4"
+                    style="width:26px;height:26px;background:#E2D7C0"></span>
+              <select id="artColorSel" class="fld" style="flex:1 1 0;min-width:0"></select>
             </div>
           </div>
           <p id="matDesc" class="text-[12px] text-[#8F8674] mt-2 leading-5"></p>
@@ -1391,7 +1400,7 @@ var S = {
   /* 全客製的紙＝名片那份美術紙選單（papers.js）。存的是陣列索引，不是紙名。
      預設挑「日本雅子 140g」—— 老闆 2026-11-18 一開口就是這支（長瑩的雅子系列）。
      artQuery ＝ 紙名搜尋框的字，只用來篩選單，不影響計價。 */
-  artPaper:0, artGrade:0, artQuery:'',
+  artPaper:0, artGrade:0, artQuery:'', artColor:0,
   // 每一塊版：面積都是「該塊版自己的」，不是全部加總
   // 燙印：顏色＋面積＋是不是滿版。預設面積＝公版的正常燙印範圍 6×15＝90
   plates:[ { color:'bright', area:90, full:false } ],
@@ -1476,6 +1485,55 @@ function fontName(){ return { cal:'開運書法體', kai:'標楷體', sans:'現�
    這樣後面的計價、預覽、摘要、LINE 文字全都不用改就能吃到。
      unit ＝ 每個紙錢 ＝ 大紙牌價 ÷ 這張大紙軋得出幾個紅包袋
      （有 unit 的紙，calc() 就不會再去走級距表、也不乘紙材與蓋型係數——跟公版定價紙同一條路） */
+/* ── 色名 → 示意色（老闆 2026-11-18：「客人選什麼色，示意圖就要改成什麼色」）──
+   牌價檔只有色名（像「05 琥珀紅」「Blue F7708」），沒有色票值 → 用關鍵字推一個近似色。
+   ⚠️ 這是**螢幕示意色，不是真正的紙色**，頁面上已經註明；要準確請寄紙樣。
+   要修哪個色就改下面這張表（specific 的字詞放前面，先命中先贏）。 */
+var COLOR_WORDS = [
+  // ── 先放完整詞（兩個字以上），避免被單字搶先命中 ──
+  ['午夜藍','#1E2B47'], ['海軍藍','#1F3A63'], ['加勒比藍','#1A86B8'], ['冰藍','#CBDDE8'], ['行星藍','#2E4D7B'],
+  ['霧藍','#8FA5B4'], ['鈷藍','#2A4C9B'], ['淺藍','#AFC9DE'], ['深藍','#22355C'],
+  ['森林綠','#2B4C33'], ['橄欖綠','#6B6B37'], ['麥草綠','#A9B07A'], ['海藻綠','#44614C'], ['杉綠','#3C5A44'],
+  ['銅綠','#5E8A77'], ['蘋果綠','#8FB45C'], ['馬爾斯綠','#4C7A68'], ['淺綠','#A9C79A'], ['深綠','#27432E'],
+  ['琥珀紅','#A8402C'], ['珊瑚紅','#D4604F'], ['紅布朗','#7A3B2E'], ['紅莓','#8E2B3E'], ['酒紅','#6E1F2B'],
+  ['磚紅','#9C4A33'], ['紅土','#9A4B32'], ['赤陶','#B4603F'], ['淺紅','#C9705F'], ['深紅','#7A1C25'],
+  ['陶土黃','#C19A4B'], ['奶黃','#EBD9A8'], ['霧黃','#D6C48A'], ['赭黃','#B88A3A'], ['淺黃','#EEDFA6'], ['深黃','#C79A2E'],
+  ['可可棕','#5B3B2A'], ['暮色棕','#6B4A38'], ['咖啡豆','#4A3326'], ['生棕','#7A5A40'], ['鏽棕','#8A5230'],
+  ['土褐','#7E5F43'], ['褐煤','#4A3B2E'], ['牛皮','#C2A179'], ['淺棕','#9A7554'], ['深棕','#4A3324'],
+  ['雅典黑','#232323'], ['特黑','#171615'], ['純黑','#1A1918'],
+  ['石膏白','#F1EDE3'], ['石灰白','#E8E4D8'], ['棉白','#F3EEE2'], ['自然白','#F0EADC'], ['雪白','#F7F5EE'],
+  ['超白','#F8F6F1'], ['柔白','#F2EEE4'], ['米白','#EDE4D0'], ['象牙','#F0E6CF'], ['純白','#F8F7F3'],
+  ['黏土灰','#A9A295'], ['板岩灰','#6E7276'], ['石灰','#CFC9BC'], ['鋼鐵灰','#5B6063'], ['粉灰','#C6BCB5'],
+  ['冷灰','#9EA3A3'], ['淺灰','#C7C4BD'], ['深灰','#55534F'], ['中灰','#8E8B85'],
+  ['薰衣紫','#8B7CA6'], ['淺紫','#B9A9CC'], ['深紫','#4E3C6B'],
+  ['甜橘','#D97B35'], ['粉紅','#E4A7B4'], ['玫瑰','#C9697C'],
+  ['石英','#DCD6CA'], ['信天翁','#8E9AA0'], ['琉璃','#EDE9DD'], ['太古','#E6E0D2'], ['羊皮','#E9DEC4'],
+  ['米花','#EFE7D3'], ['明亮','#F6F3EC'], ['冰原','#F2F4F3'], ['特亮','#F7F5F0'],
+  // ── 英文（牌價表很多色名是英文）──
+  ['white','#F2EDE2'], ['ivory','#F0E6CF'], ['cream','#F1E7D2'], ['beige','#DFD2B8'], ['natural','#EFE8D9'],
+  ['black','#1F1E1C'], ['gray','#9A9793'], ['grey','#9A9793'], ['silver','#C8C8C6'],
+  ['red','#A32B35'], ['blue','#2E5A91'], ['green','#4C7A4E'], ['yellow','#D9BE52'], ['orange','#D98038'],
+  ['brown','#6B4A33'], ['khaki','#C2A179'], ['pink','#E4A7B4'], ['purple','#6B4E8E'], ['gold','#C9A24B'],
+  // ── 最後才放單字（前面都沒命中時） ──
+  ['白','#F1ECE0'], ['黑','#201F1D'], ['灰','#9C9893'], ['紅','#A82F33'], ['藍','#2F5B8E'],
+  ['綠','#4E7A4F'], ['黃','#D8BE57'], ['橘','#D4792F'], ['橙','#D4792F'], ['紫','#6E5390'],
+  ['粉','#E6AFB8'], ['棕','#6B4A33'], ['褐','#6B4A33'], ['咖','#4A3326'], ['金','#C9A24B'],
+  ['銀','#C6C6C4'], ['米','#E7DCC2'], ['青','#4E8378'], ['墨','#2B2C2E']
+];
+function colorHex(name){
+  var s = String(name || '').toLowerCase();
+  for(var i = 0; i < COLOR_WORDS.length; i++){
+    if(s.indexOf(COLOR_WORDS[i][0].toLowerCase()) >= 0) return COLOR_WORDS[i][1];
+  }
+  return '#E2D7C0';                      // 認不出來就給一個中性米色
+}
+/* 把色票調亮／調暗，用來做預覽那層紙的漸層（amt 正數變亮、負數變暗） */
+function shade(hex, amt){
+  var n = parseInt(hex.slice(1), 16);
+  var r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+  function f(v){ return Math.max(0, Math.min(255, Math.round(v + 255 * amt))) }
+  return '#' + ((1 << 24) + (f(r) << 16) + (f(g) << 8) + f(b)).toString(16).slice(1);
+}
 function artMode(){ return S.product === 'hongbao' && S.hbMode === 'custom' }
 function artPaperObj(){ return ART_PAPERS[Math.min(S.artPaper, ART_PAPERS.length - 1)] || ART_PAPERS[0] }
 function artGradeObj(){ var p = artPaperObj(); return p.grades[Math.min(S.artGrade, p.grades.length - 1)] || p.grades[0] }
@@ -1483,22 +1541,44 @@ function artUps(){
   var B = PRICE.hongbao.custom.dieBlank;
   return upsOnSheet(artGradeObj().perBig, B.w, B.h);
 }
+/* 這款紙有哪些顏色（沒資料就回空陣列，選單整個不出現） */
+function artColors(){ return PAPER_COLORS[artPaperObj().name] || [] }
+function artColorObj(){
+  var cs = artColors();
+  if(!cs.length) return null;
+  if(S.artColor >= cs.length) S.artColor = 0;
+  return cs[S.artColor] || cs[0];
+}
+/* 該色在這個克數的牌價。同款紙不同色價錢可能不同（例雅子 105g：棉白 42／森林綠 58），
+   有查到就用該色的價，查不到才退回 grades 那個「最高色號價」。 */
+function artSheetPrice(){
+  var g = artGradeObj(), c = artColorObj();
+  var gn = parseFloat(String(g.g).replace(/[^0-9.]/g, ''));
+  if(c && c.p && c.p[gn]) return c.p[gn];
+  return g.price;
+}
 function artMat(){
   var p = artPaperObj(), g = artGradeObj();
   var ups = artUps(), sh = sheetInfo(g.perBig);
   var B = PRICE.hongbao.custom.dieBlank;
+  var col = artColorObj(), sheetPrice = artSheetPrice();
   return {
-    name: p.name + ' ' + g.g,
-    unit: ups ? g.price / ups : 0,       // 落數抓不到（0）時，計價端會轉成「請洽 LINE」
+    // 顏色也寫進名稱，訂單、規格列、LINE 內容就都會帶到
+    name: p.name + ' ' + g.g + (col ? '・' + col.n : ''),
+    unit: ups ? sheetPrice / ups : 0,    // 落數抓不到（0）時，計價端會轉成「請洽 LINE」
     f: 1.00, css: 'm-art',
-    art: { paper:p, grade:g, ups:ups, sheet:sh },
+    hex: col ? colorHex(col.n) : '',     // 預覽那張紙要塗的顏色（示意色）
+    art: { paper:p, grade:g, ups:ups, sheet:sh, color:col, sheetPrice:sheetPrice },
     /* ⚠️ 老闆 2026-11-18：「紙錢不用顯示出來」——
        每個紙錢、大紙牌價、一張軋幾個，這三個擺出來等於把成本算式給客人看，全部收起來。
        數字照算不變，只是不顯示；要看成本請開 DevTools 看 calc() 或回頭查這份原始碼。 */
     desc: ups
-      ? '選好紙與克數，下面的價格會自動更新。' +
-        (sh.est ? '⚠ 這款紙我們要再跟紙廠確認一次規格，線上金額僅供參考，實際報價會再修。'
-                : '想看實際紙樣或摸摸看手感，用官方 LINE 跟我們說，可以寄紙樣給您。')
+      ? '選好紙、克數與顏色，下面的價格會自動更新。' +
+        (artColors().length
+          ? '這款有 ' + artColors().length + ' 個顏色；右邊預覽的紙色是**螢幕示意**，' +
+            '實際色請以紙樣為準（用官方 LINE 跟我們說，可以寄紙樣）。'
+          : '這款紙的顏色我們手上沒有完整色卡，請用官方 LINE 問我們。') +
+        (sh.est ? '⚠ 這款紙我們要再跟紙廠確認一次規格，線上金額僅供參考，實際報價會再修。' : '')
       : '這款紙的規格還沒建進系統，線上算不出來，請用官方 LINE 問我們。'
   };
 }
@@ -1738,6 +1818,19 @@ function buildArtSelect(){
   }).join('');
 
   $('artUps').textContent = '';   // 原本寫「一張大紙軋 N 個」，同上，不對客人顯示
+
+  /* 顏色選單（老闆 2026-11-18）：有色卡資料才出現。
+     ⚠️ 選項字只寫色名，**不寫價差** —— 同紙不同色價錢可能不一樣，但那屬於成本，不對客人攤開。 */
+  var cs = artColors();
+  $('artColorBox').classList.toggle('hidden', !cs.length);
+  if(cs.length){
+    if(S.artColor >= cs.length) S.artColor = 0;
+    $('artColorSel').innerHTML = cs.map(function(c, i){
+      return '<option value="' + i + '"' + (i === S.artColor ? ' selected' : '') + '>' +
+             esc(c.n) + '</option>';
+    }).join('');
+    $('artColorChip').style.background = colorHex(cs[S.artColor].n);
+  }
   $('artSearch').placeholder = '搜尋紙名（共 ' + ART_PAPERS.length + ' 款）';
   if(noHit && qy) $('artUps').textContent = '找不到「' + qy + '」，先列出全部';
 }
@@ -2143,6 +2236,17 @@ function renderPreview(){
                '<p class="text-center text-[11px] text-[#7E7565] mt-3 tracking-[.2em]">橫批＋上下聯一對</p>' +
              '</div>';
     }
+  }
+  /* 預覽那張紙要塗成客人選的顏色（老闆 2026-11-18：「客人選什麼色，示意圖就要改成什麼色」）。
+     .m-art 的三段漸層讀這三個變數：本色、暗一點、亮一點，這樣還是有紙的立體感。 */
+  var hex = mat.hex || '';
+  var sa = $('stageArt');
+  if(hex){
+    sa.style.setProperty('--art1', shade(hex, 0.03));
+    sa.style.setProperty('--art2', shade(hex, -0.05));
+    sa.style.setProperty('--art3', hex);
+  } else {
+    sa.style.removeProperty('--art1'); sa.style.removeProperty('--art2'); sa.style.removeProperty('--art3');
   }
   $('stageArt').innerHTML = html;
   $('stageInner').classList.toggle('no-motion', !S.motion);
@@ -2905,6 +3009,7 @@ $('artSearch').addEventListener('input', function(){
 $('artSel').addEventListener('change', function(){
   S.artPaper = +this.value;
   S.artGrade = 0;                       // 換紙就回到第一個克數，免得指到不存在的克數
+  S.artColor = 0;                       // 顏色也要歸零，不然會指到別款紙的色號
   buildArtSelect();
   $('matDesc').textContent = artMat().desc;
   update();
@@ -2914,6 +3019,12 @@ $('artGradeSel').addEventListener('change', function(){
   buildArtSelect();
   $('matDesc').textContent = artMat().desc;
   update();
+});
+$('artColorSel').addEventListener('change', function(){
+  S.artColor = +this.value;
+  buildArtSelect();
+  $('matDesc').textContent = artMat().desc;
+  update();                 // 換色會連帶換價（同紙不同色牌價可能不同）與預覽紙色
 });
 /* OPP 透明袋與代裝（老闆 2026-11-18）：沒加購袋子就不給勾代裝 */
 $('oppChk').addEventListener('change', function(){
