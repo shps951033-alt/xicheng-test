@@ -152,6 +152,14 @@ body{ background:#12100C; color:#EDE4D3 }
   radial-gradient(circle at 34% 77%,rgba(255,235,170,.5) 0 1.2px,transparent 1.7px),
   radial-gradient(circle at 84% 88%,rgba(255,225,140,.4) 0 1px,transparent 1.5px),
   linear-gradient(150deg,#B52222,#8E0F0F 55%,#A41A1A); background-size:34px 34px,46px 46px,52px 52px,38px 38px,100% 100% }
+/* 全客製挑美術紙時的預覽紙色（2026-11-18）。
+   美術紙有 293 款、顏色千百種，沒辦法每款畫一個底圖 → 統一用「中性紙感」的米白紙，
+   預覽旁邊會寫明紙色以實際紙材為準。帶一點纖維紋，看起來才像美術紙不像印刷紙。 */
+.m-art{ background:
+  repeating-linear-gradient(74deg,rgba(0,0,0,.028) 0 1px,transparent 1px 3px),
+  repeating-linear-gradient(-16deg,rgba(255,255,255,.05) 0 1px,transparent 1px 4px),
+  radial-gradient(85% 70% at 32% 14%,rgba(255,255,255,.1),transparent 68%),
+  linear-gradient(152deg,#E8DCC4,#D8C8A8 58%,#E2D4BA) }
 .m-laini{ background:
   repeating-linear-gradient(90deg,rgba(0,0,0,.1) 0 1px,transparent 1px 4px),
   repeating-linear-gradient(0deg,rgba(255,255,255,.055) 0 1px,transparent 1px 4px),
@@ -455,6 +463,17 @@ section[id]{ scroll-margin-top:76px }
           <select id="matSel" class="fld"></select>
           <!-- 公版：挑款式（一款＝紙材＋蓋型＋尺寸綁好），所以同一個位置換成款式選單 -->
           <select id="stockSel" class="fld hidden"></select>
+          <!-- 全客製紅包袋：美術紙選單（老闆 2026-11-18「直接用我們現有放在名片上的紙材選單」）。
+               293 款太多，所以上面給搜尋框、選單按紙類分組；選完紙再選克數。 -->
+          <div id="artBox" class="hidden space-y-2">
+            <input id="artSearch" class="fld" type="search" autocomplete="off"
+                   placeholder="搜尋紙名（例：雅子、剛古、萊妮、黑卡）">
+            <select id="artSel" class="fld"></select>
+            <div class="flex gap-2 items-center">
+              <select id="artGradeSel" class="fld" style="flex:1 1 0;min-width:0"></select>
+              <span id="artUps" class="shrink-0 text-[11.5px] text-gold-dim tabular-nums"></span>
+            </div>
+          </div>
           <p id="matDesc" class="text-[12px] text-[#8F8674] mt-2 leading-5"></p>
 
           <!-- 紙材實拍：就擺在選單正下方，選了款式立刻看到，不用彈窗擋住操作。
@@ -481,6 +500,23 @@ section[id]{ scroll-margin-top:76px }
                 </button>
               </div>
             </div>
+          </div>
+
+          <!-- 刀模與可燙金範圍（只有全客製才看得到）。
+               老闆 2026-11-18 要在站上呈現刀模圖並寫明可燙金範圍；
+               圖丟進 img\die\hongbao-die.png 就會自動出現（沒圖就只顯示文字，不會破版）。 -->
+          <div id="dieBox" class="hidden mt-3 rounded-xl border border-ink-3 bg-ink p-4">
+            <span class="block text-[13px] font-bold text-gold-light">我們現成的紅包袋刀模</span>
+            <figure class="mt-2" style="display:none">
+              <img src="img/die/hongbao-die.png" alt="喜成紅包袋刀模展開圖與可燙金範圍"
+                   class="w-full max-w-[360px] rounded-lg border border-ink-4 bg-white/5"
+                   onload="this.closest('figure').style.display=''"
+                   onerror="this.closest('figure').remove()">
+              <figcaption class="mt-1.5 text-[11.5px] text-[#8F8674] leading-5">
+                刀模展開圖。虛線內為可燙金範圍。
+              </figcaption>
+            </figure>
+            <p id="dieNote" class="text-[12px] text-[#8F8674] mt-2 leading-5"></p>
           </div>
         </div>
 
@@ -566,6 +602,28 @@ section[id]{ scroll-margin-top:76px }
                 <span class="block text-[11.5px] text-[#8F8674] mt-1 leading-5">
                   紅包袋的袋型不必勾這裡——上面「刀模形狀」會自己判斷要不要開模。<br>
                   這裡是給<span class="text-gold-light">袋型以外的特殊軋型</span>用的（挖窗、異形開口等）。
+                </span>
+              </span>
+            </label>
+          </div>
+
+          <!-- OPP 透明包裝袋（紅包袋專屬，老闆 2026-11-18）。
+               袋型不讓客人選：平頭蓋→短袋、花頭蓋／圓頭蓋→長袋，跟著上面的蓋型自動判斷。 -->
+          <div id="oppBox" class="mt-3 rounded-xl border border-ink-3 bg-ink p-4">
+            <label class="flex items-start gap-2.5 cursor-pointer">
+              <input type="checkbox" id="oppChk" class="w-4 h-4 accent-[#D4AF37] mt-0.5">
+              <span>
+                <span class="block text-[13.5px] text-[#EDE4D3]">OPP 透明包裝袋</span>
+                <span id="oppNote" class="block text-[12px] text-[#8F8674] mt-1 leading-5"></span>
+              </span>
+            </label>
+            <label id="oppPackWrap" class="hidden mt-3 pt-3 border-t border-ink-3 flex items-start gap-2.5 cursor-pointer">
+              <input type="checkbox" id="oppPackChk" class="w-4 h-4 accent-[#D4AF37] mt-0.5">
+              <span>
+                <span class="block text-[13.5px] text-[#EDE4D3]">代裝服務</span>
+                <span class="block text-[12px] text-[#8F8674] mt-1 leading-5">
+                  我們幫您一個一個裝進 OPP 袋再出貨，<span class="text-gold-light">每裝一袋 3 元</span>。
+                  不勾就是紅包袋與袋子分開寄給您，自己裝。
                 </span>
               </span>
             </label>
@@ -881,6 +939,8 @@ section[id]{ scroll-margin-top:76px }
   </div>
 </div>
 
+<!-- 美術紙選單（全客製紅包袋用）。整包來自名片報價工具，改牌價要去那邊改，見 papers.js 開頭 -->
+<script src="papers.js"></script>
 <script>
 /* ══════════════════════════════════════════════════════════════════════
    價格設定（草稿版）
@@ -929,8 +989,50 @@ var PRICE = {
      算法：放損張數 ＝ 加工層數 × est，只收紙材錢（客人實拿仍是訂購數量）。 */
   spoil: { min:5, max:10, est:8 },
 
+  /* ★ OPP 透明包裝袋（紅包袋專屬）—— 老闆 2026-11-18 給的確定值：
+       ‧短袋 每個 1 元　　→ 適合「平頭蓋」的紅包袋
+       ‧長袋 每個 1.25 元 → 適合「中式花頭蓋」與「圓頭蓋」的紅包袋
+       ‧兩種都是一個袋子最多裝 5 個紅包袋
+       ‧需要代裝服務的話，每裝一個 3 元
+     📌「每裝一個 3 元」照**袋**算（packPer:'bag'）：老闆同一段話裡的「每個」
+        指的都是 OPP 袋（「每個最多可裝5個」「短的每個1元」），所以代裝也解讀成每袋。
+        若老闆的意思是每裝一個紅包袋 3 元，把 packPer 改成 'piece' 就好，其他不用動。
+     ⚠️ 袋型是跟著蓋型自動判定的，不讓客人自己選錯（平頭蓋→短袋，其餘→長袋）。 */
+  opp: {
+    per: 5,
+    short: { name:'短袋', price:1.00, flaps:['flat'] },
+    long:  { name:'長袋', price:1.25, flaps:['floral', 'round', 'pointed', 'sqround'] },
+    packFee: 3, packPer: 'bag'
+  },
+
   hongbao: {
     label: '客製化紅包袋',
+    /* ★★ 全客製紅包袋的計價（老闆 2026-11-18 當面指示，整套改掉）★★
+       老闆原話：「紙材直接用我們現有放在名片上的紙材選單套用進來，然後我們有一個現成刀模，
+       軋一個紅包袋的紙大要 22*27 公分，所以你依照這個大小抓要幾張美術紙下去算價格，
+       然後看燙印面積、燙幾色、是否有要打凸？糊型每個抓 3 元。」
+
+       所以全客製的每個成本 ＝
+         ① 紙　　＝ 大紙牌價 ÷ 這張大紙能軋幾個（照 22×27 排版，見 papers.js）
+         ② 軋型　＝ 後加工\軋型.md「木刀」那段（落版 594cm² → 8K 級距）
+         ③ 糊型　＝ 每個 3 元（老闆給的確定值）
+         ④ 燙金／打凸　＝ 原本那套（版費 max(250,面積×4.4999)／max(450,面積×8.4999)＋每份工費）
+       ⚠️ 下面的 blank 級距表是**公版袋**（已經糊好的成品袋）用的，全客製不再走它。 */
+    custom: {
+      /* 刀模用紙：老闆說軋一個紅包袋要用掉 22 × 27 公分的紙。
+         這兩個數字一改，全部紙的落數與單價都會自動重算（算式在 papers.js 的 upsOnSheet）。
+         ⚠️ 老闆要傳刀模圖過來，圖到了對一下這個尺寸，順便把可燙金範圍標上去。 */
+      dieBlank: { w:22, h:27 },
+      glueUnit: 3,          // 糊型（成型）每個 3 元 —— 老闆 2026-11-18 給的確定值
+      /* 軋型工資：照 後加工\軋型.md 的「木刀（A5 以上～菊全內，喜成自做）」那段。
+         紅包袋落版 22×27 ＝ 594 cm²（> A5 310.8），每張單價依張數階梯、未達基本費收基本費。
+         ⚠️ 老闆 2026-11-18 沒有另外講紅包袋的軋型工資，這裡是直接引用公司現成的軋型積木，
+            不是我自己編的數字；若紅包袋另有行情價，改這裡就好。 */
+      diecutLabor: { tiers:{ 1:1.5, 1500:1.2, 3000:1.0, 5000:0.8, 10000:0.6 }, min:1500 },
+      /* 新開刀模費：同一份軋型積木的面積分級，594 cm² 落在「＞310.8 ～ ≤1,073（約 8K）」→ 1,200。
+         我們現成那支刀模（老闆 2026-11-18 確認有）就不收這筆。 */
+      diePlate: 1200
+    },
     // 紙材底價（公版袋、未加工），每份
     blank: { 10:6.5, 30:5.5, 50:5.0, 100:4.5, 300:3.2, 500:2.6, 1000:2.1, 2000:1.8 },
     // 各工序每份工費（不含版費）
@@ -1236,12 +1338,18 @@ var S = {
   hbLayout:'portrait', hbSize:{ portrait:'s18', landscape:'L9' },
   hbFlap:'flat', flapPrint:false, dofangSize:'s30',
   material:'fenghua', ink:'dcmyk',
+  /* 全客製的紙＝名片那份美術紙選單（papers.js）。存的是陣列索引，不是紙名。
+     預設挑「日本雅子 140g」—— 老闆 2026-11-18 一開口就是這支（長瑩的雅子系列）。
+     artQuery ＝ 紙名搜尋框的字，只用來篩選單，不影響計價。 */
+  artPaper:0, artGrade:0, artQuery:'',
   // 每一塊版：面積都是「該塊版自己的」，不是全部加總
   // 燙印：顏色＋面積＋是不是滿版。預設面積＝公版的正常燙印範圍 6×15＝90
   plates:[ { color:'bright', area:90, full:false } ],
   // 打凸／打凹：一處一塊版，面積預設同樣是正常燙印範圍 6×15＝90
   embossPlates:[ { area:90, full:false } ],
   debossPlates:[ { area:90, full:false } ],
+  /* OPP 透明袋（老闆 2026-11-18）：加購才算；代裝服務要先加購袋子才有意義 */
+  opp:false, oppPack:false,
   logo:null, logoRaw:null, logoType:'', logoName:'', knock:true, logoSize:46, logoDemo:false, logoAR:0.55,
   sides:'single', plate:'zinc', area:25, qty:500,
   emboss:false, diecut:false, aiConv:false, aiQty:1,
@@ -1307,7 +1415,48 @@ function fontCss(){
            sans:"'Noto Sans TC',sans-serif", serif:"'Noto Serif TC',serif" }[S.font];
 }
 function fontName(){ return { cal:'開運書法體', kai:'標楷體', sans:'現代黑體', serif:'經典宋體' }[S.font] }
-function matCfg(){ return PRICE[S.product].materials[S.material] }
+/* ── 全客製紅包袋的美術紙（老闆 2026-11-18）────────────────────────────
+   artMode() 為真時，「紙材」不再是本頁 materials 那六款公版紙，
+   而是 papers.js 那份名片用的美術紙選單（五家紙廠、293 款）。
+   artMat() 刻意回傳跟 materials 同樣形狀的物件（name／unit／f／css／desc），
+   這樣後面的計價、預覽、摘要、LINE 文字全都不用改就能吃到。
+     unit ＝ 每個紙錢 ＝ 大紙牌價 ÷ 這張大紙軋得出幾個紅包袋
+     （有 unit 的紙，calc() 就不會再去走級距表、也不乘紙材與蓋型係數——跟公版定價紙同一條路） */
+function artMode(){ return S.product === 'hongbao' && S.hbMode === 'custom' }
+function artPaperObj(){ return ART_PAPERS[Math.min(S.artPaper, ART_PAPERS.length - 1)] || ART_PAPERS[0] }
+function artGradeObj(){ var p = artPaperObj(); return p.grades[Math.min(S.artGrade, p.grades.length - 1)] || p.grades[0] }
+function artUps(){
+  var B = PRICE.hongbao.custom.dieBlank;
+  return upsOnSheet(artGradeObj().perBig, B.w, B.h);
+}
+function artMat(){
+  var p = artPaperObj(), g = artGradeObj();
+  var ups = artUps(), sh = sheetInfo(g.perBig);
+  var B = PRICE.hongbao.custom.dieBlank;
+  return {
+    name: p.name + ' ' + g.g,
+    unit: ups ? g.price / ups : 0,       // 落數抓不到（0）時，計價端會轉成「請洽 LINE」
+    f: 1.00, css: 'm-art',
+    art: { paper:p, grade:g, ups:ups, sheet:sh },
+    desc: ups
+      ? '大紙 ' + (sh.label || ((sh.h / 10) + ' × ' + (sh.w / 10) + ' cm')) +
+        '，整張牌價 ' + g.price + ' 元；按刀模 ' + B.w + ' × ' + B.h +
+        ' 公分排版，一張大紙軋 ' + ups + ' 個 → 每個紙錢 ' + (g.price / ups).toFixed(2) + ' 元。' +
+        (sh.est ? '⚠ 這款紙的大紙尺寸我們還要跟紙廠確認，落數先抓保守值，實際報價會再修。' : '')
+      : '這款紙的大紙尺寸還沒建進系統，線上算不出來，請用官方 LINE 問我們。'
+  };
+}
+/* OPP 袋型跟著蓋型走：平頭蓋用短袋，中式花頭蓋／圓頭蓋（與西式那兩款）用長袋。
+   老闆 2026-11-18 給的對應，不讓客人自己選錯。 */
+function oppKind(){
+  var fl = S.product === 'hongbao' ? flapCfg() : null;
+  if(!fl) return 'long';
+  return PRICE.opp.short.flaps.indexOf(isStock() ? stockCfg().flap : S.hbFlap) >= 0 ? 'short' : 'long';
+}
+function matCfg(){
+  if(artMode()) return artMat();
+  return PRICE[S.product].materials[S.material];
+}
 function typeCfg(){ return S.product === 'chunlian' ? PRICE.chunlian.types[S.couplet] : null }
 function sizeCfg(){ return PRICE.dofangSizes[S.dofangSize] }
 function sizeF(){ return S.couplet === 'dofang' ? sizeCfg().f : 1 }
@@ -1436,7 +1585,8 @@ function svgWrap(inner, size){
    使用者如果開了「省電／省流量」，瀏覽器會擋自動播，這時就停在封面圖上，點了才播。 */
 function applyMedia(){
   var m = PRICE[S.product] && PRICE[S.product].materials[S.material];
-  var key = m && m.media;
+  // 全客製改挑美術紙後，就沒有紙材實拍影片了（那六支影片是公版紙拍的）→ 整區收起來
+  var key = artMode() ? '' : (m && m.media);
   var box = $('mediaBox');
   box.classList.toggle('hidden', !key);
   if(!key) return;
@@ -1484,11 +1634,80 @@ function buildMaterialSelect(){
     $('matDesc').textContent = '這款是' + PRICE.hongbao.layouts[s.layout].name + '的' +
       PRICE.hongbao.flaps[s.flap].name + '，' + s.spec + '；用紙是' + ms[s.paper].name + '。' +
       '紙材與蓋型都隨款式固定，要自己挑紙、指定刀模請改選「全客製」。';
+  } else if(artMode()){
+    // 全客製：說明文字由 artMat() 產生（大紙尺寸、牌價、落數、每個紙錢）
+    $('matDesc').textContent = artMat().desc;
   } else {
     $('matDesc').textContent = ms[S.material].desc;
   }
   applyMedia();
 }
+/* ── 美術紙選單（全客製紅包袋）────────────────────────────────────────
+   293 款紙，所以：上面搜尋框篩選、選單按紙類分組（optgroup）、選完紙再選克數。
+   option 的 value ＝ ART_PAPERS 的索引，跟名片工具一樣的做法。 */
+function artGroupOf(p){ return p.grp || '精選美術紙' }
+function buildArtSelect(){
+  var qy = (S.artQuery || '').trim();
+  var hits = [];
+  ART_PAPERS.forEach(function(p, i){
+    if(!qy || p.name.indexOf(qy) >= 0) hits.push(i);
+  });
+  // 搜不到就退回全部，不要讓客人看到空選單
+  var noHit = !hits.length;
+  if(noHit) ART_PAPERS.forEach(function(p, i){ hits.push(i) });
+  if(hits.indexOf(S.artPaper) < 0) S.artPaper = hits[0];
+
+  var groups = [], byGrp = {};
+  hits.forEach(function(i){
+    var g = artGroupOf(ART_PAPERS[i]);
+    if(!byGrp[g]){ byGrp[g] = []; groups.push(g) }
+    byGrp[g].push(i);
+  });
+  $('artSel').innerHTML = groups.map(function(g){
+    return '<optgroup label="' + esc(g) + '">' + byGrp[g].map(function(i){
+      return '<option value="' + i + '"' + (i === S.artPaper ? ' selected' : '') + '>' +
+             esc(ART_PAPERS[i].name) + '</option>';
+    }).join('') + '</optgroup>';
+  }).join('');
+
+  // 克數選單：順便把「每個紙錢」寫在選項裡，客人不用算
+  var p = artPaperObj(), B = PRICE.hongbao.custom.dieBlank;
+  if(S.artGrade >= p.grades.length) S.artGrade = 0;
+  $('artGradeSel').innerHTML = p.grades.map(function(g, i){
+    var ups = upsOnSheet(g.perBig, B.w, B.h);
+    return '<option value="' + i + '"' + (i === S.artGrade ? ' selected' : '') + '>' +
+           g.g + (ups ? '｜每個紙錢 ' + (g.price / ups).toFixed(2) + ' 元' : '｜請洽 LINE') +
+           '</option>';
+  }).join('');
+
+  var ups = artUps();
+  $('artUps').textContent = ups ? '一張大紙軋 ' + ups + ' 個' : '';
+  $('artSearch').placeholder = '搜尋紙名（共 ' + ART_PAPERS.length + ' 款）';
+  if(noHit && qy) $('artUps').textContent = '找不到「' + qy + '」，先列出全部';
+}
+
+/* ── 刀模圖／可燙金範圍 ───────────────────────────────────────────────
+   老闆 2026-11-18：「我等等傳我們刀模圖給你，然後你要幫我呈現在網站上，且告知可燙金範圍」。
+   圖還沒到 → 這區只顯示文字（用紙尺寸）；把圖丟進 img\die\hongbao-die.png 就會自動出現，
+   不用改程式（跟作品照、FAQ 範例照同一套做法）。 */
+function applyDieBox(){
+  var box = $('dieBox');
+  if(!box) return;
+  box.classList.toggle('hidden', !artMode());
+  if(!artMode()) return;
+  var B = PRICE.hongbao.custom.dieBlank, FA = PRICE.hongbao.foilArea;
+  var f = flapCfg();
+  $('dieNote').innerHTML =
+    '展開後用紙 <span class="text-gold-light">' + B.w + ' × ' + B.h + ' 公分</span>' +
+    '（一個紅包袋吃掉這麼大一塊紙，上面的每個紙錢就是照這個尺寸排出來的）。<br>' +
+    '可燙金範圍：袋身正面 <span class="text-gold-light">' + FA.label +
+    '（' + FA.cm2 + ' 平方公分）</span>以內算「正常面積」，超出去就跳到滿版那一檔；' +
+    (f.canPrint ? '蓋面也可以另外燙，算另一塊版。' : '平頭蓋沒有蓋面可燙，只燙袋身。') + '<br>' +
+    (f.die ? '這個蓋型用我們現成的刀模，<span class="text-gold-light">不收刀模費</span>。'
+           : '這個蓋型我們沒有現成刀模，要新開一支（下面明細會列出來）。') +
+    '<br><span class="text-[#6E6558]">※ 右邊預覽的紙色是中性示意色，實際顏色以您挑的美術紙為準。</span>';
+}
+
 /* 照片欄位：檔案在就顯示照片，不在就留虛線空位（img 自己 onerror 移除）。
    這樣老闆把照片丟進資料夾就會出現，不用改任何程式。 */
 function photoSlot(src, alt, hint){
@@ -1866,6 +2085,15 @@ function calc(){
   // ③ 套準不另外收費（已含在燙金加工費那 10 元裡），只當判定條件
   var regUnit = 0, regSetup = 0;
 
+  /* ③之二 全客製的「糊型（成型）」：每個 3 元（老闆 2026-11-18 給的確定值）。
+     公版是買現成糊好的成品袋，不收這筆；春聯是平張，也沒有糊型。 */
+  var unitRows = [];
+  if(artMode()){
+    unitRows.push({ name:'糊型（成型）', unit:PRICE.hongbao.custom.glueUnit,
+                    note:'每個 ' + PRICE.hongbao.custom.glueUnit + ' 元，手工糊成袋' });
+  }
+  unitRows.forEach(function(r){ procUnitSum += r.unit });
+
   var unit = paperUnit + procUnitSum;
   var printCost = unit * qty;
 
@@ -1910,7 +2138,9 @@ function calc(){
      （橫式目前停售，所以實務上只會用到圓頭蓋那支） */
   var needNewDie = S.product === 'hongbao' && !isStock() && !flapCfg().die;
   if(needNewDie) plateRows.push({
-    name:'新開刀模費', note:flapCfg().name + '：我們目前沒有這支刀模，需另開一支', v:PRICE.diecutPlate });
+    name:'新開刀模費', note:flapCfg().name + '：我們目前沒有這支刀模，需另開一支',
+    // 紅包袋落版 22×27＝594cm² → 後加工\軋型.md 木刀「約 8K」級距＝1,200
+    v: S.product === 'hongbao' ? PRICE.hongbao.custom.diePlate : PRICE.diecutPlate });
   if(S.diecut)   plateRows.push({ name:'特殊刀模費', note:'一式', v:PRICE.diecutPlate });
 
   // ⑤ 放損：每過一道加工要多備料試機對位。燙金是「每塊版各上機一次」，所以照版數算層
@@ -1932,6 +2162,45 @@ function calc(){
   var aiCost = aiN * PRICE.aiConvert;   // 一次性費用，不隨份數跑
   if(aiCost) plateRows.push({ name:'圖檔轉印刷檔', note:aiN + ' 張 × ' + PRICE.aiConvert + ' 元', v:aiCost });
 
+  /* ⑥ 全客製的軋型工資：照 後加工\軋型.md 的木刀階梯（每張單價 × 張數，未達基本費收基本費）。
+     「張」在這裡＝一個紅包袋（刀模一次軋一個 22×27 的料）。 */
+  if(artMode()){
+    var C = PRICE.hongbao.custom;
+    var dcRate  = tierOf(C.diecutLabor.tiers, qty).unit;
+    var dcLabor = Math.max(C.diecutLabor.min, Math.round(qty * dcRate));
+    plateRows.push({
+      name:'軋型工資',
+      note:'每個 ' + dcRate.toFixed(2) + ' 元 × ' + qty.toLocaleString('en-US') + ' 個' +
+           (qty * dcRate < C.diecutLabor.min ? '，未達基本費 ' + money(C.diecutLabor.min) + '，收基本費' : ''),
+      v: dcLabor
+    });
+  }
+
+  /* ⑦ OPP 透明袋（老闆 2026-11-18）：加購才算。
+     袋型跟著蓋型自動判定（平頭蓋→短袋 1 元、花頭蓋／圓頭蓋→長袋 1.25 元），
+     一個袋子最多裝 5 個 → 袋數＝⌈數量 ÷ 5⌉。代裝服務每袋 3 元。 */
+  var oppBags = 0, oppKindKey = oppKind();
+  if(S.opp && S.product === 'hongbao'){
+    var O = PRICE.opp, kind = O[oppKindKey];
+    oppBags = Math.ceil(qty / O.per);
+    plateRows.push({
+      name:'OPP 透明袋（' + kind.name + '）',
+      note: oppBags.toLocaleString('en-US') + ' 個袋 × ' + kind.price.toFixed(2) + ' 元' +
+            '（每袋最多裝 ' + O.per + ' 個，' + flapCfg().name + '配' + kind.name + '）',
+      v: oppBags * kind.price
+    });
+    if(S.oppPack){
+      var packN = O.packPer === 'piece' ? qty : oppBags;
+      plateRows.push({
+        name:'代裝服務',
+        note:'我們幫您裝進袋子，每裝一' + (O.packPer === 'piece' ? '個' : '袋') + ' ' +
+             O.packFee + ' 元 × ' + packN.toLocaleString('en-US') +
+             (O.packPer === 'piece' ? ' 個' : ' 袋'),
+        v: packN * O.packFee
+      });
+    }
+  }
+
   var oneOff = plateRows.reduce(function(s, r){ return s + r.v }, 0);
   var sub = printCost + oneOff;
   var ship = (S.ship === 'self' || sub >= PRICE.freeShipOver) ? 0 : PRICE.shipFee[S.ship];
@@ -1940,7 +2209,8 @@ function calc(){
   return {
     qty:qty, big:qty > PRICE.bigOrderQty,
     tier:tier, unit:unit, paperUnit:paperUnit, fixedPaper:fixedPaper, matF:mat.f, typeF:tf,
-    procRows:procRows, regUnit:regUnit, plateRows:plateRows, layers:layers, spoilQty:spoilQty,
+    procRows:procRows, unitRows:unitRows, regUnit:regUnit, plateRows:plateRows,
+    layers:layers, spoilQty:spoilQty, oppBags:oppBags, oppKind:oppKindKey,
     printCost:printCost, oneOff:oneOff, aiN:aiN, aiCost:aiCost,
     sub:sub, ship:ship, total:total, tax:total * PRICE.taxRate
   };
@@ -1948,7 +2218,29 @@ function calc(){
 /* 有填（且填對）統編＝要開三聯式發票，金額要加 5% 稅；
    留空＝不開發票，收未稅價（老闆 2026-11-17）。 */
 function wantInvoice(){ return /^\d{8}$/.test(val('oVat')) }
+/* OPP 袋那張卡的說明文字：袋型、單價、要幾個袋、大概多少錢（老闆 2026-11-18）。
+   數量與蓋型一改就要跟著變，所以每次 renderPrice 都重算一次。 */
+function applyOppUI(){
+  var box = $('oppBox');
+  if(!box) return;
+  var hb = S.product === 'hongbao';
+  box.classList.toggle('hidden', !hb);          // 春聯沒有這種袋子
+  if(!hb) return;
+  var O = PRICE.opp, kind = O[oppKind()];
+  var qty = Math.max(moq(), S.qty || moq());
+  var bags = Math.ceil(qty / O.per);
+  $('oppNote').innerHTML =
+    '紅包袋專用的透明袋，整批送人或轉送時比較挺、也不怕壓到。<br>' +
+    '您這個蓋型（' + flapCfg().name + '）配<span class="text-gold-light">' + kind.name + '</span>，' +
+    '每個 ' + kind.price.toFixed(2) + ' 元，一個袋子最多裝 ' + O.per + ' 個紅包袋；' +
+    qty.toLocaleString('en-US') + ' 個要 <span class="text-gold-light">' +
+    bags.toLocaleString('en-US') + ' 個袋＝' + money(bags * kind.price) + '</span>。';
+  $('oppPackWrap').classList.toggle('hidden', !S.opp);
+  $('oppChk').checked = !!S.opp;
+}
+
 function renderPrice(){
+  applyOppUI();
   var q = calc();
   var rows = [];
   var mat = matCfg();
@@ -1957,10 +2249,23 @@ function renderPrice(){
     : PRICE.hongbao.layouts[S.hbLayout].name + '・' + flapCfg().name + '・';
 
   var n = q.qty.toLocaleString('en-US');
-  rows.push(['紙材（' + typeTxt + mat.name + '）', n + ' 份 × ' + q.paperUnit.toFixed(2) + ' 元', q.paperUnit * q.qty]);
+  /* 全客製是「大紙牌價 ÷ 落數」，所以這一行要把算式寫出來，客人才知道錢花在哪
+     （老闆 2026-11-18 的指示就是照刀模 22×27 抓幾張美術紙來算）。 */
+  var paperNote = n + ' 份 × ' + q.paperUnit.toFixed(2) + ' 元';
+  if(mat.art && mat.art.ups){
+    var A = mat.art, B = PRICE.hongbao.custom.dieBlank;
+    paperNote = '大紙 ' + (A.sheet.label || ((A.sheet.h / 10) + '×' + (A.sheet.w / 10) + 'cm')) +
+                ' 每張 ' + A.grade.price + ' 元 ÷ 一張軋 ' + A.ups + ' 個（刀模用紙 ' +
+                B.w + '×' + B.h + 'cm）＝ 每個 ' + q.paperUnit.toFixed(2) + ' 元　× ' + n + ' 個';
+  }
+  rows.push(['紙材（' + typeTxt + mat.name + '）', paperNote, q.paperUnit * q.qty]);
   q.procRows.forEach(function(p){
     if(p.quote){ rows.push([p.name, p.note, null]); return }   // null ＝ 顯示「另行報價」
     rows.push([p.name + '工費', p.note + '　× ' + n + ' 份', p.unit * q.qty]);
+  });
+  // 糊型這類「按個數算、但不是工序」的項目，也要各自列一行（老闆 2026-11-18）
+  q.unitRows.forEach(function(r){
+    rows.push([r.name, r.note + '　× ' + n + ' 個', r.unit * q.qty]);
   });
   if(q.regUnit) rows.push(['套準', '每份 ' + q.regUnit.toFixed(2) + ' 元 × ' + n + ' 份', q.regUnit * q.qty]);
   q.plateRows.forEach(function(p){ rows.push([p.name, p.note, p.v]) });
@@ -2269,12 +2574,20 @@ function applyModeUI(){
 
   /* 同一個位置兩種選單：公版挑「款式」（紙材跟著走）、全客製挑「紙張材質」。
      老闆 2026-10-12 指定把公版款式放到這裡、用下拉式。 */
+  /* 同一個位置三種選單（2026-11-18 起）：
+       公版紅包袋 → 款式選單（紙材跟著款式走）
+       全客製紅包袋 → 美術紙選單（搜尋＋紙名＋克數，papers.js）
+       春聯 → 原本那份紙材選單 */
   var pickStock = hb && stock;
+  var pickArt   = hb && !stock;
   $('matLabel').textContent = pickStock ? '公版款式' : '紙張材質';
-  $('matLabel').setAttribute('for', pickStock ? 'stockSel' : 'matSel');
+  $('matLabel').setAttribute('for', pickStock ? 'stockSel' : (pickArt ? 'artSel' : 'matSel'));
   $('stockSel').classList.toggle('hidden', !pickStock);
-  $('matSel').classList.toggle('hidden', pickStock);
+  $('artBox').classList.toggle('hidden', !pickArt);
+  $('matSel').classList.toggle('hidden', pickStock || pickArt);
+  if(pickArt) buildArtSelect();
   buildMaterialSelect();
+  applyDieBox();
 
   // 刀模形狀：只有全客製才「選」；公版是現成款式，跟著尺寸走
   applyFlapUI();
@@ -2386,6 +2699,37 @@ $('matSel').addEventListener('change', function(){
   S.material = this.value;
   $('matDesc').textContent = matCfg().desc;
   update();
+});
+/* 全客製的美術紙選單（papers.js）：搜尋 → 紙名 → 克數 */
+$('artSearch').addEventListener('input', function(){
+  S.artQuery = this.value;
+  buildArtSelect();
+  $('matDesc').textContent = artMat().desc;
+  update();
+});
+$('artSel').addEventListener('change', function(){
+  S.artPaper = +this.value;
+  S.artGrade = 0;                       // 換紙就回到第一個克數，免得指到不存在的克數
+  buildArtSelect();
+  $('matDesc').textContent = artMat().desc;
+  update();
+});
+$('artGradeSel').addEventListener('change', function(){
+  S.artGrade = +this.value;
+  buildArtSelect();
+  $('matDesc').textContent = artMat().desc;
+  update();
+});
+/* OPP 透明袋與代裝（老闆 2026-11-18）：沒加購袋子就不給勾代裝 */
+$('oppChk').addEventListener('change', function(){
+  S.opp = this.checked;
+  if(!S.opp){ S.oppPack = false; $('oppPackChk').checked = false }
+  applyOppUI();
+  renderPrice();
+});
+$('oppPackChk').addEventListener('change', function(){
+  S.oppPack = this.checked;
+  renderPrice();
 });
 // 燙印版列表（動態產生，用委派）
 $('plateList').addEventListener('change', function(e){
@@ -2625,6 +2969,18 @@ function orderText(no){
   L.push('‧規格：' + specText());
   L.push('‧加工方式：' + craftName());
   L.push('‧材質：' + matCfg().name);
+  // 全客製是按大紙落數算的，把落數一起報出去，工廠備料跟客人對帳都用得上
+  if(artMode() && artUps()){
+    L.push('　（大紙 ' + (artMat().art.sheet.label || '—') + ' 每張 ' + artGradeObj().price +
+           ' 元，一張軋 ' + artUps() + ' 個；糊型每個 ' + PRICE.hongbao.custom.glueUnit + ' 元）');
+  }
+  if(S.opp && S.product === 'hongbao'){
+    var oK = PRICE.opp[oppKind()];
+    var oQ = Math.max(moq(), S.qty || moq());
+    L.push('‧OPP 透明袋：' + oK.name + ' × ' + Math.ceil(oQ / PRICE.opp.per) +
+           ' 個（每袋裝 ' + PRICE.opp.per + ' 個，每個 ' + oK.price.toFixed(2) + ' 元）' +
+           (S.oppPack ? '＋代裝服務' : '（不代裝，分開寄）'));
+  }
   if(hasProc('foil')){
     L.push('‧燙印版：共 ' + S.plates.length + ' 塊（每色一塊，各自計價）');
     S.plates.forEach(function(p, i){
@@ -2804,6 +3160,19 @@ if(document.fonts && document.fonts.ready) document.fonts.ready.then(fitStage);
 /* ── 啟動 ─────────────────────────────────────────────────────────── */
 if(DRAFT_PRICING) $('draftBar').classList.remove('hidden');
 $('favicon').href = cssUrl('--logo-mark');
+/* 全客製的預設紙：日本雅子 140g —— 老闆 2026-11-18 一開口就是長瑩的雅子系列。
+   用紙名找索引，這樣 papers.js 整包換掉、順序變了也不會指錯紙。 */
+(function(){
+  for(var i = 0; i < ART_PAPERS.length; i++){
+    if(ART_PAPERS[i].name === '日本雅子'){
+      S.artPaper = i;
+      for(var j = 0; j < ART_PAPERS[i].grades.length; j++){
+        if(ART_PAPERS[i].grades[j].g === '140g') S.artGrade = j;
+      }
+      break;
+    }
+  }
+})();
 buildFlaps();
 buildHbSizes();
 applyModeUI();           // 公版／全客製要先定，底下才知道哪些能選
