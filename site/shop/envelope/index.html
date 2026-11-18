@@ -513,7 +513,8 @@ section[id]{ scroll-margin-top:76px }
                    onload="this.closest('figure').style.display=''"
                    onerror="this.closest('figure').remove()">
               <figcaption class="mt-1.5 text-[11.5px] text-[#8F8674] leading-5">
-                刀模展開圖。虛線內為可燙金範圍。
+                我們這支刀模的展開圖。<span class="text-crimson-soft">紅色虛線內</span>是可燙金範圍，
+                綠線是成品正面的摺線。要出稿可以直接照這張的比例擺圖。
               </figcaption>
             </figure>
             <p id="dieNote" class="text-[12px] text-[#8F8674] mt-2 leading-5"></p>
@@ -1023,12 +1024,24 @@ var PRICE = {
          這兩個數字一改，全部紙的落數與單價都會自動重算（算式在 papers.js 的 upsOnSheet）。
          ⚠️ 老闆要傳刀模圖過來，圖到了對一下這個尺寸，順便把可燙金範圍標上去。 */
       dieBlank: { w:22, h:27 },
+      /* ★ 2026-11-18 老闆傳來刀模檔（F:\桌面\喜成圓口紅包袋.ai，已存 紅包袋春聯\刀模-喜成圓口紅包袋.ai）。
+         從檔案量到的實際數字：
+           展開外框（含蓋頭、底摺、黏合舌）＝ 19.8 × 24.7 公分
+           成品正面（綠色摺線框）　　　　　＝ 9 × 18 公分（不含蓋頭）→ 跟公版 18×9 同規格
+           蓋型＝圓頭蓋；背面有半圓拇指開口
+         老闆說的「22 × 27 公分」是**備料尺寸**（展開外框再加裁切與咬口邊），落數照這個抓沒錯。
+         可燙金安全範圍＝成品正面四邊各內縮 0.5 公分 ＝ 8 × 17 公分（136 平方公分）。
+         ⚠️ 這只是「畫得下」的範圍；工費分檔仍看 foilArea 的 90 平方公分（6×15），超過算滿版那檔。 */
+      dieOuter: { w:19.8, h:24.7 },
+      dieFront: { w:9, h:18 },
+      foilSafe: { w:8, h:17 },
       glueUnit: 3,          // 糊型（成型）每個 3 元 —— 老闆 2026-11-18 給的確定值
-      /* 軋型工資：照 後加工\軋型.md 的「木刀（A5 以上～菊全內，喜成自做）」那段。
-         紅包袋落版 22×27 ＝ 594 cm²（> A5 310.8），每張單價依張數階梯、未達基本費收基本費。
-         ⚠️ 老闆 2026-11-18 沒有另外講紅包袋的軋型工資，這裡是直接引用公司現成的軋型積木，
-            不是我自己編的數字；若紅包袋另有行情價，改這裡就好。 */
-      diecutLabor: { tiers:{ 1:1.5, 1500:1.2, 3000:1.0, 5000:0.8, 10000:0.6 }, min:1500 },
+      /* ★ 軋型工資（老闆 2026-11-18 第二次補的**確定值**，紅包袋專屬）：
+           「紅包袋軋型基本費用是 1200，軋一個 2 元」
+         → 工資 ＝ max(1200, 個數 × 2)，照公司一貫的「單價工資 vs 基本費取大」算法
+           （與 後加工\軋型.md 同一套寫法，只是紅包袋的數字不同：1,200 不是 1,500、每個 2 元不走階梯）。
+         ⚠️ 原本我先引用了軋型積木的木刀階梯（1.5 元起、基本費 1,500），已被這組數字取代，別再用舊的。 */
+      diecutLabor: { unit:2, min:1200 },
       /* 新開刀模費：同一份軋型積木的面積分級，594 cm² 落在「＞310.8 ～ ≤1,073（約 8K）」→ 1,200。
          我們現成那支刀模（老闆 2026-11-18 確認有）就不收這筆。 */
       diePlate: 1200
@@ -1698,13 +1711,16 @@ function applyDieBox(){
   if(!box) return;
   box.classList.toggle('hidden', !artMode());
   if(!artMode()) return;
-  var B = PRICE.hongbao.custom.dieBlank, FA = PRICE.hongbao.foilArea;
+  var C = PRICE.hongbao.custom, FA = PRICE.hongbao.foilArea;
   var f = flapCfg();
   $('dieNote').innerHTML =
-    '展開後用紙 <span class="text-gold-light">' + B.w + ' × ' + B.h + ' 公分</span>' +
-    '（一個紅包袋吃掉這麼大一塊紙，上面的每個紙錢就是照這個尺寸排出來的）。<br>' +
-    '可燙金範圍：袋身正面 <span class="text-gold-light">' + FA.label +
-    '（' + FA.cm2 + ' 平方公分）</span>以內算「正常面積」，超出去就跳到滿版那一檔；' +
+    '成品 <span class="text-gold-light">' + C.dieFront.w + ' × ' + C.dieFront.h + ' 公分</span>（不含蓋頭）、圓頭蓋；' +
+    '展開外框 ' + C.dieOuter.w + ' × ' + C.dieOuter.h + ' 公分，' +
+    '加上裁切與咬口邊，一個要用掉 <span class="text-gold-light">' + C.dieBlank.w + ' × ' + C.dieBlank.h +
+    ' 公分</span>的紙——上面的每個紙錢就是照這個尺寸排出來的。<br>' +
+    '<span class="text-gold-light">可燙金範圍：正面 ' + C.foilSafe.w + ' × ' + C.foilSafe.h +
+    ' 公分</span>（圖上紅色虛線內，四邊各留 0.5 公分避開摺線與裁切誤差）。' +
+    '燙印面積在 ' + FA.label + '（' + FA.cm2 + ' 平方公分）以內算「正常面積」，超過就跳到滿版那一檔；' +
     (f.canPrint ? '蓋面也可以另外燙，算另一塊版。' : '平頭蓋沒有蓋面可燙，只燙袋身。') + '<br>' +
     (f.die ? '這個蓋型用我們現成的刀模，<span class="text-gold-light">不收刀模費</span>。'
            : '這個蓋型我們沒有現成刀模，要新開一支（下面明細會列出來）。') +
@@ -2169,7 +2185,7 @@ function calc(){
      「張」在這裡＝一個紅包袋（刀模一次軋一個 22×27 的料）。 */
   if(artMode()){
     var C = PRICE.hongbao.custom;
-    var dcRate  = tierOf(C.diecutLabor.tiers, qty).unit;
+    var dcRate  = C.diecutLabor.unit;
     var dcLabor = Math.max(C.diecutLabor.min, Math.round(qty * dcRate));
     plateRows.push({
       name:'軋型工資',
