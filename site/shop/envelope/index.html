@@ -1456,12 +1456,14 @@ function artMat(){
     unit: ups ? g.price / ups : 0,       // 落數抓不到（0）時，計價端會轉成「請洽 LINE」
     f: 1.00, css: 'm-art',
     art: { paper:p, grade:g, ups:ups, sheet:sh },
+    /* ⚠️ 老闆 2026-11-18：「紙錢不用顯示出來」——
+       每個紙錢、大紙牌價、一張軋幾個，這三個擺出來等於把成本算式給客人看，全部收起來。
+       數字照算不變，只是不顯示；要看成本請開 DevTools 看 calc() 或回頭查這份原始碼。 */
     desc: ups
-      ? '大紙 ' + (sh.label || ((sh.h / 10) + ' × ' + (sh.w / 10) + ' cm')) +
-        '，整張牌價 ' + g.price + ' 元；按刀模 ' + B.w + ' × ' + B.h +
-        ' 公分排版，一張大紙軋 ' + ups + ' 個 → 每個紙錢 ' + (g.price / ups).toFixed(2) + ' 元。' +
-        (sh.est ? '⚠ 這款紙的大紙尺寸我們還要跟紙廠確認，落數先抓保守值，實際報價會再修。' : '')
-      : '這款紙的大紙尺寸還沒建進系統，線上算不出來，請用官方 LINE 問我們。'
+      ? '選好紙與克數，下面的價格會自動更新。' +
+        (sh.est ? '⚠ 這款紙我們要再跟紙廠確認一次規格，線上金額僅供參考，實際報價會再修。'
+                : '想看實際紙樣或摸摸看手感，用官方 LINE 跟我們說，可以寄紙樣給您。')
+      : '這款紙的規格還沒建進系統，線上算不出來，請用官方 LINE 問我們。'
   };
 }
 /* OPP 袋型跟著蓋型走：平頭蓋用短袋，中式花頭蓋／圓頭蓋（與西式那兩款）用長袋。
@@ -1653,7 +1655,7 @@ function buildMaterialSelect(){
       PRICE.hongbao.flaps[s.flap].name + '，' + s.spec + '；用紙是' + ms[s.paper].name + '。' +
       '紙材與蓋型都隨款式固定，要自己挑紙、指定刀模請改選「全客製」。';
   } else if(artMode()){
-    // 全客製：說明文字由 artMat() 產生（大紙尺寸、牌價、落數、每個紙錢）
+    // 全客製：說明文字由 artMat() 產生（2026-11-18 起不含任何成本數字）
     $('matDesc').textContent = artMat().desc;
   } else {
     $('matDesc').textContent = ms[S.material].desc;
@@ -1688,18 +1690,18 @@ function buildArtSelect(){
     }).join('') + '</optgroup>';
   }).join('');
 
-  // 克數選單：順便把「每個紙錢」寫在選項裡，客人不用算
+  /* 克數選單：只出克數。
+     ⚠️ 老闆 2026-11-18：「紙錢不用顯示出來」——原本這裡寫「每個紙錢 X 元」，已拿掉。
+     算不出落數的紙（規格還沒建）才標一句，免得客人選了看不懂為什麼沒價。 */
   var p = artPaperObj(), B = PRICE.hongbao.custom.dieBlank;
   if(S.artGrade >= p.grades.length) S.artGrade = 0;
   $('artGradeSel').innerHTML = p.grades.map(function(g, i){
     var ups = upsOnSheet(g.perBig, B.w, B.h);
     return '<option value="' + i + '"' + (i === S.artGrade ? ' selected' : '') + '>' +
-           g.g + (ups ? '｜每個紙錢 ' + (g.price / ups).toFixed(2) + ' 元' : '｜請洽 LINE') +
-           '</option>';
+           g.g + (ups ? '' : '｜需另詢') + '</option>';
   }).join('');
 
-  var ups = artUps();
-  $('artUps').textContent = ups ? '一張大紙軋 ' + ups + ' 個' : '';
+  $('artUps').textContent = '';   // 原本寫「一張大紙軋 N 個」，同上，不對客人顯示
   $('artSearch').placeholder = '搜尋紙名（共 ' + ART_PAPERS.length + ' 款）';
   if(noHit && qy) $('artUps').textContent = '找不到「' + qy + '」，先列出全部';
 }
@@ -1719,7 +1721,7 @@ function applyDieBox(){
     '成品 <span class="text-gold-light">' + C.dieFront.w + ' × ' + C.dieFront.h + ' 公分</span>（不含蓋頭）、圓頭蓋；' +
     '展開外框 ' + C.dieOuter.w + ' × ' + C.dieOuter.h + ' 公分，' +
     '加上裁切與咬口邊，一個要用掉 <span class="text-gold-light">' + C.dieBlank.w + ' × ' + C.dieBlank.h +
-    ' 公分</span>的紙——上面的每個紙錢就是照這個尺寸排出來的。<br>' +
+    ' 公分</span>的紙。<br>' +
     '<span class="text-gold-light">可燙金／打凸範圍：除了糊邊，整張都可以做</span>' +
     '——正面、背面、蓋頭都行，只有圖上塗灰的那兩塊糊邊（右側窄條與底摺，各約 ' +
     C.glueEdgeCm + ' 公分寬）不能壓，壓了會黏不牢。<br>' +
@@ -2271,15 +2273,11 @@ function renderPrice(){
     : PRICE.hongbao.layouts[S.hbLayout].name + '・' + flapCfg().name + '・';
 
   var n = q.qty.toLocaleString('en-US');
-  /* 全客製是「大紙牌價 ÷ 落數」，所以這一行要把算式寫出來，客人才知道錢花在哪
-     （老闆 2026-11-18 的指示就是照刀模 22×27 抓幾張美術紙來算）。 */
+  /* ⚠️ 老闆 2026-11-18：「紙錢不用顯示出來」。
+     全客製這一行原本會寫出「大紙每張 X 元 ÷ 一張軋 N 個 ＝ 每個 Y 元」整串算式，已改成只寫數量。
+     公版那邊維持原本的「N 份 × 單價」（那是老闆自己報給客人的成品袋價，可以公開）。 */
   var paperNote = n + ' 份 × ' + q.paperUnit.toFixed(2) + ' 元';
-  if(mat.art && mat.art.ups){
-    var A = mat.art, B = PRICE.hongbao.custom.dieBlank;
-    paperNote = '大紙 ' + (A.sheet.label || ((A.sheet.h / 10) + '×' + (A.sheet.w / 10) + 'cm')) +
-                ' 每張 ' + A.grade.price + ' 元 ÷ 一張軋 ' + A.ups + ' 個（刀模用紙 ' +
-                B.w + '×' + B.h + 'cm）＝ 每個 ' + q.paperUnit.toFixed(2) + ' 元　× ' + n + ' 個';
-  }
+  if(mat.art) paperNote = n + ' 個　' + mat.name;
   rows.push(['紙材（' + typeTxt + mat.name + '）', paperNote, q.paperUnit * q.qty]);
   q.procRows.forEach(function(p){
     if(p.quote){ rows.push([p.name, p.note, null]); return }   // null ＝ 顯示「另行報價」
@@ -3001,11 +2999,7 @@ function orderText(no){
   L.push('‧規格：' + specText());
   L.push('‧加工方式：' + craftName());
   L.push('‧材質：' + matCfg().name);
-  // 全客製是按大紙落數算的，把落數一起報出去，工廠備料跟客人對帳都用得上
-  if(artMode() && artUps()){
-    L.push('　（大紙 ' + (artMat().art.sheet.label || '—') + ' 每張 ' + artGradeObj().price +
-           ' 元，一張軋 ' + artUps() + ' 個；糊型每個 ' + PRICE.hongbao.custom.glueUnit + ' 元）');
-  }
+  // ⚠️ 老闆 2026-11-18：紙錢（含牌價與落數）不對客人顯示 → 這份複製給 LINE 的內容也不寫
   if(S.opp && S.product === 'hongbao'){
     var oK = PRICE.opp[oppKind()];
     var oQ = Math.max(moq(), S.qty || moq());
