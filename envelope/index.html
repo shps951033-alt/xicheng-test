@@ -109,6 +109,16 @@ body{ background:#12100C; color:#EDE4D3 }
   .foil-text,.foil-mask,.glare::after,.hero-sheen{ animation:none !important }
 }
 
+/* ── 預覽上可拖曳的圖文（老闆 2026-11-18）──────────────────────────── */
+/* 客人自己把 Logo 與吉祥話拖到想要的位置，拖完的座標會寫進訂單明細，
+   我們排版時照這個位置做。touch-action:none 是手機能拖的關鍵（不然會變成捲頁）。 */
+.pv-item{ position:absolute; transform:translate(-50%,-50%); cursor:grab;
+          touch-action:none; white-space:nowrap; user-select:none; -webkit-user-select:none }
+.pv-item:active{ cursor:grabbing }
+.pv-item.sel::after{ content:''; position:absolute; inset:-9px -11px; border-radius:6px;
+                     border:1px dashed rgba(240,220,168,.65); pointer-events:none }
+.pv-face{ touch-action:none }
+
 /* ── 紙材質感 ──────────────────────────────────────────────────────── */
 /* 鳳花紋 80g：紅底壓花紋，花形錯位排列，燙金壓下去紋理會更明顯 */
 .m-fenghua{ background:
@@ -675,6 +685,23 @@ section[id]{ scroll-margin-top:76px }
           <!-- stageInner 是「縮放後的版面框」，stageArt 才是原尺寸作品（見 fitStage） -->
           <div id="stageInner"><div id="stageArt"><!-- JS 產生作品 --></div></div>
         </div>
+        <!-- 擺字區（老闆 2026-11-18）：加吉祥話、拖到想要的位置；選中的那個可以換面／改字級／刪除 -->
+        <div id="placeBox" class="px-4 py-3 border-t border-ink-3">
+          <div class="flex items-center justify-between gap-3 flex-wrap">
+            <span class="text-[12px] text-gold-dim">加字放上去，直接用手指或滑鼠拖到喜歡的位置</span>
+            <div class="flex gap-1.5 flex-wrap" id="greetBtns"><!-- JS 產生 --></div>
+          </div>
+          <div id="itemBar" class="hidden mt-3 pt-3 border-t border-ink-3 flex items-center gap-2 flex-wrap">
+            <span class="text-[12px] text-[#EDE4D3] font-bold" id="itemName"></span>
+            <span class="text-[11.5px] text-[#7E7565]" id="itemPos"></span>
+            <span class="flex-1"></span>
+            <button type="button" id="itemSmall" class="chip !px-2.5 !py-1 !text-[12px]">縮小</button>
+            <button type="button" id="itemBig"   class="chip !px-2.5 !py-1 !text-[12px]">放大</button>
+            <button type="button" id="itemFace"  class="chip !px-2.5 !py-1 !text-[12px]">移到背面</button>
+            <button type="button" id="itemDel"
+              class="chip !px-2.5 !py-1 !text-[12px] !text-crimson-soft">刪除</button>
+          </div>
+        </div>
         <div class="px-4 py-3 border-t border-ink-3 flex items-center justify-between gap-3">
           <p id="specLine" class="text-[12px] text-[#8F8674] leading-5"></p>
           <span class="text-[11px] text-[#6E6558] shrink-0">※ 螢幕色彩僅供示意</span>
@@ -1038,6 +1065,11 @@ var PRICE = {
       dieFront: { w:9, h:18 },
       glueEdgeCm: 1.8,
       glueUnit: 3,          // 糊型（成型）每個 3 元 —— 老闆 2026-11-18 給的確定值
+      /* ★ 數位印刷（老闆 2026-11-18 的確定值）：「以 22*27 的紙大下去印，印一張要 12 元」
+         → 一張 22×27 ＝ 一個紅包袋，所以全客製的數位印就是**每個 12 元、沒有數量級距**。
+         雙面＝再過一次機，照舊 ×2。
+         ⚠️ 公版那邊維持原本的級距表（procUnit.digital）——公版是成型袋、走的機器與算法不同。 */
+      digitalUnit: 12,
       /* ★ 軋型工資（老闆 2026-11-18 第二次補的**確定值**，紅包袋專屬）：
            「紅包袋軋型基本費用是 1200，軋一個 2 元」
          → 工資 ＝ max(1200, 個數 × 2)，照公司一貫的「單價工資 vs 基本費取大」算法
@@ -1368,6 +1400,10 @@ var S = {
   debossPlates:[ { area:90, full:false } ],
   /* OPP 透明袋（老闆 2026-11-18）：加購才算；代裝服務要先加購袋子才有意義 */
   opp:false, oppPack:false,
+  /* 預覽上可拖曳的圖文（老闆 2026-11-18：「示範圖 增加可以隨意滑動擺放位置，
+     可以增加 新年快樂／恭禧發財／happy new year 的文字 讓客人自行擺放」）。
+     x,y ＝ 在那一面上的相對位置（0～1），跟預覽縮放無關，直接寫進訂單明細給我們排版用。 */
+  items:[], sel:null, itemSeq:0,
   logo:null, logoRaw:null, logoType:'', logoName:'', knock:true, logoSize:46, logoDemo:false, logoAR:0.55,
   sides:'single', plate:'zinc', area:25, qty:500,
   emboss:false, diecut:false, aiConv:false, aiQty:1,
@@ -1804,6 +1840,93 @@ function patternArt(size){
   var p = PATTERNS[S.pattern];
   return p && p.svg ? svgWrap(p.svg, size) : '';
 }
+/* ── 預覽上可拖曳的圖文（老闆 2026-11-18）────────────────────────────
+   客人可以自己加吉祥話、連同上傳的 Logo 一起拖到想要的位置；
+   拖完的座標（相對 0～1）會寫進訂單明細，我們照那個位置排版。
+   ⚠️ 位置只是「客人想要的擺法」，實際完稿仍由我們對齊摺線與安全邊。 */
+var GREETINGS = [ '新年快樂', '恭禧發財', 'HAPPY NEW YEAR' ];
+function itemById(id){ return S.items.filter(function(i){ return i.id === id })[0] }
+function itemsOn(face){ return S.items.filter(function(i){ return i.face === face }) }
+function addItem(type, txt){
+  var it = { id:'i' + (++S.itemSeq), type:type, txt:txt || '', face:'front',
+             x:0.5, y:type === 'logo' ? 0.5 : 0.26,
+             size: type === 'logo' ? S.logoSize : 26 };
+  // 後加的往下挪一點，不然全疊在同一個點看不出來
+  var n = itemsOn('front').length;
+  if(n) it.y = Math.min(0.9, it.y + n * 0.14);
+  S.items.push(it);
+  S.sel = it.id;
+  return it;
+}
+function removeItem(id){
+  S.items = S.items.filter(function(i){ return i.id !== id });
+  if(S.sel === id) S.sel = null;
+}
+function itemHtml(it){
+  var inner = it.type === 'logo'
+    ? logoArt(Math.round(it.size * 2.6))
+    : '<span style="font-size:' + it.size + 'px;line-height:1.15;letter-spacing:.08em;' +
+      "font-weight:700;font-family:'Noto Serif TC','標楷體',serif" + '">' + esc(it.txt) + '</span>';
+  return '<div class="pv-item' + (S.sel === it.id ? ' sel' : '') + '" data-item="' + it.id + '" ' +
+           'style="left:' + (it.x * 100).toFixed(2) + '%;top:' + (it.y * 100).toFixed(2) + '%">' +
+           paint(inner, 'main') +
+         '</div>';
+}
+function faceHtml(face){ return itemsOn(face).map(itemHtml).join('') }
+
+/* 拖曳：用事件委派掛在舞台上，重繪後不必重新綁。
+   位置用「指標在那一面上的百分比」算，所以 fitStage 把舞台縮放過也不受影響
+   （getBoundingClientRect 量到的本來就是縮放後的實際大小）。 */
+var drag = null;
+function bindDrag(){
+  var stage = $('stageArt');
+  stage.addEventListener('pointerdown', function(e){
+    var el = e.target.closest('.pv-item');
+    if(!el){ if(S.sel){ S.sel = null; renderPreview(); renderItemBar() } return }
+    var it = itemById(el.getAttribute('data-item'));
+    if(!it) return;
+    var face = el.closest('.pv-face');
+    if(!face) return;
+    drag = { it:it, el:el, face:face };
+    S.sel = it.id;
+    el.setPointerCapture && el.setPointerCapture(e.pointerId);
+    document.querySelectorAll('.pv-item.sel').forEach(function(n){ n.classList.remove('sel') });
+    el.classList.add('sel');
+    renderItemBar();
+    e.preventDefault();
+  });
+  stage.addEventListener('pointermove', function(e){
+    if(!drag) return;
+    var r = drag.face.getBoundingClientRect();
+    if(!r.width || !r.height) return;
+    var x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+    drag.it.x = Math.min(0.96, Math.max(0.04, x));
+    drag.it.y = Math.min(0.96, Math.max(0.04, y));
+    drag.el.style.left = (drag.it.x * 100).toFixed(2) + '%';
+    drag.el.style.top  = (drag.it.y * 100).toFixed(2) + '%';
+    e.preventDefault();
+  });
+  function endDrag(){
+    if(!drag) return;
+    drag = null;
+    renderItemBar();          // 放開才更新下面的位置文字，拖的時候不要一直重排
+  }
+  stage.addEventListener('pointerup', endDrag);
+  stage.addEventListener('pointercancel', endDrag);
+}
+
+/* 選中的那個圖文：下面那排小工具（換面、字級、刪除） */
+function renderItemBar(){
+  var bar = $('itemBar');
+  if(!bar) return;
+  var it = S.sel ? itemById(S.sel) : null;
+  bar.classList.toggle('hidden', !it);
+  if(!it) return;
+  $('itemName').textContent = it.type === 'logo' ? '您的圖檔' : it.txt;
+  $('itemPos').textContent = (it.face === 'front' ? '正面' : '背面') +
+    '　左右 ' + Math.round(it.x * 100) + '%　上下 ' + Math.round(it.y * 100) + '%';
+  $('itemFace').textContent = it.face === 'front' ? '移到背面' : '移到正面';
+}
 function logoArt(w){
   if(!S.logo) return '';
   // 用圖檔自己的長寬比，直式 Logo 才不會被壓在扁框裡（上限 2.2 倍避免超高圖撐破版面）
@@ -1911,8 +2034,9 @@ function envelopeArt(w, flapH, bodyH, matCss, flapInner, bodyInner){
              Math.round(flapH * 0.12) + 'px;height:' + Math.round(flapH * 0.88) + 'px">' +
                '<span style="display:inline-block;transform:rotate(180deg)">' + flapInner + '</span>' +
              '</div>' : '') +
-           // 袋身正面內容
-           '<div class="absolute" style="left:0;top:' + flapH + 'px;width:' + w + 'px;height:' + bodyH + 'px">' +
+           // 袋身正面內容（pv-face ＝ 可拖曳圖文的落點範圍）
+           '<div class="absolute pv-face" data-face="front" style="left:0;top:' + flapH + 'px;width:' +
+             w + 'px;height:' + bodyH + 'px">' +
              bodyInner +
            '</div>' +
          '</div>';
@@ -1931,7 +2055,8 @@ function backArt(w, h, matCss, inner){
                'fill="none" stroke="rgba(255,235,205,.26)" stroke-width="1.4"/>' +
              '<path d="M ' + (cx - r) + ' ' + ty + ' a ' + r + ' ' + r + ' 0 0 1 ' + (r * 2) + ' 0" ' +
                'fill="none" stroke="rgba(255,235,205,.22)" stroke-width="1.2"/>' +
-           '</svg>' + (inner || '') +
+           '</svg>' +
+           '<div class="absolute inset-0 pv-face" data-face="back">' + (inner || '') + '</div>' +
          '</div>';
 }
 function flapCfg(){ return PRICE.hongbao.flaps[S.hbFlap] }
@@ -1965,20 +2090,20 @@ function renderPreview(){
     else    { W = 300; H = Math.round(300 * ratio) }
     var flapH = Math.round(flapRise(S.hbFlap, land ? H : W, sz));
 
-    var logo = S.logo ? paint(logoArt(Math.round(S.logoSize * (land ? 3.2 : 2.6))), 'main') : '';
+    // Logo 不再固定置中——2026-11-18 起它跟吉祥話一樣是可拖曳的 item，位置由客人決定
     /* 可燙金範圍照實際的 6 × 15 公分畫（沿短邊 6、沿長邊 15），置中。
        客人看到的框就是真的能燙多大，不是隨便內縮一圈。 */
     var FA = PRICE.hongbao.foilArea;
     var bw = Math.round((land ? W * FA.long / sz.l : W * FA.short / sz.w));
     var bh = Math.round((land ? H * FA.short / sz.w : H * FA.long / sz.l));
     var bx = Math.round((W - bw) / 2), by = Math.round((H - bh) / 2);
-    var bodyInner = area(bx, by, bw, bh, S.logo ? '' : '可燙金範圍 ' + FA.label) +
-                    '<div class="absolute inset-0 grid place-items-center">' + logo + '</div>';
+    var hasFront = itemsOn('front').length;
+    var bodyInner = area(bx, by, bw, bh, hasFront ? '' : '可燙金範圍 ' + FA.label) + faceHtml('front');
 
     /* 正反兩面並排（老闆 2026-11-18：「預覽的示意圖 用正反2面」）。
        現在除了糊邊整張都能燙，背面也要讓客人看得到可以做。
        背面那欄往下墊一個蓋頭的高度，兩片袋身才會對齊在同一條線上。 */
-    var backBox = area(bx, by, bw, bh, '背面也可燙金');
+    var backBox = area(bx, by, bw, bh, itemsOn('back').length ? '' : '背面也可燙金') + faceHtml('back');
     var cap = 'text-center text-[11px] text-[#7E7565] mt-2 tracking-[.14em]';
     html = '<div class="flex items-start justify-center gap-5 sm:gap-7">' +
              '<div>' + envelopeArt(W, flapH, H, mat.css, '', bodyInner) +
@@ -2110,6 +2235,12 @@ function calc(){
       // 特殊箔材的加價逐版累加（雷射金／玫瑰金等）
       var fx = S.plates.reduce(function(s, p){ return s + (PRICE.foilExtra[p.color] || 0) }, 0);
       if(fx){ u += fx; note += '＋箔材 ' + fx.toFixed(2) }
+    } else if(k === 'digital' && artMode()){
+      /* ★ 全客製的數位印刷（老闆 2026-11-18）：以 22×27 的紙下去印，一張 12 元。
+         一張 ＝ 一個紅包袋，所以就是每個 12 元、沒有級距。 */
+      u = PRICE.hongbao.custom.digitalUnit;
+      note = '以 ' + PRICE.hongbao.custom.dieBlank.w + ' × ' + PRICE.hongbao.custom.dieBlank.h +
+             ' 公分平張印，每個 ' + u + ' 元';
     } else {
       var t = tierOf(PRICE[S.product].procUnit[k], qty);
       u = t.unit * sizeF2;
@@ -2123,7 +2254,10 @@ function calc(){
       }
     }
     if(k === 'digital' && S.sides === 'double'){
-      u *= 2; note = '每份 ' + t.unit.toFixed(2) + ' 元 × 雙面';
+      // 雙面＝再過一次機，單價乘 2（全客製 12 元那條路也一樣）
+      var base1 = artMode() ? PRICE.hongbao.custom.digitalUnit : t.unit;
+      u = base1 * 2;
+      note = '每個 ' + base1.toFixed(2) + ' 元 × 雙面';
     }
     // 打凸／打凹也是一處壓一次，處數多就多壓幾趟
     if(k === 'emboss' || k === 'deboss'){
@@ -2628,6 +2762,8 @@ function applyModeUI(){
 
   // 公版：版式／尺寸／蓋型那整張卡收起來（都由款式決定）
   $('hbLayoutBox').classList.toggle('hidden', !hb || stock);
+  // 擺字區只有紅包袋有（春聯的預覽沒有正反面可以放）
+  $('placeBox').classList.toggle('hidden', !hb);
   if(stock){ applyStock(); buildStockList() }
 
   /* 同一個位置兩種選單：公版挑「款式」（紙材跟著走）、全客製挑「紙張材質」。
@@ -2883,7 +3019,8 @@ function handleFile(file){
 }
 /* 量出圖檔的長寬比再重繪（預覽的燙金遮罩框要照這個比例開） */
 function finishLogo(){
-  if(!S.logo){ S.logoAR = .55; renderPreview(); return }
+  syncLogoItem();                    // 圖檔有無改變時，同步那一筆可拖曳的 logo item
+  if(!S.logo){ S.logoAR = .55; renderPreview(); renderItemBar(); return }
   var im = new Image();
   im.onload  = function(){ S.logoAR = (im.naturalHeight / im.naturalWidth) || .55; renderPreview() };
   im.onerror = function(){ S.logoAR = .55; renderPreview() };
@@ -2919,7 +3056,61 @@ function applyKnock(){
 }
 $('fileInp').addEventListener('change', function(){ handleFile(this.files[0]) });
 $('knockChk').addEventListener('change', function(){ S.knock = this.checked; applyKnock() });
-$('logoSize').addEventListener('input', function(){ S.logoSize = +this.value; renderPreview() });
+$('logoSize').addEventListener('input', function(){
+  S.logoSize = +this.value;
+  // Logo 現在是可拖曳的 item，尺寸滑桿要改到那一筆上（位置不動）
+  S.items.forEach(function(i){ if(i.type === 'logo') i.size = S.logoSize });
+  renderPreview();
+});
+
+/* ── 擺字（老闆 2026-11-18）──────────────────────────────────────── */
+function buildGreetBtns(){
+  $('greetBtns').innerHTML = GREETINGS.map(function(t){
+    return '<button type="button" class="chip !px-2.5 !py-1 !text-[12px]" data-greet="' + esc(t) + '">＋ ' +
+           esc(t) + '</button>';
+  }).join('');
+}
+$('greetBtns').addEventListener('click', function(e){
+  var b = e.target.closest('[data-greet]');
+  if(!b) return;
+  addItem('text', b.getAttribute('data-greet'));
+  renderPreview(); renderItemBar(); renderPrice();
+});
+function selItem(){ return S.sel ? itemById(S.sel) : null }
+$('itemSmall').addEventListener('click', function(){
+  var it = selItem(); if(!it) return;
+  it.size = Math.max(12, it.size - 4);
+  if(it.type === 'logo'){ S.logoSize = it.size; $('logoSize').value = it.size }
+  renderPreview(); renderItemBar();
+});
+$('itemBig').addEventListener('click', function(){
+  var it = selItem(); if(!it) return;
+  it.size = Math.min(90, it.size + 4);
+  if(it.type === 'logo'){ S.logoSize = it.size; $('logoSize').value = it.size }
+  renderPreview(); renderItemBar();
+});
+$('itemFace').addEventListener('click', function(){
+  var it = selItem(); if(!it) return;
+  it.face = it.face === 'front' ? 'back' : 'front';
+  renderPreview(); renderItemBar();
+});
+$('itemDel').addEventListener('click', function(){
+  var it = selItem(); if(!it) return;
+  // 刪掉 Logo 那一筆 ＝ 等於移除圖檔，不然客人會以為圖沒了但還在算錢
+  if(it.type === 'logo'){ S.logo = S.logoRaw = null; S.logoName = ''; S.logoDemo = false;
+                          $('fileInp').value = ''; $('fileOpts').classList.add('hidden');
+                          $('fileLabel').textContent = '點此選擇檔案，或拖曳到這裡'; }
+  removeItem(it.id);
+  renderPreview(); renderItemBar(); renderPrice();
+});
+/* 上傳或移除圖檔時，同步維護那一筆 logo item */
+function syncLogoItem(){
+  var has = S.items.some(function(i){ return i.type === 'logo' });
+  if(S.logo && !has) addItem('logo', '');
+  if(!S.logo && has){
+    S.items.filter(function(i){ return i.type === 'logo' }).forEach(function(i){ removeItem(i.id) });
+  }
+}
 /* 取出 CSS 變數裡的 url(...)，Logo 只存一份（在 :root），JS 這邊不重複貼一次 base64 */
 function cssUrl(name){
   var v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -2940,7 +3131,8 @@ $('fileClear').addEventListener('click', function(e){
   S.logo = S.logoRaw = null; S.logoName = ''; S.logoDemo = false; $('fileInp').value = '';
   $('fileLabel').textContent = '點此選擇檔案，或拖曳到這裡';
   $('fileOpts').classList.add('hidden');
-  renderPreview();
+  syncLogoItem();
+  renderPreview(); renderItemBar();
 });
 ['dragover','drop'].forEach(function(ev){
   document.addEventListener(ev, function(e){
@@ -3028,6 +3220,16 @@ function orderText(no){
   L.push('‧加工方式：' + craftName());
   L.push('‧材質：' + matCfg().name);
   // ⚠️ 老闆 2026-11-18：紙錢（含牌價與落數）不對客人顯示 → 這份複製給 LINE 的內容也不寫
+  /* 客人在預覽上擺的圖文位置（老闆 2026-11-18）：一定要帶進訂單，不然我們不知道他要放哪。
+     座標是相對位置（左上角為 0%），完稿時照這個比例擺。 */
+  if(S.product === 'hongbao' && S.items.length){
+    L.push('‧版面擺放（客人在預覽上拖的位置，左上角為 0%）：');
+    S.items.forEach(function(it){
+      L.push('　' + (it.face === 'front' ? '正面' : '背面') + '　' +
+             (it.type === 'logo' ? '圖檔 ' + (S.logoName || '（未命名）') : '文字「' + it.txt + '」') +
+             '　左右 ' + Math.round(it.x * 100) + '%、上下 ' + Math.round(it.y * 100) + '%');
+    });
+  }
   if(S.opp && S.product === 'hongbao'){
     var oK = PRICE.opp[oppKind()];
     var oQ = Math.max(moq(), S.qty || moq());
@@ -3229,6 +3431,8 @@ $('favicon').href = cssUrl('--logo-mark');
 })();
 buildFlaps();
 buildHbSizes();
+buildGreetBtns();        // 吉祥話按鈕（＋新年快樂…）
+bindDrag();              // 預覽上的圖文拖曳
 applyModeUI();           // 公版／全客製要先定，底下才知道哪些能選
 applyCraftUI();          // 內含 buildFoils()、buildQty() 與 applyFlapUI()
 buildMaterialSelect();
