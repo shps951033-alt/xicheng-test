@@ -117,6 +117,13 @@ body{ background:#12100C; color:#EDE4D3 }
 .pv-item:active{ cursor:grabbing }
 .pv-item.sel::after{ content:''; position:absolute; inset:-9px -11px; border-radius:6px;
                      border:1px dashed rgba(240,220,168,.65); pointer-events:none }
+/* 實際尺寸標籤（老闆 2026-11-18：拖放大縮小時要看得出來是幾公分 × 幾公分）。
+   只有選中那一筆才顯示；絕對定位在框下面，不佔位子所以不會把圖推歪。 */
+.pv-cm{ display:none; position:absolute; left:50%; top:100%; transform:translate(-50%,10px);
+        white-space:nowrap; font-size:10.5px; letter-spacing:.04em; color:#EDE4D3;
+        background:rgba(20,18,16,.82); border:1px solid rgba(240,220,168,.35);
+        border-radius:4px; padding:1px 5px; pointer-events:none }
+.pv-item.sel .pv-cm{ display:block }
 .pv-face{ touch-action:none }
 
 /* ── 紙材質感 ──────────────────────────────────────────────────────── */
@@ -444,7 +451,7 @@ section[id]{ scroll-margin-top:76px }
           <div id="flapTextBox" class="hidden mt-3 pl-7">
             <p class="text-[12px] text-[#8F8674] leading-5">預覽上蓋面虛線內都可以燙，整片都能用。<br>
               蓋面要燙什麼，請在完稿檔裡一起做好（圖案記得倒置）。<br>
-              ※ 蓋面是<span class="text-gold-light">另一塊版</span>，請在上面「燙印色與版」多加一塊，面積填蓋面那塊自己的。</p>
+              ※ 蓋面是<span class="text-gold-light">另一塊版</span>，請在上面「燙印色與版」多加一塊，尺寸填蓋面那塊圖稿自己的長寬。</p>
           </div>
         </div>
       </div>
@@ -547,8 +554,7 @@ section[id]{ scroll-margin-top:76px }
           </div>
           <p class="text-[12px] text-[#8F8674] mt-1 mb-3 leading-5">
             一個顏色＝一塊版。兩色疊燙、或正反面圖案不同，都要各算一塊版——請分別新增，
-            面積填該塊版自己的，不要加總。<span class="text-gold-light">圖案幾乎鋪滿整面就勾「滿版」</span>——
-            工費會換成滿版那一檔，面積也會自動帶成整個袋身（版費跟著變）；面積還是可以自己再改。<br>
+            <span class="text-gold-light">尺寸填你圖稿實際要燙多大</span>（該塊版自己的，不要把幾塊版加總）。<br>
             <span id="areaHintLine"></span>
           </p>
           <div id="plateList" class="space-y-2"></div>
@@ -567,15 +573,19 @@ section[id]{ scroll-margin-top:76px }
 
       <!-- 圖檔上傳 -->
       <div class="rounded-2xl border border-ink-3 bg-ink-2 p-5">
-        <span class="lbl">上傳 Logo／圖檔（PNG／SVG／AI）</span>
+        <span class="lbl">上傳 Logo／圖檔（PNG／SVG／AI，可多份）</span>
         <label for="fileInp" class="block border border-dashed border-ink-4 hover:border-gold-dim rounded-xl p-5 text-center cursor-pointer transition">
           <svg class="mx-auto mb-2 text-gold-dim" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
-          <span id="fileLabel" class="text-[13px] text-[#CFC3AC]">點此選擇檔案，或拖曳到這裡</span>
+          <span id="fileLabel" class="text-[13px] text-[#CFC3AC]">點此選擇檔案（可一次選多個），或拖曳到這裡</span>
           <span class="block text-[11.5px] text-[#7E7565] mt-1.5">PNG／SVG 可直接預覽燙金效果；AI 檔請一併用 LINE 傳給我們</span>
+          <!-- 老闆 2026-11-18：多份圖檔各自擺位置、各自挑箔色，就是客人要的套準關係 -->
+          <span class="block text-[11.5px] text-gold-dim mt-1">多份圖檔可以各自拖位置、各自選箔色，套準位置您自己決定</span>
           <!-- 老闆 2026-11-17：燙金細線下限 0.38mm，稿件在這裡先提醒一次 -->
           <span class="block text-[11.5px] text-gold-dim mt-1">燙金線條請至少 0.38 mm（約 1.1pt），太細會斷線、吃不上箔</span>
-          <input id="fileInp" type="file" accept=".png,.svg,.jpg,.jpeg,.ai,image/*" class="hidden">
+          <input id="fileInp" type="file" multiple accept=".png,.svg,.jpg,.jpeg,.ai,image/*" class="hidden">
         </label>
+        <!-- 已上傳的檔案清單（按檔名可以選到預覽上那一筆） -->
+        <div id="fileList" class="mt-3 space-y-1.5"></div>
         <button id="fileDemo" type="button"
           class="mt-3 text-[13px] text-gold-dim hover:text-gold-light underline underline-offset-4">
           手邊沒有檔案？載入範例 Logo 看燙金效果 →
@@ -585,10 +595,10 @@ section[id]{ scroll-margin-top:76px }
             <input type="checkbox" id="knockChk" class="w-4 h-4 accent-[#D4AF37]" checked> 自動去白底
           </label>
           <label class="flex items-center gap-2 text-[13px] text-[#CFC3AC]">
-            尺寸
+            全部圖檔大小
             <input id="logoSize" type="range" min="20" max="90" value="46" class="w-28 accent-[#D4AF37]">
           </label>
-          <button id="fileClear" class="text-[13px] text-crimson-soft hover:text-crimson underline underline-offset-4">移除圖檔</button>
+          <button id="fileClear" class="text-[13px] text-crimson-soft hover:text-crimson underline underline-offset-4">全部移除</button>
         </div>
       </div>
 
@@ -700,15 +710,28 @@ section[id]{ scroll-margin-top:76px }
             <span class="text-[12px] text-gold-dim">加字放上去，直接用手指或滑鼠拖到喜歡的位置</span>
             <div class="flex gap-1.5 flex-wrap" id="greetBtns"><!-- JS 產生 --></div>
           </div>
-          <div id="itemBar" class="hidden mt-3 pt-3 border-t border-ink-3 flex items-center gap-2 flex-wrap">
-            <span class="text-[12px] text-[#EDE4D3] font-bold" id="itemName"></span>
-            <span class="text-[11.5px] text-[#7E7565]" id="itemPos"></span>
-            <span class="flex-1"></span>
-            <button type="button" id="itemSmall" class="chip !px-2.5 !py-1 !text-[12px]">縮小</button>
-            <button type="button" id="itemBig"   class="chip !px-2.5 !py-1 !text-[12px]">放大</button>
-            <button type="button" id="itemFace"  class="chip !px-2.5 !py-1 !text-[12px]">移到背面</button>
-            <button type="button" id="itemDel"
-              class="chip !px-2.5 !py-1 !text-[12px] !text-crimson-soft">刪除</button>
+          <div id="itemBar" class="hidden mt-3 pt-3 border-t border-ink-3">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="text-[12px] text-[#EDE4D3] font-bold" id="itemName"></span>
+              <span class="text-[11.5px] text-gold-light" id="itemCmLine"></span>
+              <span class="text-[11.5px] text-[#7E7565]" id="itemPos"></span>
+              <span class="flex-1"></span>
+              <button type="button" id="itemSmall" class="chip !px-2.5 !py-1 !text-[12px]">縮小</button>
+              <button type="button" id="itemBig"   class="chip !px-2.5 !py-1 !text-[12px]">放大</button>
+              <button type="button" id="itemFace"  class="chip !px-2.5 !py-1 !text-[12px]">移到背面</button>
+              <button type="button" id="itemDel"
+                class="chip !px-2.5 !py-1 !text-[12px] !text-crimson-soft">刪除</button>
+            </div>
+            <!-- 這一筆要燙哪個箔色（老闆 2026-11-18：示意圖不只金色）；多份圖檔各燙各的色＝套準 -->
+            <div id="itemFoilBox" class="mt-2 flex items-center gap-2 flex-wrap">
+              <span class="text-[12px] text-[#8F8674]">這一筆的箔色</span>
+              <select id="itemFoilSel" class="fld !py-1.5 !text-[12px] !w-auto"></select>
+              <button type="button" id="itemUseSize"
+                class="text-[12px] text-gold-dim hover:text-gold-light underline underline-offset-4">
+                把這個大小帶入燙印尺寸
+              </button>
+              <span id="itemFoilWarn" class="text-[11.5px] text-crimson-soft"></span>
+            </div>
           </div>
         </div>
         <div class="px-4 py-3 border-t border-ink-3 flex items-center justify-between gap-3">
@@ -1401,19 +1424,26 @@ var S = {
      預設挑「日本雅子 140g」—— 老闆 2026-11-18 一開口就是這支（長瑩的雅子系列）。
      artQuery ＝ 紙名搜尋框的字，只用來篩選單，不影響計價。 */
   artPaper:0, artGrade:0, artQuery:'', artColor:0,
-  // 每一塊版：面積都是「該塊版自己的」，不是全部加總
-  // 燙印：顏色＋面積＋是不是滿版。預設面積＝公版的正常燙印範圍 6×15＝90
-  plates:[ { color:'bright', area:90, full:false } ],
-  // 打凸／打凹：一處一塊版，面積預設同樣是正常燙印範圍 6×15＝90
-  embossPlates:[ { area:90, full:false } ],
-  debossPlates:[ { area:90, full:false } ],
+  /* 每一塊版：尺寸都是「該塊版自己的」，不是全部加總。
+     ★ 老闆 2026-11-18：「燙印面積以客人實際圖稿大小為主，讓客人自行填入燙印的長、寬」
+       → 客人填的是 w（寬）× h（長），公分；area 是我們自己乘出來的（不給客人直接填平方公分），
+         full（滿版那一檔）也不再是客人自己勾的勾勾，改成 area 超過正常面積就自動算滿版。
+       → 要改這段邏輯請看 setPlateSize()，別在各處自己乘。
+     預設 6 × 15 ＝ 90 平方公分，就是公版的正常燙印範圍。 */
+  plates:[ { color:'bright', w:6, h:15, area:90, full:false } ],
+  embossPlates:[ { w:6, h:15, area:90, full:false } ],
+  debossPlates:[ { w:6, h:15, area:90, full:false } ],
   /* OPP 透明袋（老闆 2026-11-18）：加購才算；代裝服務要先加購袋子才有意義 */
   opp:false, oppPack:false,
   /* 預覽上可拖曳的圖文（老闆 2026-11-18：「示範圖 增加可以隨意滑動擺放位置，
      可以增加 新年快樂／恭禧發財／happy new year 的文字 讓客人自行擺放」）。
      x,y ＝ 在那一面上的相對位置（0～1），跟預覽縮放無關，直接寫進訂單明細給我們排版用。 */
   items:[], sel:null, itemSeq:0,
-  logo:null, logoRaw:null, logoType:'', logoName:'', knock:true, logoSize:46, logoDemo:false, logoAR:0.55,
+  /* ★ 多份圖檔（老闆 2026-11-18：「客人可以同時上傳多份圖檔，讓客人自行選擇套準位置」）。
+     一個檔 ＝ S.logos 裡一筆 {id,name,type,raw,src,ar,demo}，同時在預覽上生出一筆可拖曳的 item；
+     每一筆 item 自己記 foil（要燙哪個箔色）＝ 客人自己決定怎麼套準、哪個圖燙哪一色。
+     ⚠️ 以前只存一個 S.logo，全站改成陣列了，不要再加回單數那組欄位。 */
+  logos:[], logoSeq:0, knock:true, logoSize:46,
   sides:'single', plate:'zinc', area:25, qty:500,
   emboss:false, diecut:false, aiConv:false, aiQty:1,
   ship:'home', inv:'company',   // 發票只剩三聯式（老闆 2026-11-17）
@@ -1611,57 +1641,85 @@ function specText(){
 }
 
 /* ── 建立 UI（箔色／圖樣／材質選單／樣品牆／FAQ）───────────────────── */
-/* 燙印版列表：一列＝一塊版＝一個顏色＋該塊版自己的面積 */
+/* ── 一塊版的「長 × 寬」填寫列（老闆 2026-11-18：面積以客人實際圖稿大小為主）──
+   客人填公分，右邊即時顯示換算出來的平方公分與落在哪一檔；
+   平方公分是算給他看的，不給他直接填（以前填 cm² 等於要客人自己乘，還會跟勾勾打架）。 */
+function plateCalcHtml(p){
+  if(!p.area){
+    return '<span class="text-crimson-soft">請填長寬</span>';
+  }
+  var m = foilMaxCm();
+  return '＝ <span class="text-[#EDE4D3]">' + p.area + ' cm²</span>' +
+         '<span class="' + (p.full ? 'text-gold-light' : 'text-[#8F8674]') + '">・' +
+           (p.full ? '算滿版那一檔' : '正常面積') + '</span>' +
+         (plateOver(p) && m
+           ? '<span class="block text-crimson-soft mt-0.5">⚠ 比可燙範圍（' + m.w + ' × ' + m.h +
+             ' 公分，' + m.why + '）還大，我們收到單會跟你確認</span>'
+           : '');
+}
+/* key ＝ 'foil:0'／'emboss:0'／'deboss:1'，一支函式服務三種版 */
+function plateByKey(key){
+  var v = key.split(':');
+  return v[0] === 'foil' ? S.plates[+v[1]] : pressArr(v[0])[+v[1]];
+}
+function sizeRowHtml(key, p, label){
+  var inp = function(ax, aria){
+    return '<input type="number" min="0" max="200" step="0.1" value="' + (p[ax] || '') +
+           '" class="fld !py-1.5 !w-[66px] text-center" data-psz="' + ax + ':' + key +
+           '" aria-label="' + aria + '" inputmode="decimal">';
+  };
+  return '<div class="mt-2 flex items-center gap-1.5 flex-wrap">' +
+           '<span class="shrink-0 text-[12px] text-[#8F8674]">' + label + '　寬</span>' +
+           inp('w', label + '的寬，公分') +
+           '<span class="text-[12px] text-[#8F8674]">× 長</span>' +
+           inp('h', label + '的長，公分') +
+           '<span class="text-[12px] text-[#8F8674]">公分</span>' +
+           '<span class="text-[12px] ml-1 leading-5" data-pcalc="' + key + '">' + plateCalcHtml(p) + '</span>' +
+         '</div>';
+}
+/* 燙印版列表：一列＝一塊版＝一個顏色＋該塊版自己的燙印長寬 */
 function buildPlateList(){
-  // 把「正常燙印範圍」寫出來，客人才知道什麼情況算滿版
-  var FA = PRICE.hongbao.foilArea, hint = $('areaHintLine');
+  // 把「正常燙印範圍」寫出來，客人才知道什麼情況會跳到滿版那一檔
+  var FA = PRICE.hongbao.foilArea, hint = $('areaHintLine'), m = foilMaxCm();
   if(hint){
     hint.innerHTML = S.product === 'hongbao'
-      ? '公版的正常燙印範圍是 <span class="text-gold-light">' + FA.label + '（' + FA.cm2 +
-        ' 平方公分）</span>，超過這個範圍就算滿版。'
+      ? '燙印面積<span class="text-gold-light">以你實際圖稿的大小為準</span>，請直接填長寬；' +
+        '在 ' + FA.label + '（' + FA.cm2 + ' 平方公分）以內算正常面積，超過就跳到滿版那一檔。' +
+        (m ? '這款最大可以燙到 <span class="text-gold-light">' + m.w + ' × ' + m.h + ' 公分</span>（' + m.why + '）。' : '')
       : '';
   }
   var opts = FOILS.map(function(f){ return f });
   $('plateList').innerHTML = S.plates.map(function(p, i){
-    return '<div class="flex items-center gap-2" data-prow="' + i + '">' +
-             '<span class="shrink-0 text-[12px] text-[#8F8674] w-12">第 ' + (i + 1) + ' 版</span>' +
-             '<select class="fld !py-2 flex-1" data-pcolor="' + i + '">' +
-               opts.map(function(f){
-                 return '<option value="' + f.k + '"' + (f.k === p.color ? ' selected' : '') + '>' + f.name + '</option>';
-               }).join('') +
-             '</select>' +
-             '<span class="shrink-0 flex items-center gap-1">' +
-               '<input type="number" min="1" max="3000" step="1" value="' + p.area +
-                 '" class="fld !py-2 !w-20" data-parea="' + i + '">' +
-               '<span class="text-[12px] text-[#8F8674]">cm²</span>' +
-             '</span>' +
-             // 滿版與否會影響燙金加工費（正常 3 元／滿版 4 元），所以要讓客人標
-             '<label class="shrink-0 flex items-center gap-1.5 text-[12px] text-[#CFC3AC] cursor-pointer">' +
-               '<input type="checkbox" class="w-3.5 h-3.5 accent-[#D4AF37]" data-pfull="' + i + '"' +
-                 (p.full ? ' checked' : '') + '>滿版</label>' +
-             (S.plates.length > 1
-               ? '<button type="button" class="shrink-0 text-crimson-soft hover:text-crimson text-[16px] leading-none px-1" ' +
-                 'data-pdel="' + i + '" aria-label="移除這塊版">×</button>'
-               : '<span class="shrink-0 w-6"></span>') +
+    return '<div class="rounded-lg border border-ink-4/70 bg-ink-2/40 px-2.5 py-2" data-prow="' + i + '">' +
+             '<div class="flex items-center gap-2">' +
+               '<span class="shrink-0 text-[12px] text-[#8F8674] w-12">第 ' + (i + 1) + ' 版</span>' +
+               '<select class="fld !py-2 flex-1" data-pcolor="' + i + '">' +
+                 opts.map(function(f){
+                   return '<option value="' + f.k + '"' + (f.k === p.color ? ' selected' : '') + '>' + f.name + '</option>';
+                 }).join('') +
+               '</select>' +
+               (S.plates.length > 1
+                 ? '<button type="button" class="shrink-0 text-crimson-soft hover:text-crimson text-[16px] leading-none px-1" ' +
+                   'data-pdel="' + i + '" aria-label="移除這塊版">×</button>'
+                 : '<span class="shrink-0 w-6"></span>') +
+             '</div>' +
+             sizeRowHtml('foil:' + i, p, '燙印尺寸') +
            '</div>';
   }).join('');
 }
-/* 打凸／打凹的版列表：只有面積，沒有顏色 */
+/* 打凸／打凹的版列表：只有尺寸，沒有顏色 */
 function buildPressList(kind){
   var arr = kind === 'emboss' ? S.embossPlates : S.debossPlates;
+  var nm = kind === 'emboss' ? '打凸尺寸' : '打凹尺寸';
   $(kind + 'List').innerHTML = arr.map(function(p, i){
-    return '<div class="flex items-center gap-2">' +
-             '<span class="shrink-0 text-[12px] text-[#8F8674] w-12">第 ' + (i + 1) + ' 處</span>' +
-             '<input type="number" min="1" max="3000" step="1" value="' + p.area +
-               '" class="fld !py-2 !w-24" data-pressarea="' + kind + ':' + i + '">' +
-             '<span class="text-[12px] text-[#8F8674]">cm²</span>' +
-             // 滿版與否決定版費是 800 還是 1300
-             '<label class="shrink-0 flex items-center gap-1.5 text-[12px] text-[#CFC3AC] cursor-pointer ml-1">' +
-               '<input type="checkbox" class="w-3.5 h-3.5 accent-[#D4AF37]" data-pressfull="' + kind + ':' + i + '"' +
-                 (p.full ? ' checked' : '') + '>滿版</label>' +
-             (arr.length > 1
-               ? '<button type="button" class="ml-auto shrink-0 text-crimson-soft hover:text-crimson text-[16px] leading-none px-1" ' +
-                 'data-pressdel="' + kind + ':' + i + '" aria-label="移除這一處">×</button>' : '') +
+    return '<div class="rounded-lg border border-ink-4/70 bg-ink-2/40 px-2.5 py-2">' +
+             '<div class="flex items-center gap-2">' +
+               '<span class="shrink-0 text-[12px] text-[#8F8674]">第 ' + (i + 1) + ' 處</span>' +
+               (arr.length > 1
+                 ? '<button type="button" class="ml-auto shrink-0 text-crimson-soft hover:text-crimson text-[16px] leading-none px-1" ' +
+                   'data-pressdel="' + kind + ':' + i + '" aria-label="移除這一處">×</button>' : '') +
+             '</div>' +
+             sizeRowHtml(kind + ':' + i, p, nm) +
            '</div>';
   }).join('');
 }
@@ -1854,7 +1912,8 @@ function applyDieBox(){
     '<span class="text-gold-light">可燙金／打凸範圍：除了糊邊，整張都可以做</span>' +
     '——正面、背面、蓋頭都行，只有圖上塗灰的那兩塊糊邊（右側窄條與底摺，各約 ' +
     C.glueEdgeCm + ' 公分寬）不能壓，壓了會黏不牢。<br>' +
-    '燙印面積在 ' + FA.label + '（' + FA.cm2 + ' 平方公分）以內算「正常面積」，超過就跳到滿版那一檔；' +
+    '燙印面積<span class="text-gold-light">以您圖稿實際的大小為準</span>（請在上面「燙印色與版」填長寬）：' +
+    '在 ' + FA.label + '（' + FA.cm2 + ' 平方公分）以內算「正常面積」，超過就跳到滿版那一檔；' +
     (f.canPrint ? '蓋面也可以另外燙，算另一塊版。' : '平頭蓋沒有蓋面可燙，只燙袋身。') + '<br>' +
     (f.die ? '這個蓋型用我們現成的刀模，<span class="text-gold-light">不收刀模費</span>。'
            : '這個蓋型我們沒有現成刀模，要新開一支（下面明細會列出來）。') +
@@ -1940,10 +1999,13 @@ function patternArt(size){
 var GREETINGS = [ '新年快樂', '恭禧發財', 'HAPPY NEW YEAR' ];
 function itemById(id){ return S.items.filter(function(i){ return i.id === id })[0] }
 function itemsOn(face){ return S.items.filter(function(i){ return i.face === face }) }
-function addItem(type, txt){
+function addItem(type, txt, extra){
   var it = { id:'i' + (++S.itemSeq), type:type, txt:txt || '', face:'front',
              x:0.5, y:type === 'logo' ? 0.5 : 0.26,
-             size: type === 'logo' ? S.logoSize : 26 };
+             size: type === 'logo' ? S.logoSize : 26,
+             // 預設跟第 1 塊版同一個箔色；客人可以逐個改（老闆 2026-11-18）
+             foil: (S.plates[0] || {}).color || 'bright' };
+  if(extra) Object.keys(extra).forEach(function(k){ it[k] = extra[k] });
   // 後加的往下挪一點，不然全疊在同一個點看不出來
   var n = itemsOn('front').length;
   if(n) it.y = Math.min(0.9, it.y + n * 0.14);
@@ -1955,14 +2017,23 @@ function removeItem(id){
   S.items = S.items.filter(function(i){ return i.id !== id });
   if(S.sel === id) S.sel = null;
 }
+/* 每一筆圖文各自上色（老闆 2026-11-18：「示意圖那邊除了金色，還可以選擇其他色箔」）。
+   沒有做燙金（只有數位印刷）時就跟著印刷色走，不給他挑箔色。 */
+function itemPaint(it, html){
+  if(!partIsFoil('main')) return '<span class="' + inkClass() + '">' + html + '</span>';
+  var f = FOILS.filter(function(x){ return x.k === it.foil })[0] || foilObj();
+  return '<span class="' + f.css + '">' + html + '</span>';
+}
 function itemHtml(it){
   var inner = it.type === 'logo'
-    ? logoArt(Math.round(it.size * 2.6))
+    ? logoArt(Math.round(it.size * 2.6), logoById(it.logoId))
     : '<span style="font-size:' + it.size + 'px;line-height:1.15;letter-spacing:.08em;' +
       "font-weight:700;font-family:'Noto Serif TC','標楷體',serif" + '">' + esc(it.txt) + '</span>';
   return '<div class="pv-item' + (S.sel === it.id ? ' sel' : '') + '" data-item="' + it.id + '" ' +
            'style="left:' + (it.x * 100).toFixed(2) + '%;top:' + (it.y * 100).toFixed(2) + '%">' +
-           paint(inner, 'main') +
+           itemPaint(it, inner) +
+           // 實際幾公分（老闆 2026-11-18：放大縮小時要看得出來）；選中才顯示，量完由 JS 填字
+           '<span class="pv-cm" data-cm="' + it.id + '"></span>' +
          '</div>';
 }
 function faceHtml(face){ return itemsOn(face).map(itemHtml).join('') }
@@ -2015,17 +2086,65 @@ function renderItemBar(){
   var it = S.sel ? itemById(S.sel) : null;
   bar.classList.toggle('hidden', !it);
   if(!it) return;
-  $('itemName').textContent = it.type === 'logo' ? '您的圖檔' : it.txt;
+  var lg = it.type === 'logo' ? logoById(it.logoId) : null;
+  $('itemName').textContent = it.type === 'logo' ? (lg && lg.name ? lg.name : '您的圖檔') : it.txt;
   $('itemPos').textContent = (it.face === 'front' ? '正面' : '背面') +
     '　左右 ' + Math.round(it.x * 100) + '%　上下 ' + Math.round(it.y * 100) + '%';
   $('itemFace').textContent = it.face === 'front' ? '移到背面' : '移到正面';
+  // 實際公分（老闆 2026-11-18）：放大縮小、拖動之後都要跟著更新
+  var c = itemCm(it.id);
+  $('itemCmLine').textContent = c ? ('實際約 ' + c.w + ' × ' + c.h + ' 公分') : '';
+  /* 箔色：只有真的要燙金才給挑（純數位印刷時顏色是印出來的，挑箔色沒意義）。
+     挑到的色不在上面任何一塊版裡就提醒 —— 多一個色就是多一塊版、要多一次製版費。 */
+  var foilOn = hasProc('foil');
+  $('itemFoilBox').classList.toggle('hidden', !foilOn);
+  if(foilOn){
+    $('itemFoilSel').innerHTML = FOILS.map(function(f){
+      return '<option value="' + f.k + '"' + (f.k === it.foil ? ' selected' : '') + '>' + f.name + '</option>';
+    }).join('');
+    var inPlates = S.plates.some(function(p){ return p.color === it.foil });
+    var fo = FOILS.filter(function(f){ return f.k === it.foil })[0];
+    $('itemFoilWarn').textContent = inPlates ? ''
+      : '※ 上面的版還沒有「' + (fo ? fo.name : it.foil) + '」，多一個色要多一塊版，記得加';
+  }
 }
-function logoArt(w){
-  if(!S.logo) return '';
+/* 多檔上傳之後 logoArt 要指定畫哪一個檔；沒指定就畫第一個（春聯那邊只畫一個）。 */
+function logoById(id){ return S.logos.filter(function(l){ return l.id === id })[0] }
+function logoMain(){ return S.logos.filter(function(l){ return l.src })[0] || null }
+function logoArt(w, lg){
+  lg = lg || logoMain();
+  if(!lg || !lg.src) return '';
   // 用圖檔自己的長寬比，直式 Logo 才不會被壓在扁框裡（上限 2.2 倍避免超高圖撐破版面）
-  var h = Math.round(w * Math.min(S.logoAR || .55, 2.2));
+  var h = Math.round(w * Math.min(lg.ar || .55, 2.2));
   return '<span class="foil-mask block" style="width:' + w + 'px;height:' + h + 'px;' +
-         '-webkit-mask-image:url(' + S.logo + ');mask-image:url(' + S.logo + ')"></span>';
+         '-webkit-mask-image:url(' + lg.src + ');mask-image:url(' + lg.src + ')"></span>';
+}
+/* ★ 這一筆圖文實際有多大（公分）——老闆 2026-11-18：
+     「客人在示意圖自由放大縮小時，可以清楚知道實際是幾公分乘幾公分」。
+   做法：量 DOM 元素佔那一面的百分比，再乘袋身的實際公分數。
+   ⚠️ 不要用 it.size 去推：文字的寬度是字型排出來的，只有量 DOM 才準；
+      而且舞台被 fitStage 縮放過，但兩個 rect 都被同樣縮放，比例相除就抵消了。 */
+function itemCm(id){
+  var el = document.querySelector('.pv-item[data-item="' + id + '"]');
+  if(!el) return null;
+  var face = el.closest('.pv-face'); if(!face) return null;
+  var r = el.getBoundingClientRect(), f = face.getBoundingClientRect();
+  if(!f.width || !f.height || !r.width) return null;
+  var sz = S.product === 'hongbao' ? hbSizeCfg() : null;
+  if(!sz) return null;
+  var land = S.hbLayout === 'landscape';
+  var cmW = land ? sz.l : sz.w, cmH = land ? sz.w : sz.l;
+  return { w: Math.round(r.width / f.width * cmW * 10) / 10,
+           h: Math.round(r.height / f.height * cmH * 10) / 10 };
+}
+/* 把量到的公分寫進每一筆的小標籤（選中那一筆才看得到） */
+function paintItemCm(){
+  S.items.forEach(function(it){
+    var lab = document.querySelector('.pv-cm[data-cm="' + it.id + '"]');
+    if(!lab) return;
+    var c = itemCm(it.id);
+    lab.textContent = c ? ('約 ' + c.w + ' × ' + c.h + ' 公分') : '';
+  });
 }
 /* 蓋口形狀：回傳一段 SVG path（單位就是預覽的 px，因為預覽尺寸是固定的邏輯尺寸）
    平頭蓋＝平切；圓頭蓋＝一道圓弧；中式花頭蓋＝五瓣花邊，中間那瓣最長 */
@@ -2171,7 +2290,7 @@ function renderPreview(){
              'width:' + w + 'px;font-size:11px;letter-spacing:.18em;color:rgba(240,220,168,.42)">' + label + '</div>' : '');
   }
   function artOrHint(boxW, boxH, x, y){
-    if(S.logo) return '';                       // 有圖就不畫提示字
+    if(logoMain()) return '';                   // 有圖就不畫提示字
     return area(x, y, boxW, boxH, '可燙金／印刷範圍');
   }
 
@@ -2184,14 +2303,15 @@ function renderPreview(){
     var flapH = Math.round(flapRise(S.hbFlap, land ? H : W, sz));
 
     // Logo 不再固定置中——2026-11-18 起它跟吉祥話一樣是可拖曳的 item，位置由客人決定
-    /* 可燙金範圍照實際的 6 × 15 公分畫（沿短邊 6、沿長邊 15），置中。
-       客人看到的框就是真的能燙多大，不是隨便內縮一圈。 */
-    var FA = PRICE.hongbao.foilArea;
-    var bw = Math.round((land ? W * FA.long / sz.l : W * FA.short / sz.w));
-    var bh = Math.round((land ? H * FA.short / sz.w : H * FA.long / sz.l));
+    /* 虛線框 ＝ 客人自己填的燙印長寬（老闆 2026-11-18：「燙印面積以客人實際圖稿大小為主」）。
+       沒填或還沒勾加工就退回正常範圍 6 × 15；填得比袋身大就夾住，框才不會跑出紙外
+       （旁邊欄位已經有紅字提醒，這裡不重複罵）。 */
+    var fb = foilBoxCm();
+    var bw = Math.min(W, Math.round(land ? W * fb.w / sz.l : W * fb.w / sz.w));
+    var bh = Math.min(H, Math.round(land ? H * fb.h / sz.w : H * fb.h / sz.l));
     var bx = Math.round((W - bw) / 2), by = Math.round((H - bh) / 2);
     var hasFront = itemsOn('front').length;
-    var bodyInner = area(bx, by, bw, bh, hasFront ? '' : '可燙金範圍 ' + FA.label) + faceHtml('front');
+    var bodyInner = area(bx, by, bw, bh, hasFront ? '' : fb.label) + faceHtml('front');
 
     /* 正反兩面並排（老闆 2026-11-18：「預覽的示意圖 用正反2面」）。
        現在除了糊邊整張都能燙，背面也要讓客人看得到可以做。
@@ -2221,13 +2341,13 @@ function renderPreview(){
     if(S.couplet === 'dofang'){
       html = '<div class="' + foilCss() + ' relative grid place-items-center" style="width:510px;height:510px">' +
                '<div style="transform:rotate(45deg)">' +
-                 sheet(360, 360, S.logo ? '<div class="absolute inset-0 grid place-items-center" style="transform:rotate(-45deg)">' +
+                 sheet(360, 360, logoMain() ? '<div class="absolute inset-0 grid place-items-center" style="transform:rotate(-45deg)">' +
                    paint(logoArt(160), 'main') + '</div>' : '') +
                '</div>' +
              '</div>';
     } else if(S.couplet === 'tiaopi'){
       html = '<div class="' + foilCss() + '">' +
-               sheet(560, 160, S.logo ? '<div class="absolute inset-0 grid place-items-center">' + paint(logoArt(180), 'main') + '</div>' : '') +
+               sheet(560, 160, logoMain() ? '<div class="absolute inset-0 grid place-items-center">' + paint(logoArt(180), 'main') + '</div>' : '') +
              '</div>';
     } else {
       html = '<div class="' + foilCss() + '">' +
@@ -2251,6 +2371,9 @@ function renderPreview(){
   $('stageArt').innerHTML = html;
   $('stageInner').classList.toggle('no-motion', !S.motion);
   fitStage();
+  // 量實際公分要等版面排好；字型晚一步載完寬度會變，所以下一格畫面再量一次
+  paintItemCm();
+  if(window.requestAnimationFrame) requestAnimationFrame(paintItemCm);
 
   // 規格說明
   $('specLine').innerHTML = esc(specText()) + '｜' + esc(mat.name) + '｜' +
@@ -2334,7 +2457,8 @@ function calc(){
         note = '每份 ' + base + ' 元 × ' + n + ' 色（未套準，此組合待老闆核價）';
       } else {
         u = base;
-        note = (anyFull ? '滿版' : '正常面積') + '燙一色，每份 ' + u + ' 元';
+        note = (anyFull ? '燙印面積超過 ' + PRICE.hongbao.foilArea.cm2 + ' 平方公分（滿版那一檔）' : '正常面積') +
+               '燙一色，每份 ' + u + ' 元';
       }
       // 特殊箔材的加價逐版累加（雷射金／玫瑰金等）
       var fx = S.plates.reduce(function(s, p){ return s + (PRICE.foilExtra[p.color] || 0) }, 0);
@@ -2757,14 +2881,56 @@ function syncTextFields(){
   $('dofangSizeBox').classList.toggle('hidden', hb || S.couplet !== 'dofang');
 }
 
-/* 滿版的燙印面積＝整個袋身（長×寬）。勾了滿版就把面積帶成這個數字，
-   版費（看面積算）才會跟著變 —— 不然客人勾了滿版只有工費動、版費不動，會以為壞掉。 */
+/* 整個袋身的面積（長×寬）＝「鋪滿整面」大概多大，只拿來寫提示給客人看。 */
 function fullAreaCm2(){
   if(S.product !== 'hongbao') return 0;
   var sz = hbSizeCfg();
   return sz ? Math.round(sz.w * sz.l) : 0;
 }
 function normalAreaCm2(){ return PRICE.hongbao.foilArea.cm2 }
+
+/* ★ 燙印／打凸的面積改成「客人自己填長寬」（老闆 2026-11-18）：
+     area ＝ w × h，由這支函式統一算；**全站不要再有第二個地方自己乘**。
+     full（滿版那一檔）也在這裡判定 ＝ 面積超過正常範圍（90 平方公分）就算滿版，
+     不再是客人自己勾的勾勾 —— 以前可以填 5×5 卻勾滿版，數字會自相矛盾。 */
+function setPlateSize(p){
+  p.w = Math.max(0, +p.w || 0);
+  p.h = Math.max(0, +p.h || 0);
+  p.area = Math.round(p.w * p.h);
+  p.full = p.area > normalAreaCm2();
+  return p;
+}
+/* 這個產品最大能燙到多大（只用來提醒客人，不阻止他填）。
+   全客製＝刀模展開扣掉糊邊；公版＝袋身（蓋面另外一塊版，所以不含蓋頭）。 */
+function foilMaxCm(){
+  if(S.product !== 'hongbao') return null;
+  if(artMode()){
+    var C = PRICE.hongbao.custom;
+    return { w:+(C.dieOuter.w - C.glueEdgeCm).toFixed(1), h:C.dieOuter.h, why:'刀模展開扣掉糊邊' };
+  }
+  var sz = hbSizeCfg();
+  return sz ? { w:sz.w, h:sz.l, why:'袋身' } : null;
+}
+/* 預覽那個虛線框要畫多大：取客人填過的最大一塊版（燙金／打凸／打凹都算，
+   只看有勾的工序）；都沒填就退回正常燙印範圍 6 × 15。回傳的 w 是橫向、h 是縱向，
+   跟客人填的「寬 × 長」同一個方向，不自己幫他轉向。 */
+function foilBoxCm(){
+  var FA = PRICE.hongbao.foilArea, list = [], best = null;
+  if(hasProc('foil'))   list = list.concat(S.plates);
+  if(hasProc('emboss')) list = list.concat(S.embossPlates);
+  if(hasProc('deboss')) list = list.concat(S.debossPlates);
+  list.forEach(function(p){ if(p.area && (!best || p.area > best.area)) best = p });
+  return best
+    ? { w:best.w, h:best.h, label:'燙印 ' + best.w + ' × ' + best.h + ' 公分', own:true }
+    : { w:FA.short, h:FA.long, label:'正常燙印範圍 ' + FA.label, own:false };
+}
+/* 填得比可燙範圍還大就回 true（長寬任一邊超過都算，會跳提醒） */
+function plateOver(p){
+  var m = foilMaxCm(); if(!m) return false;
+  var a = Math.max(p.w, p.h), b = Math.min(p.w, p.h);
+  var A = Math.max(m.w, m.h), B = Math.min(m.w, m.h);
+  return a > A + 0.05 || b > B + 0.05;
+}
 
 /* 目前選到的紅包袋尺寸 */
 function sizeList(){ return PRICE.hongbao.sizes[S.hbLayout] }
@@ -3040,44 +3206,33 @@ $('oppPackChk').addEventListener('change', function(){
 // 燙印版列表（動態產生，用委派）
 $('plateList').addEventListener('change', function(e){
   var c = e.target.closest('[data-pcolor]');
-  if(c){ S.plates[+c.getAttribute('data-pcolor')].color = c.value; update(); return }
-  var fu = e.target.closest('[data-pfull]');
-  if(fu){
-    var p = S.plates[+fu.getAttribute('data-pfull')];
-    p.full = fu.checked;
-    // 滿版＝鋪滿整面 → 面積帶成整個袋身，版費才會跟著變
-    var a = p.full ? fullAreaCm2() : normalAreaCm2();
-    if(a) p.area = a;
-    buildPlateList(); renderPrice(); return;
+  if(c){
+    var pi = +c.getAttribute('data-pcolor');
+    S.plates[pi].color = c.value;
+    // 第 1 塊版換色時，客人還沒自己挑過箔色的那些圖文跟著換（挑過的不動）
+    if(pi === 0) S.items.forEach(function(i){ if(!i.foilTouched) i.foil = c.value });
+    renderFileList(); update(); renderItemBar(); return;
   }
-  var a = e.target.closest('[data-parea]');
-  if(a){ S.plates[+a.getAttribute('data-parea')].area = Math.max(1, +a.value || 1); renderPrice() }
-});
-$('plateList').addEventListener('input', function(e){
-  var a = e.target.closest('[data-parea]');
-  if(a){ S.plates[+a.getAttribute('data-parea')].area = Math.max(0, +a.value || 0); renderPrice() }
 });
 $('plateList').addEventListener('click', function(e){
   var d = e.target.closest('[data-pdel]'); if(!d) return;
   S.plates.splice(+d.getAttribute('data-pdel'), 1);
   buildPlateList(); update();
 });
-// 打凸／打凹的處數列表
+/* ★ 燙印／打凸／打凹的「長 × 寬」欄位（老闆 2026-11-18）：三種版共用一組委派。
+   data-psz="w:foil:0" ＝ 改第 1 塊燙印版的寬。
+   ⚠️ 打字時**不要** rebuild 整個列表（會把游標踢掉）—— 只改那一列右邊的換算文字。 */
 function pressArr(kind){ return kind === 'emboss' ? S.embossPlates : S.debossPlates }
 document.addEventListener('input', function(e){
-  var a = e.target.closest && e.target.closest('[data-pressarea]'); if(!a) return;
-  var v = a.getAttribute('data-pressarea').split(':');
-  pressArr(v[0])[+v[1]].area = Math.max(0, +a.value || 0);
+  var el = e.target.closest && e.target.closest('[data-psz]'); if(!el) return;
+  var v = el.getAttribute('data-psz').split(':');          // [軸, 版別, 序號]
+  var key = v[1] + ':' + v[2], p = plateByKey(key); if(!p) return;
+  p[v[0]] = Math.max(0, +el.value || 0);
+  setPlateSize(p);                                          // area 與滿版判定都在這支裡
+  var lab = document.querySelector('[data-pcalc="' + key + '"]');
+  if(lab) lab.innerHTML = plateCalcHtml(p);
   renderPrice();
-});
-document.addEventListener('change', function(e){
-  var fu = e.target.closest && e.target.closest('[data-pressfull]'); if(!fu) return;
-  var v = fu.getAttribute('data-pressfull').split(':');
-  var p = pressArr(v[0])[+v[1]];
-  p.full = fu.checked;
-  var a = p.full ? fullAreaCm2() : normalAreaCm2();   // 同燙印版：滿版就帶整個袋身的面積
-  if(a) p.area = a;
-  buildPressList(v[0]); renderPrice();
+  renderPreview();                                          // 預覽的燙印框跟著填的尺寸變
 });
 document.addEventListener('click', function(e){
   var d = e.target.closest && e.target.closest('[data-pressdel]');
@@ -3091,13 +3246,14 @@ document.addEventListener('click', function(e){
     var kind = ad.getAttribute('data-addpress');
     var arr = pressArr(kind);
     var last = arr[arr.length - 1] || {};
-    arr.push({ area:last.area || 90, full:!!last.full });
+    // 新增的一處先沿用上一處的長寬（多半是同一組圖），客人再改
+    arr.push(setPlateSize({ w:last.w || 6, h:last.h || 15 }));
     buildPressList(kind); renderPrice();
   }
 });
 $('plateAdd').addEventListener('click', function(){
-  var last = S.plates[S.plates.length - 1] || { color:'bright', area:25 };
-  S.plates.push({ color:last.color, area:last.area });
+  var last = S.plates[S.plates.length - 1] || { color:'bright', w:6, h:15 };
+  S.plates.push(setPlateSize({ color:last.color, w:last.w || 6, h:last.h || 15 }));
   buildPlateList(); update();
 });
 $('inkGrid').addEventListener('click', function(e){
@@ -3111,37 +3267,42 @@ $('inkGrid').addEventListener('click', function(e){
 // 文字
 
 
-// 圖檔上傳
-function handleFile(file){
+/* ── 圖檔上傳（老闆 2026-11-18 改成可以同時上傳多份）───────────────────
+   一個檔 ＝ S.logos 一筆 ＋ 預覽上一筆可拖曳的 item，客人自己擺位置、自己挑箔色，
+   那就是他要的套準關係。AI 檔瀏覽器畫不出來，只記檔名（還是會列在單子上）。 */
+function handleFiles(list){
+  if(!list || !list.length) return;
+  for(var i = 0; i < list.length; i++) addLogoFile(list[i]);
+  $('fileInp').value = '';            // 清掉才能再選同一個檔
+}
+function addLogoFile(file){
   if(!file) return;
-  S.logoDemo = false;
-  S.logoName = file.name;
-  S.logoType = (file.name.split('.').pop() || '').toLowerCase();
-  $('fileLabel').textContent = file.name;
-  $('fileOpts').classList.remove('hidden');
-
-  if(S.logoType === 'ai'){
-    S.logo = null; S.logoRaw = null;
-    $('fileLabel').textContent = file.name + '（AI 檔無法在瀏覽器預覽，已記錄檔名）';
-    renderPreview(); return;
-  }
+  var lg = { id:'g' + (++S.logoSeq), name:file.name, raw:null, src:null, ar:0.55, demo:false,
+             type:(file.name.split('.').pop() || '').toLowerCase() };
+  S.logos.push(lg);
+  addItem('logo', '', { logoId:lg.id });
+  renderFileList();
+  if(lg.type === 'ai'){ renderPreview(); renderItemBar(); return }   // 畫不出來，但檔名留著
   var r = new FileReader();
-  r.onload = function(){ S.logoRaw = r.result; applyKnock() };
+  r.onload = function(){ lg.raw = r.result; applyKnock(lg) };
+  r.onerror = function(){ renderFileList() };
   r.readAsDataURL(file);
 }
 /* 量出圖檔的長寬比再重繪（預覽的燙金遮罩框要照這個比例開） */
-function finishLogo(){
-  syncLogoItem();                    // 圖檔有無改變時，同步那一筆可拖曳的 logo item
-  if(!S.logo){ S.logoAR = .55; renderPreview(); renderItemBar(); return }
+function finishLogo(lg){
+  if(!lg || !lg.src){ renderFileList(); renderPreview(); renderItemBar(); return }
   var im = new Image();
-  im.onload  = function(){ S.logoAR = (im.naturalHeight / im.naturalWidth) || .55; renderPreview() };
-  im.onerror = function(){ S.logoAR = .55; renderPreview() };
-  im.src = S.logo;
+  im.onload  = function(){ lg.ar = (im.naturalHeight / im.naturalWidth) || .55;
+                           renderFileList(); renderPreview(); renderItemBar() };
+  im.onerror = function(){ lg.ar = .55; renderFileList(); renderPreview(); renderItemBar() };
+  im.src = lg.src;
 }
-function applyKnock(){
-  if(!S.logoRaw){ S.logo = null; finishLogo(); return }
+/* 自動去白底：逐個檔各跑一次（勾勾是全域的，改了就全部重跑） */
+function applyKnock(lg){
+  if(!lg){ S.logos.forEach(applyKnock); return }
+  if(!lg.raw){ lg.src = null; finishLogo(lg); return }
   // SVG 與範例圖本來就有去背，不必再跑一次白底判斷
-  if(!S.knock || S.logoType === 'svg' || S.logoDemo){ S.logo = S.logoRaw; finishLogo(); return }
+  if(!S.knock || lg.type === 'svg' || lg.demo){ lg.src = lg.raw; finishLogo(lg); return }
   var img = new Image();
   img.onload = function(){
     var c = document.createElement('canvas');
@@ -3158,21 +3319,59 @@ function applyKnock(){
         else a[i + 3] = Math.min(255, a[i + 3] * (1 + (232 - lum) / 232));
       }
       x.putImageData(d, 0, 0);
-      S.logo = c.toDataURL('image/png');
-    }catch(err){ S.logo = S.logoRaw }   // file:// 開啟時 canvas 會被汙染，退回原圖
-    S.logoAR = (img.naturalHeight / img.naturalWidth) || .55;
-    renderPreview();
+      lg.src = c.toDataURL('image/png');
+    }catch(err){ lg.src = lg.raw }     // file:// 開啟時 canvas 會被汙染，退回原圖
+    lg.ar = (img.naturalHeight / img.naturalWidth) || .55;
+    renderFileList(); renderPreview(); renderItemBar();
   };
-  img.onerror = function(){ S.logo = S.logoRaw; finishLogo() };
-  img.src = S.logoRaw;
+  img.onerror = function(){ lg.src = lg.raw; finishLogo(lg) };
+  img.src = lg.raw;
 }
-$('fileInp').addEventListener('change', function(){ handleFile(this.files[0]) });
+/* 移除某一個檔：連它在預覽上的那一筆一起刪掉 */
+function removeLogo(id){
+  S.logos = S.logos.filter(function(l){ return l.id !== id });
+  S.items.filter(function(i){ return i.logoId === id }).forEach(function(i){ removeItem(i.id) });
+  renderFileList(); renderPreview(); renderItemBar(); renderPrice();
+}
+/* 已上傳的檔案清單：按一下就選到預覽上那一筆，方便客人逐個擺位置 */
+function renderFileList(){
+  var box = $('fileList'); if(!box) return;
+  box.innerHTML = S.logos.map(function(l){
+    var it = S.items.filter(function(i){ return i.logoId === l.id })[0];
+    var fo = it ? FOILS.filter(function(f){ return f.k === it.foil })[0] : null;
+    return '<div class="flex items-center gap-2 text-[12px] rounded-lg border border-ink-4/70 bg-ink px-2.5 py-1.5">' +
+             '<span class="shrink-0 w-4 h-4 rounded-sm border border-ink-4" style="background:' +
+               (fo ? fo.sw : '#C9AC63') + '"></span>' +
+             '<button type="button" class="flex-1 text-left text-[#CFC3AC] hover:text-gold-light truncate" ' +
+               'data-logosel="' + l.id + '">' + esc(l.name) + '</button>' +
+             '<span class="shrink-0 text-[11px] text-[#7E7565]">' +
+               (l.type === 'ai' ? 'AI 檔・不預覽' : (l.src ? (it ? (it.face === 'front' ? '正面' : '背面') : '') : '讀取中…')) +
+             '</span>' +
+             '<button type="button" class="shrink-0 text-crimson-soft hover:text-crimson px-1" ' +
+               'data-logodel="' + l.id + '" aria-label="移除這個檔">×</button>' +
+           '</div>';
+  }).join('');
+  $('fileOpts').classList.toggle('hidden', !S.logos.length);
+  $('fileLabel').textContent = S.logos.length
+    ? '已選 ' + S.logos.length + ' 個檔，可再加選'
+    : '點此選擇檔案（可一次選多個），或拖曳到這裡';
+}
+$('fileList').addEventListener('click', function(e){
+  var d = e.target.closest('[data-logodel]');
+  if(d){ removeLogo(d.getAttribute('data-logodel')); return }
+  var s = e.target.closest('[data-logosel]');
+  if(s){
+    var it = S.items.filter(function(i){ return i.logoId === s.getAttribute('data-logosel') })[0];
+    if(it){ S.sel = it.id; renderPreview(); renderItemBar() }
+  }
+});
+$('fileInp').addEventListener('change', function(){ handleFiles(this.files) });
 $('knockChk').addEventListener('change', function(){ S.knock = this.checked; applyKnock() });
 $('logoSize').addEventListener('input', function(){
   S.logoSize = +this.value;
-  // Logo 現在是可拖曳的 item，尺寸滑桿要改到那一筆上（位置不動）
+  /* 滑桿是「全部圖檔」一起改大小；要單獨調某一個，用預覽下面那排的放大／縮小。 */
   S.items.forEach(function(i){ if(i.type === 'logo') i.size = S.logoSize });
-  renderPreview();
+  renderPreview(); renderItemBar();
 });
 
 /* ── 擺字（老闆 2026-11-18）──────────────────────────────────────── */
@@ -3206,23 +3405,33 @@ $('itemFace').addEventListener('click', function(){
   it.face = it.face === 'front' ? 'back' : 'front';
   renderPreview(); renderItemBar();
 });
+/* 這一筆要燙哪個箔色（老闆 2026-11-18）。只改預覽的顏色，不自己動價錢——
+   要多一塊版請客人自己在上面加，不然我們會在他不知道的情況下多報一次製版費。 */
+$('itemFoilSel').addEventListener('change', function(){
+  var it = selItem(); if(!it) return;
+  it.foil = this.value;
+  it.foilTouched = true;      // 客人自己挑過的就不再被第 1 塊版的顏色蓋掉
+  renderPreview(); renderItemBar(); renderFileList();
+});
+/* 把預覽上量到的實際公分，帶進「燙印尺寸」的長寬欄 —— 客人拉到喜歡的大小就不用自己換算。
+   帶去哪一塊版：這一筆的箔色對得上就帶那一塊，對不上就帶第 1 塊。 */
+$('itemUseSize').addEventListener('click', function(){
+  var it = selItem(); if(!it) return;
+  var c = itemCm(it.id); if(!c) return;
+  var idx = -1;
+  S.plates.forEach(function(p, i){ if(idx < 0 && p.color === it.foil) idx = i });
+  var p = S.plates[idx < 0 ? 0 : idx]; if(!p) return;
+  p.w = c.w; p.h = c.h;
+  setPlateSize(p);
+  buildPlateList(); renderPrice(); renderPreview(); renderItemBar();
+});
 $('itemDel').addEventListener('click', function(){
   var it = selItem(); if(!it) return;
-  // 刪掉 Logo 那一筆 ＝ 等於移除圖檔，不然客人會以為圖沒了但還在算錢
-  if(it.type === 'logo'){ S.logo = S.logoRaw = null; S.logoName = ''; S.logoDemo = false;
-                          $('fileInp').value = ''; $('fileOpts').classList.add('hidden');
-                          $('fileLabel').textContent = '點此選擇檔案，或拖曳到這裡'; }
+  // 刪掉圖檔那一筆 ＝ 連那個上傳檔一起移除，不然客人會以為圖沒了、檔案卻還掛在單子上
+  if(it.type === 'logo' && it.logoId){ removeLogo(it.logoId); return }
   removeItem(it.id);
   renderPreview(); renderItemBar(); renderPrice();
 });
-/* 上傳或移除圖檔時，同步維護那一筆 logo item */
-function syncLogoItem(){
-  var has = S.items.some(function(i){ return i.type === 'logo' });
-  if(S.logo && !has) addItem('logo', '');
-  if(!S.logo && has){
-    S.items.filter(function(i){ return i.type === 'logo' }).forEach(function(i){ removeItem(i.id) });
-  }
-}
 /* 取出 CSS 變數裡的 url(...)，Logo 只存一份（在 :root），JS 這邊不重複貼一次 base64 */
 function cssUrl(name){
   var v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -3230,27 +3439,25 @@ function cssUrl(name){
   return m ? m[1] : '';
 }
 $('fileDemo').addEventListener('click', function(){
-  S.logoDemo = true;
-  S.logoType = 'png';
-  S.logoName = '（喜成範例 Logo，非客戶檔案）';
-  S.logoRaw = cssUrl('--logo-mark');
-  $('fileLabel').textContent = '已載入範例 Logo（正式下單請換成您自己的檔案）';
-  $('fileOpts').classList.remove('hidden');
-  applyKnock();
+  var lg = { id:'g' + (++S.logoSeq), name:'（喜成範例 Logo，非客戶檔案）', type:'png',
+             raw:cssUrl('--logo-mark'), src:null, ar:0.55, demo:true };
+  S.logos.push(lg);
+  addItem('logo', '', { logoId:lg.id });
+  renderFileList();
+  applyKnock(lg);
 });
 $('fileClear').addEventListener('click', function(e){
   e.preventDefault();
-  S.logo = S.logoRaw = null; S.logoName = ''; S.logoDemo = false; $('fileInp').value = '';
-  $('fileLabel').textContent = '點此選擇檔案，或拖曳到這裡';
-  $('fileOpts').classList.add('hidden');
-  syncLogoItem();
-  renderPreview(); renderItemBar();
+  S.logos.slice().forEach(function(l){ removeLogo(l.id) });
+  $('fileInp').value = '';
+  renderFileList();
+  renderPreview(); renderItemBar(); renderPrice();
 });
 ['dragover','drop'].forEach(function(ev){
   document.addEventListener(ev, function(e){
     if(!e.target.closest('label[for="fileInp"]')) return;
     e.preventDefault();
-    if(ev === 'drop' && e.dataTransfer && e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+    if(ev === 'drop' && e.dataTransfer && e.dataTransfer.files.length) handleFiles(e.dataTransfer.files);
   });
 });
 
@@ -3337,9 +3544,14 @@ function orderText(no){
   if(S.product === 'hongbao' && S.items.length){
     L.push('‧版面擺放（客人在預覽上拖的位置，左上角為 0%）：');
     S.items.forEach(function(it){
+      var lg = it.type === 'logo' ? logoById(it.logoId) : null;
+      var fo = FOILS.filter(function(f){ return f.k === it.foil })[0];
+      var c = itemCm(it.id);              // 客人拉到的實際大小（老闆 2026-11-18）
       L.push('　' + (it.face === 'front' ? '正面' : '背面') + '　' +
-             (it.type === 'logo' ? '圖檔 ' + (S.logoName || '（未命名）') : '文字「' + it.txt + '」') +
-             '　左右 ' + Math.round(it.x * 100) + '%、上下 ' + Math.round(it.y * 100) + '%');
+             (it.type === 'logo' ? '圖檔 ' + ((lg && lg.name) || '（未命名）') : '文字「' + it.txt + '」') +
+             '　左右 ' + Math.round(it.x * 100) + '%、上下 ' + Math.round(it.y * 100) + '%' +
+             (c ? '　約 ' + c.w + ' × ' + c.h + ' 公分' : '') +
+             (hasProc('foil') && fo ? '　箔色 ' + fo.name : ''));
     });
   }
   if(S.opp && S.product === 'hongbao'){
@@ -3353,7 +3565,9 @@ function orderText(no){
     L.push('‧燙印版：共 ' + S.plates.length + ' 塊（每色一塊，各自計價）');
     S.plates.forEach(function(p, i){
       var f = FOILS.filter(function(x){ return x.k === p.color })[0];
-      L.push('　第 ' + (i + 1) + ' 版：' + (f ? f.name : p.color) + '　燙印面積 ' + p.area + ' 平方公分');
+      // 老闆 2026-11-18：面積以客人圖稿為主 → 單子上要看到他填的長寬，面積放後面備註
+      L.push('　第 ' + (i + 1) + ' 版：' + (f ? f.name : p.color) + '　燙印尺寸 ' + p.w + ' × ' + p.h +
+             ' 公分（' + p.area + ' 平方公分' + (p.full ? '，滿版那一檔' : '') + '）');
     });
   }
   if(hasProc('digital')){
@@ -3362,7 +3576,9 @@ function orderText(no){
   [['emboss', '打凸', S.embossPlates], ['deboss', '打凹', S.debossPlates]].forEach(function(x){
     if(!hasProc(x[0])) return;
     L.push('‧' + x[1] + '：共 ' + x[2].length + ' 處（逐處一塊版，各自計價）');
-    x[2].forEach(function(p, i){ L.push('　第 ' + (i + 1) + ' 處：面積 ' + p.area + ' 平方公分') });
+    x[2].forEach(function(p, i){
+      L.push('　第 ' + (i + 1) + ' 處：' + p.w + ' × ' + p.h + ' 公分（' + p.area + ' 平方公分）');
+    });
   });
   if(S.reg) L.push('‧套準：有（多道工序疊在同一個圖案上）');
   if(flapOn()){
@@ -3378,8 +3594,15 @@ function orderText(no){
   L.push('');
   L.push('■ 版面');
   L.push('‧版面設計以客戶提供的完稿檔為準（或由喜成代排，另議）');
-  if(S.logoDemo)       L.push('‧圖檔：目前用網站的範例 Logo 預覽，實際檔案待提供');
-  else if(S.logoName)  L.push('‧上傳圖檔：' + S.logoName + '（原始檔另以 LINE 傳送）');
+  /* 上傳的檔案（老闆 2026-11-18 起可以多份）：逐個列出來，範例圖要標清楚不是客戶的檔。 */
+  if(S.logos.length){
+    L.push('‧上傳圖檔共 ' + S.logos.length + ' 份（原始檔另以 LINE 傳送）：');
+    S.logos.forEach(function(l, i){
+      L.push('　' + (i + 1) + '. ' + l.name +
+             (l.demo ? '（網站範例圖，實際檔案待提供）' : '') +
+             (l.type === 'ai' ? '（AI 檔，網站不預覽）' : ''));
+    });
+  }
 
   var add = [];
   if(S.diecut) add.push('軋型／特殊刀模');
@@ -3544,6 +3767,7 @@ $('favicon').href = cssUrl('--logo-mark');
 buildFlaps();
 buildHbSizes();
 buildGreetBtns();        // 吉祥話按鈕（＋新年快樂…）
+renderFileList();        // 上傳檔案清單（空的時候也要把文案與 fileOpts 的顯示定好）
 bindDrag();              // 預覽上的圖文拖曳
 applyModeUI();           // 公版／全客製要先定，底下才知道哪些能選
 applyCraftUI();          // 內含 buildFoils()、buildQty() 與 applyFlapUI()
