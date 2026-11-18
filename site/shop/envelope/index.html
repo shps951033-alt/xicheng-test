@@ -1336,7 +1336,10 @@ var S = {
      公版是現成糊好的袋子，沒辦法再進機器壓凸壓凹。 */
   hbMode:'stock', hbStock:'fenghua',
   hbLayout:'portrait', hbSize:{ portrait:'s18', landscape:'L9' },
-  hbFlap:'flat', flapPrint:false, dofangSize:'s30',
+  /* 全客製的預設蓋型＝圓頭蓋：老闆 2026-11-18 說「我們有一個現成刀模」，就是這支
+     （2026-10-12 也確認過現成的只有圓頭蓋那支）→ 預設不要讓客人一進來就背 1,200 刀模費。
+     公版模式會由 applyStock() 依款式自己覆蓋這個值，不受影響。 */
+  hbFlap:'round', flapPrint:false, dofangSize:'s30',
   material:'fenghua', ink:'dcmyk',
   /* 全客製的紙＝名片那份美術紙選單（papers.js）。存的是陣列索引，不是紙名。
      預設挑「日本雅子 140g」—— 老闆 2026-11-18 一開口就是這支（長瑩的雅子系列）。
