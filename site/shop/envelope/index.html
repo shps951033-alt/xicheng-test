@@ -1339,7 +1339,7 @@ var S = {
   /* 全客製的預設蓋型＝圓頭蓋：老闆 2026-11-18 說「我們有一個現成刀模」，就是這支
      （2026-10-12 也確認過現成的只有圓頭蓋那支）→ 預設不要讓客人一進來就背 1,200 刀模費。
      公版模式會由 applyStock() 依款式自己覆蓋這個值，不受影響。 */
-  hbFlap:'round', flapPrint:false, dofangSize:'s30',
+  hbFlap:'round', flapTouched:false, flapPrint:false, dofangSize:'s30',
   material:'fenghua', ink:'dcmyk',
   /* 全客製的紙＝名片那份美術紙選單（papers.js）。存的是陣列索引，不是紙名。
      預設挑「日本雅子 140g」—— 老闆 2026-11-18 一開口就是這支（長瑩的雅子系列）。
@@ -2384,6 +2384,15 @@ $('stockSel').addEventListener('change', function(){
 $$('[data-mode]').forEach(function(b){
   b.addEventListener('click', function(){
     S.hbMode = b.getAttribute('data-mode');
+    /* 切到全客製時，如果客人還沒自己挑過蓋型，就先帶到有現成刀模的那支（圓頭蓋）。
+       老闆 2026-11-18：「我們有一個現成刀模」→ 預設不要讓人一進來就背 1,200 新開刀模費。
+       （公版模式的蓋型是跟著款式走的，帶過來沒有意義，常常還是沒刀模的平頭蓋） */
+    if(S.hbMode === 'custom' && !S.flapTouched && !PRICE.hongbao.flaps[S.hbFlap].die){
+      var ready = Object.keys(PRICE.hongbao.flaps).filter(function(k){
+        return PRICE.hongbao.flaps[k].die && (ENABLE_LANDSCAPE || ['flat','floral','round'].indexOf(k) >= 0);
+      })[0];
+      if(ready){ S.hbFlap = ready; pressGroup('flap', S.hbFlap) }
+    }
     applyModeUI();
     applyCraftUI();     // 打凸／打凹的可用狀態會變
     update();
@@ -2430,6 +2439,7 @@ $('hbSizeGrid').addEventListener('click', function(e){
 $('flapGrid').addEventListener('click', function(e){
   var b = e.target.closest('[data-flap]'); if(!b) return;
   S.hbFlap = b.getAttribute('data-flap');
+  S.flapTouched = true;        // 客人自己挑過了，之後切換模式就不要再幫他改
   pressGroup('flap', S.hbFlap);
   applyFlapUI();
   renderPreview(); renderPrice();
