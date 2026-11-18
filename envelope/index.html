@@ -2538,6 +2538,7 @@ $$('[data-product]').forEach(function(b){
     S.product = b.getAttribute('data-product');
     $$('[data-product]').forEach(function(x){ x.setAttribute('aria-selected', String(x === b)) });
     $('coupletTypeBox').classList.toggle('hidden', S.product !== 'chunlian');
+    applyModeUI();          // 公版／全客製、擺字區…這些只有紅包袋有，換商品要重算一次
     buildMaterialSelect();
     syncTextFields();
     update();
