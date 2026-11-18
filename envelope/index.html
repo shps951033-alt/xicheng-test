@@ -1917,6 +1917,23 @@ function envelopeArt(w, flapH, bodyH, matCss, flapInner, bodyInner){
            '</div>' +
          '</div>';
 }
+/* 背面（老闆 2026-11-18：「預覽的示意圖 用正反2面」）。
+   背面就是一片跟袋身同大的紙，沒有蓋子；照刀模畫一個拇指開口的半圓。
+   形狀單純，不必像正面那樣走 clip-path，用圓角 div ＋ 一條 SVG 描邊就夠。 */
+function backArt(w, h, matCss, inner){
+  var r = Math.round(w * 0.13), cx = w / 2, ty = Math.round(h * 0.17);
+  return '<div class="' + foilCss() + ' relative" style="width:' + w + 'px;height:' + h + 'px">' +
+           '<div class="absolute inset-0 ' + matCss + ' glare" ' +
+             'style="border-radius:7px;filter:drop-shadow(0 16px 26px rgba(0,0,0,.5))"></div>' +
+           '<svg class="absolute inset-0 pointer-events-none" width="' + w + '" height="' + h +
+             '" viewBox="0 0 ' + w + ' ' + h + '">' +
+             '<rect x="0.7" y="0.7" width="' + (w - 1.4) + '" height="' + (h - 1.4) + '" rx="7" ' +
+               'fill="none" stroke="rgba(255,235,205,.26)" stroke-width="1.4"/>' +
+             '<path d="M ' + (cx - r) + ' ' + ty + ' a ' + r + ' ' + r + ' 0 0 1 ' + (r * 2) + ' 0" ' +
+               'fill="none" stroke="rgba(255,235,205,.22)" stroke-width="1.2"/>' +
+           '</svg>' + (inner || '') +
+         '</div>';
+}
 function flapCfg(){ return PRICE.hongbao.flaps[S.hbFlap] }
 function flapOn(){ return S.product === 'hongbao' && S.flapPrint && flapCfg().canPrint }
 
@@ -1958,9 +1975,20 @@ function renderPreview(){
     var bodyInner = area(bx, by, bw, bh, S.logo ? '' : '可燙金範圍 ' + FA.label) +
                     '<div class="absolute inset-0 grid place-items-center">' + logo + '</div>';
 
-    html = envelopeArt(W, flapH, H, mat.css, '', bodyInner) +
-           '<p class="text-center text-[11px] text-[#7E7565] mt-3 tracking-[.14em]">攤平示意（蓋子未摺）' +
-           (flapOn() ? '　蓋面虛線內亦可加工' : '') + '</p>';
+    /* 正反兩面並排（老闆 2026-11-18：「預覽的示意圖 用正反2面」）。
+       現在除了糊邊整張都能燙，背面也要讓客人看得到可以做。
+       背面那欄往下墊一個蓋頭的高度，兩片袋身才會對齊在同一條線上。 */
+    var backBox = area(bx, by, bw, bh, '背面也可燙金');
+    var cap = 'text-center text-[11px] text-[#7E7565] mt-2 tracking-[.14em]';
+    html = '<div class="flex items-start justify-center gap-5 sm:gap-7">' +
+             '<div>' + envelopeArt(W, flapH, H, mat.css, '', bodyInner) +
+               '<p class="' + cap + '">正面（蓋子未摺）</p></div>' +
+             '<div style="padding-top:' + flapH + 'px">' + backArt(W, H, mat.css, backBox) +
+               '<p class="' + cap + '">背面</p></div>' +
+           '</div>' +
+           '<p class="text-center text-[11px] text-[#7E7565] mt-3 tracking-[.14em]">攤平示意' +
+           (flapOn() ? '　蓋面虛線內亦可加工' : '') +
+           (isStock() ? '' : '　糊邊以外都能燙金／打凸') + '</p>';
 
   } else {
     // 春聯：紙張本體＋可加工範圍，圖案同樣由完稿檔決定
