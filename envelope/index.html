@@ -496,6 +496,13 @@ section[id]{ scroll-margin-top:76px }
       <div class="rounded-2xl border border-ink-3 bg-ink-2 p-5 space-y-4">
         <div>
           <label class="lbl" id="matLabel" for="matSel">紙張材質</label>
+          <!-- 春聯的紙要去哪裡挑（老闆 2026-11-18）：美術紙清單 或 傳統春聯紙 -->
+          <div id="clMatPick" class="hidden grid grid-cols-2 gap-2 mb-3">
+            <button class="chip !py-2.5" data-clmat="art" aria-pressed="true">美術紙
+              <span class="block text-[11px] text-[#8F8674] mt-1">紙廠色紙，可挑顏色克數</span></button>
+            <button class="chip !py-2.5" data-clmat="trad" aria-pressed="false">傳統春聯紙
+              <span class="block text-[11px] text-[#8F8674] mt-1">萬年紅宣紙／絨布／抗UV</span></button>
+          </div>
           <!-- 全客製：挑紙 -->
           <select id="matSel" class="fld"></select>
           <!-- 公版：挑款式（一款＝紙材＋蓋型＋尺寸綁好），所以同一個位置換成款式選單 -->
@@ -1274,7 +1281,10 @@ var PRICE = {
       dofang:  { name:'單字斗方',   f:1.00, spec:'',                      plates:1 },
       tiaopi:  { name:'四字條批',   f:1.40, spec:'100 × 28 cm 四字',      plates:1 },
       duilian: { name:'七字對聯',   f:2.20, spec:'上下聯一對 138 × 23 cm（＋橫批）', plates:2 }
-    }
+    },
+    /* 斗方用美術紙算落數時，一個成品要留的裁切邊（公分，長寬各加這麼多）。
+       ⚠️ 這是我抓的慣例值，**不是老闆給的數字**；要調報價就改這一個常數。 */
+    cutMargin: 1
   },
 
   // 斗方四種尺寸（2026-09-15 老闆指定）。係數以 30×30 為 1.0 往下抓。
@@ -1423,6 +1433,11 @@ var FAQS = [
    ══════════════════════════════════════════════════════════════════════ */
 var S = {
   product:'hongbao', couplet:'dofang',
+  /* 春聯的紙要去哪裡挑（老闆 2026-11-18：「春聯一樣，像全客製紅包袋那樣可以選紙材」）：
+     'art'  ＝ 美術紙選單（papers.js 那 387 款，真牌價×落數）  ← 預設
+     'trad' ＝ 原本那三款傳統春聯紙（萬年紅宣紙／厚磅絨布紙／抗UV卡紙，係數暫估價）
+     傳統那三款留著，是因為萬年紅宣紙本來就是春聯最常用的紙，美術紙清單裡沒有。 */
+  clMat:'art',
   procs:{ digital:false, foil:true, emboss:false, deboss:false },   // 可複選
   reg:false,                                                        // 套準
   foilParts:{ main:true, pattern:true, sub:false },                 // 印刷＋燙金並用時，哪些元素燙金
@@ -1580,11 +1595,32 @@ function shade(hex, amt){
   function f(v){ return Math.max(0, Math.min(255, Math.round(v + 255 * amt))) }
   return '#' + ((1 << 24) + (f(r) << 16) + (f(g) << 8) + f(b)).toString(16).slice(1);
 }
-function artMode(){ return S.product === 'hongbao' && S.hbMode === 'custom' }
+/* 哪些情況吃「美術紙選單」：全客製紅包袋，以及春聯選了美術紙（老闆 2026-11-18：
+   「春聯一樣，像全客製紅包袋那樣可以選紙材」）。 */
+function artMode(){
+  return (S.product === 'hongbao'  && S.hbMode === 'custom')
+      || (S.product === 'chunlian' && S.clMat === 'art');
+}
+/* ⚠️ 只有「全客製紅包袋」才有刀模、糊型、軋型、12 元平張印那一套。
+   春聯也走美術紙之後，凡是紅包袋專屬的計價與 UI 都要改吃這支，不能只看 artMode()。 */
+function hbArt(){ return artMode() && S.product === 'hongbao' }
 function artPaperObj(){ return ART_PAPERS[Math.min(S.artPaper, ART_PAPERS.length - 1)] || ART_PAPERS[0] }
 function artGradeObj(){ var p = artPaperObj(); return p.grades[Math.min(S.artGrade, p.grades.length - 1)] || p.grades[0] }
+/* 一「個」成品要用掉多大一塊紙（公分）。落數就是拿這個去排大紙。
+   ‧紅包袋全客製＝刀模備料 22 × 27（老闆給的）
+   ‧春聯斗方＝成品 ＋ 裁切邊 PRICE.chunlian.cutMargin（我抓每邊各 0.5，共 1 公分；要改改那個常數）
+   ‧條批（100×28）與對聯（138×23）＝ 比我們機台最大紙 64 × 90 還長 → 回 null，線上不報價 */
+function artBlankCm(){
+  if(S.product === 'hongbao') return PRICE.hongbao.custom.dieBlank;
+  if(S.couplet !== 'dofang') return null;              // 條批／對聯：線上算不了
+  var n = parseFloat(sizeCfg().name) || 0;             // '10 × 10 cm' → 10
+  if(!n) return null;
+  var m = PRICE.chunlian.cutMargin;
+  return { w:n + m, h:n + m };
+}
 function artUps(){
-  var B = PRICE.hongbao.custom.dieBlank;
+  var B = artBlankCm();
+  if(!B) return 0;
   return upsOnSheet(artGradeObj().perBig, B.w, B.h);
 }
 /* 這款紙有哪些顏色（沒資料就回空陣列，選單整個不出現） */
@@ -1606,7 +1642,9 @@ function artSheetPrice(){
 function artMat(){
   var p = artPaperObj(), g = artGradeObj();
   var ups = artUps(), sh = sheetInfo(g.perBig);
-  var B = PRICE.hongbao.custom.dieBlank;
+  var B = artBlankCm();
+  // 春聯的條批／對聯比大紙還長，線上算不出落數 → 直接說要另外報價，不要硬擠一個數字
+  var tooBig = S.product === 'chunlian' && S.couplet !== 'dofang';
   var col = artColorObj(), sheetPrice = artSheetPrice();
   return {
     // 顏色也寫進名稱，訂單、規格列、LINE 內容就都會帶到
@@ -1618,7 +1656,11 @@ function artMat(){
     /* ⚠️ 老闆 2026-11-18：「紙錢不用顯示出來」——
        每個紙錢、大紙牌價、一張軋幾個，這三個擺出來等於把成本算式給客人看，全部收起來。
        數字照算不變，只是不顯示；要看成本請開 DevTools 看 calc() 或回頭查這份原始碼。 */
-    desc: ups
+    desc: tooBig
+      ? '條批（100 × 28 公分）與對聯（138 × 23 公分）比我們機台能吃的最大紙張（64 × 90 公分）還長，' +
+        '美術紙沒有這麼大的平張，要接紙或另外安排，請用官方 LINE 跟我們談。' +
+        '斗方（10／12／15／30 公分）可以直接在線上試算。'
+      : ups
       ? '選好紙、克數與顏色，下面的價格會自動更新。' +
         (artColors().length
           ? '這款有 ' + artColors().length + ' 個顏色；右邊預覽的紙色是**螢幕示意**，' +
@@ -1674,9 +1716,13 @@ function plateCalcHtml(p){
     return '<span class="text-crimson-soft">請填長寬</span>';
   }
   var m = foilMaxCm();
-  return '＝ <span class="text-[#EDE4D3]">' + p.area + ' cm²</span>' +
-         '<span class="' + (p.full ? 'text-gold-light' : 'text-[#8F8674]') + '">・' +
-           (p.full ? '算滿版那一檔' : '正常面積') + '</span>' +
+  /* 「正常面積／滿版」那兩檔是紅包袋的工費分檔（老闆 2026-10-12 的 3 元／4 元），
+     春聯的工費是看數量級距、不分這兩檔，所以春聯只寫面積，不要誤導。 */
+  var band = S.product === 'hongbao'
+    ? '<span class="' + (p.full ? 'text-gold-light' : 'text-[#8F8674]') + '">・' +
+      (p.full ? '算滿版那一檔' : '正常面積') + '</span>'
+    : '';
+  return '＝ <span class="text-[#EDE4D3]">' + p.area + ' cm²</span>' + band +
          (plateOver(p) && m
            ? '<span class="block text-crimson-soft mt-0.5">⚠ 比可燙範圍（' + m.w + ' × ' + m.h +
              ' 公分，' + m.why + '）還大，我們收到單會跟你確認</span>'
@@ -1707,11 +1753,13 @@ function buildPlateList(){
   // 把「正常燙印範圍」寫出來，客人才知道什麼情況會跳到滿版那一檔
   var FA = PRICE.hongbao.foilArea, hint = $('areaHintLine'), m = foilMaxCm();
   if(hint){
+    var maxTxt = m ? '這款最大可以燙到 <span class="text-gold-light">' + m.w + ' × ' + m.h +
+                     ' 公分</span>（' + m.why + '）。' : '';
     hint.innerHTML = S.product === 'hongbao'
       ? '燙印面積<span class="text-gold-light">以你實際圖稿的大小為準</span>，請直接填長寬；' +
-        '在 ' + FA.label + '（' + FA.cm2 + ' 平方公分）以內算正常面積，超過就跳到滿版那一檔。' +
-        (m ? '這款最大可以燙到 <span class="text-gold-light">' + m.w + ' × ' + m.h + ' 公分</span>（' + m.why + '）。' : '')
-      : '';
+        '在 ' + FA.label + '（' + FA.cm2 + ' 平方公分）以內算正常面積，超過就跳到滿版那一檔。' + maxTxt
+      // 春聯：工費是看數量級距，不分正常／滿版，所以只講「填實際大小」與上限
+      : '燙印面積<span class="text-gold-light">以你實際圖稿的大小為準</span>，請直接填長寬（製版費看這個面積算）。' + maxTxt;
   }
   var opts = FOILS.map(function(f){ return f });
   $('plateList').innerHTML = S.plates.map(function(p, i){
@@ -1927,8 +1975,8 @@ function buildArtSelect(){
 function applyDieBox(){
   var box = $('dieBox');
   if(!box) return;
-  box.classList.toggle('hidden', !artMode());
-  if(!artMode()) return;
+  box.classList.toggle('hidden', !hbArt());
+  if(!hbArt()) return;
   var C = PRICE.hongbao.custom, FA = PRICE.hongbao.foilArea;
   var f = flapCfg();
   $('dieNote').innerHTML =
@@ -2490,8 +2538,10 @@ function calc(){
   var fixedPaper = mat.unit || 0;
   /* ★ 自備袋（老闆 2026-11-18）：袋子是客人寄來的 → 紙材一毛都不算。
      ⚠️ 這一行要擋在前面，不能只靠 mat.unit＝0，不然會掉回級距表估價。 */
+  /* ⚠️ 美術紙那條路（mat.art）的每個紙錢**已經是照成品尺寸排落數算出來的**，
+     再乘一次尺寸係數就會把大小算兩遍（春聯 15×15 會比實際貴一倍以上）。 */
   var paperUnit = byoMode() ? 0
-                : fixedPaper ? fixedPaper * sizeF2
+                : fixedPaper ? fixedPaper * (mat.art ? 1 : sizeF2)
                 : tier.unit * sizeF2 * paperOnlyF;
 
   // ② 每道工序的每份工費（燙金另計箔材加價與面積補價）
@@ -2526,7 +2576,7 @@ function calc(){
       // 特殊箔材的加價逐版累加（雷射金／玫瑰金等）
       var fx = S.plates.reduce(function(s, p){ return s + (PRICE.foilExtra[p.color] || 0) }, 0);
       if(fx){ u += fx; note += '＋箔材 ' + fx.toFixed(2) }
-    } else if(k === 'digital' && artMode()){
+    } else if(k === 'digital' && hbArt()){
       /* ★ 全客製的數位印刷（老闆 2026-11-18）：以 22×27 的紙下去印，一張 12 元。
          一張 ＝ 一個紅包袋，所以就是每個 12 元、沒有級距。 */
       u = PRICE.hongbao.custom.digitalUnit;
@@ -2546,7 +2596,7 @@ function calc(){
     }
     if(k === 'digital' && S.sides === 'double'){
       // 雙面＝再過一次機，單價乘 2（全客製 12 元那條路也一樣）
-      var base1 = artMode() ? PRICE.hongbao.custom.digitalUnit : t.unit;
+      var base1 = hbArt() ? PRICE.hongbao.custom.digitalUnit : t.unit;
       u = base1 * 2;
       note = '每個 ' + base1.toFixed(2) + ' 元 × 雙面';
     }
@@ -2565,7 +2615,7 @@ function calc(){
   /* ③之二 全客製的「糊型（成型）」：每個 3 元（老闆 2026-11-18 給的確定值）。
      公版是買現成糊好的成品袋，不收這筆；春聯是平張，也沒有糊型。 */
   var unitRows = [];
-  if(artMode()){
+  if(hbArt()){
     unitRows.push({ name:'糊型（成型）', unit:PRICE.hongbao.custom.glueUnit,
                     note:'每個 ' + PRICE.hongbao.custom.glueUnit + ' 元，手工糊成袋' });
   }
@@ -2649,7 +2699,7 @@ function calc(){
 
   /* ⑥ 全客製的軋型工資：照 後加工\軋型.md 的木刀階梯（每張單價 × 張數，未達基本費收基本費）。
      「張」在這裡＝一個紅包袋（刀模一次軋一個 22×27 的料）。 */
-  if(artMode()){
+  if(hbArt()){
     var C = PRICE.hongbao.custom;
     var dcRate  = C.diecutLabor.unit;
     var dcLabor = Math.max(C.diecutLabor.min, Math.round(qty * dcRate));
@@ -2844,8 +2894,21 @@ $$('[data-product]').forEach(function(b){
     $$('[data-product]').forEach(function(x){ x.setAttribute('aria-selected', String(x === b)) });
     $('coupletTypeBox').classList.toggle('hidden', S.product !== 'chunlian');
     applyModeUI();          // 公版／全客製、擺字區…這些只有紅包袋有，換商品要重算一次
+    /* ⚠️ 一定要重建工序按鈕：打凸／打凹的鎖是看「成品袋不能壓」，
+       從公版紅包袋切到春聯時不重建，那兩顆會一直停在灰掉的狀態（2026-11-18 踩到）。 */
+    applyCraftUI();
     buildMaterialSelect();
     syncTextFields();
+    update();
+  });
+});
+/* 春聯的紙材來源：美術紙／傳統春聯紙（老闆 2026-11-18） */
+$$('[data-clmat]').forEach(function(b){
+  b.addEventListener('click', function(){
+    S.clMat = b.getAttribute('data-clmat');
+    pressGroup('clmat', S.clMat);
+    applyModeUI();          // 選單要換（美術紙那組 vs 原本的紙材下拉）
+    buildMaterialSelect();
     update();
   });
 });
@@ -2940,6 +3003,9 @@ $$('[data-dofang]').forEach(function(b){
   b.addEventListener('click', function(){
     S.dofangSize = b.getAttribute('data-dofang');
     pressGroup('dofang', S.dofangSize);
+    // 尺寸會改落數（一張大紙切得出幾個）→ 紙錢、說明與可燙範圍都要重算（老闆 2026-11-18）
+    buildMaterialSelect();
+    buildPlateList();
     renderPreview(); renderPrice();
   });
 });
@@ -2949,6 +3015,7 @@ $$('[data-couplet]').forEach(function(b){
     S.couplet = b.getAttribute('data-couplet');
     pressGroup('couplet', S.couplet);
     syncTextFields();
+    applyModeUI();      // 條批／對聯要把「美術紙」那顆鎖起來（沒那麼大的平張）
     update();
   });
 });
@@ -2980,8 +3047,17 @@ function setPlateSize(p){
 /* 這個產品最大能燙到多大（只用來提醒客人，不阻止他填）。
    全客製＝刀模展開扣掉糊邊；公版＝袋身（蓋面另外一塊版，所以不含蓋頭）。 */
 function foilMaxCm(){
+  if(S.product === 'chunlian'){
+    // 春聯就是一張平的紙，整張都能燙／打凸，所以上限＝成品本身的尺寸
+    if(S.couplet === 'dofang'){
+      var n = parseFloat(sizeCfg().name) || 0;
+      return n ? { w:n, h:n, why:'斗方整張' } : null;
+    }
+    return S.couplet === 'tiaopi' ? { w:28, h:100, why:'條批整張' }
+                                  : { w:23, h:138, why:'單條整張' };
+  }
   if(S.product !== 'hongbao') return null;
-  if(artMode()){
+  if(hbArt()){
     var C = PRICE.hongbao.custom;
     return { w:+(C.dieOuter.w - C.glueEdgeCm).toFixed(1), h:C.dieOuter.h, why:'刀模展開扣掉糊邊' };
   }
@@ -3138,7 +3214,24 @@ function applyModeUI(){
        全客製紅包袋 → 美術紙選單（搜尋＋紙名＋克數，papers.js）
        春聯 → 原本那份紙材選單 */
   var pickStock = hb && stock;
-  var pickArt   = hb && !stock && !byo;        // 自備袋沒有紙可挑（袋子是客人的）
+  /* 春聯：條批（100×28）與對聯（138×23）沒有這麼大的美術紙平張、也超過我們機台的
+     最大紙張 64 × 90，所以那兩款只能走傳統春聯紙，美術紙那顆直接鎖起來。
+     ⚠️ 這段要排在 pickArt 前面 —— 這裡可能會把 clMat 退回 'trad'，排後面會拿到舊值。 */
+  $('clMatPick').classList.toggle('hidden', S.product !== 'chunlian');
+  if(S.product === 'chunlian'){
+    var artOk = S.couplet === 'dofang';
+    if(!artOk && S.clMat === 'art') S.clMat = 'trad';
+    var artBtn = document.querySelector('[data-clmat="art"]');
+    if(artBtn){
+      artBtn.disabled = !artOk;
+      artBtn.classList.toggle('opacity-40', !artOk);
+      artBtn.classList.toggle('cursor-not-allowed', !artOk);
+      artBtn.title = artOk ? '' : '條批／對聯沒有這麼大的美術紙平張，請選傳統春聯紙或用 LINE 詢問';
+    }
+    pressGroup('clmat', S.clMat);
+  }
+  // 美術紙選單：全客製紅包袋，或春聯選了「美術紙」（老闆 2026-11-18）
+  var pickArt = (hb && !stock && !byo) || artMode();
   $('matLabel').textContent = pickStock ? '公版款式' : byo ? '袋子' : '紙張材質';
   $('matLabel').setAttribute('for', pickStock ? 'stockSel' : (pickArt ? 'artSel' : 'matSel'));
   $('stockSel').classList.toggle('hidden', !pickStock);
