@@ -376,8 +376,8 @@ section[id]{ scroll-margin-top:76px }
           <span class="block text-[13px] font-bold text-gold-light mb-1">把袋子寄來加工，怎麼進行</span>
           ① 先用官方 LINE 跟我們說您的袋子（尺寸、材質、數量）與要燙的圖，我們看過確定能燙再寄。<br>
           ② 確認後我們會用 LINE 給您<span class="text-gold-light">寄件地址與收件人</span>（地址不公開在網頁上）。<br>
-          ③ <span class="text-gold-light">請多寄一些備品</span>：燙金是一個一個過機器，難免有幾個位置歪掉或吃箔不勻，
-             我們不另外收費，但袋子要您自己補。要多寄幾個，LINE 上跟我們抓。<br>
+          ③ <span class="text-gold-light">請多寄備品：總數的 5%，至少 10 個</span>（例如訂 500 個就多寄 25 個）。
+             燙金是一個一個過機器，難免有幾個位置歪掉或吃箔不勻，我們不另外收費，但袋子要您自己補。<br>
           ④ 線上這個金額<span class="text-gold-light">不含袋子</span>，只算燙金工費與製版費；加工完寄回的運費另計。<br>
           <span class="block mt-1 text-[#6E6558]">※ 太厚、已經裝好東西、表面上過亮膜或有凹凸紋路的袋子不一定吃得上箔，先問過比較保險。</span>
         </div>
@@ -1074,6 +1074,19 @@ var PRICE = {
      老闆 2026-09-15：每一層加工 5～10 張。這裡以中間值估，要一律抓滿就把 est 改成 max。
      算法：放損張數 ＝ 加工層數 × est，只收紙材錢（客人實拿仍是訂購數量）。 */
   spoil: { min:5, max:10, est:8 },
+
+  /* ★ 自備袋要客人多寄的備品（老闆 2026-11-19 給的確定值）：
+       「備品請客人準備至少 10 個，總數的 5%」
+     → 備品數 ＝ max(10, ⌈數量 × 5%⌉)。這是叫客人多寄，我們不收這筆錢。 */
+  byoSpare: { pct:0.05, min:10 },
+
+  /* ★ 打凸工費（老闆 2026-11-19 給的確定值）：「打凸一個工錢是 4 元，基本費是 1200」
+     → 工費 ＝ max(1200, 個數 × 4)，跟軋型同一套「單價工資 vs 基本費取大」的算法。
+       ‧紅包袋與春聯共用（這是我們壓力機的工錢，不看是什麼產品）。
+       ‧不乘尺寸係數 —— 老闆報的就是「一個 4 元」。
+       ‧多處打凸 ＝ 每一處各過一次機，所以乘處數；基本費整單只收一次。
+     ⚠️ **打凹老闆還沒給**，先沿用舊的級距表暫估，別拿這組數字去套。 */
+  embossLabor: { unit:4, min:1200 },
 
   /* ★ OPP 透明包裝袋（紅包袋專屬）—— 老闆 2026-11-18 給的確定值：
        ‧短袋 每個 1 元　　→ 適合「平頭蓋」的紅包袋
@@ -2586,6 +2599,17 @@ function calc(){
          一張 ＝ 一個紅包袋，所以就是每個 12 元、沒有級距。 */
       u = PRICE.hongbao.custom.digitalUnit;
       note = '以 ' + PRICE.hongbao.custom.dieBlank.w + ' × ' + PRICE.hongbao.custom.dieBlank.h + ' 公分平張印';
+    } else if(k === 'emboss'){
+      /* ★ 打凸工費（老闆 2026-11-19）：max(1200, 個數 × 4 × 處數)。
+         ⚠️ 這一列的總額不是「單價 × 數量」那麼單純（有基本費地板），
+            所以先算總額再回推每個單價，下面 unit × qty 乘回去才會剛好等於總額。
+         ⚠️ 打凹沒給價，還是走下面的級距表。 */
+      var EL = PRICE.embossLabor;
+      var mE = S.embossPlates.length;
+      var rawE = qty * EL.unit * mE;
+      u = Math.max(EL.min, rawE) / qty;
+      note = (mE > 1 ? '共 ' + mE + ' 處' : '') +
+             (rawE < EL.min ? (mE > 1 ? '，' : '') + '數量少，這筆以基本費計' : '');
     } else {
       var t = tierOf(PRICE[S.product].procUnit[k], qty);
       u = t.unit * sizeF2;
@@ -2604,9 +2628,9 @@ function calc(){
       u = base1 * 2;
       note = '雙面（正反各過一次機）';
     }
-    // 打凸／打凹也是一處壓一次，處數多就多壓幾趟
-    if(k === 'emboss' || k === 'deboss'){
-      var m = (k === 'emboss' ? S.embossPlates : S.debossPlates).length;
+    // 打凹也是一處壓一次，處數多就多壓幾趟（打凸已經在上面自己乘過處數了，不要重複）
+    if(k === 'deboss'){
+      var m = S.debossPlates.length;
       if(m > 1){ u *= m; note = '共 ' + m + ' 處' }
     }
     procUnitSum += u;
@@ -2684,10 +2708,15 @@ function calc(){
   var spoilCost = spoilQty * paperUnit;
   /* 自備袋：放損這筆我們不收錢（袋子不是我們出的），但客人要多寄備品，
      所以改成一行「不收費、請多寄」的提醒，金額 0。 */
-  if(byoMode() && spoilQty) plateRows.push({
-    name:'試機備品（不收費）', sort:70,
-    note:'燙金是一個一個過機器，' + layers + ' 層加工大約會用掉 ' + spoilQty +
-         ' 個來試機對位。我們不收這筆錢，但請您多寄一些備品過來',
+  /* 自備袋的備品（老闆 2026-11-19 給的確定值）：至少 10 個，或總數的 5%，取多的。
+     我們不收這筆錢，但袋子要客人自己多寄。 */
+  var spareQty = byoSpareQty(qty);
+  if(byoMode()) plateRows.push({
+    name:'備品（請您多寄，不收費）', sort:70,
+    note:'燙金是一個一個過機器，難免有幾個要試機對位或位置不理想。請多寄 ' +
+         spareQty.toLocaleString('en-US') + ' 個備品（總數的 ' +
+         Math.round(PRICE.byoSpare.pct * 100) + '%，至少 ' + PRICE.byoSpare.min +
+         ' 個）。我們不收這筆錢，但袋子要您補',
     v: 0
   });
   if(spoilCost) plateRows.push({
@@ -3160,6 +3189,11 @@ function buildFlaps(){
      isFormed() ＝「已經糊好的成品袋」（stock 或 byo）→ 不能再進壓力機打凸打凹、不用刀模 */
 function isStock(){ return S.product === 'hongbao' && S.hbMode === 'stock' }
 function byoMode(){ return S.product === 'hongbao' && S.hbMode === 'byo' }
+/* 自備袋要客人多寄幾個備品（老闆 2026-11-19）：至少 10 個，或總數 5%，取多的 */
+function byoSpareQty(qty){
+  var B = PRICE.byoSpare;
+  return Math.max(B.min, Math.ceil((qty || 0) * B.pct));
+}
 function isFormed(){ return isStock() || byoMode() }
 function canPress(){ return !isFormed() }          // 成品袋不能打凸／打凹
 
@@ -3749,7 +3783,9 @@ function orderText(no){
     if(isStock()) L.push('‧公版款式：' + stockCfg().name);
     if(byoMode()){
       L.push('　（下面的尺寸與蓋型是客人在網站上挑「最接近的」，實際袋子以收到的實物為準）');
-      L.push('　（請跟客人確認：袋子尺寸材質、要多寄幾個備品、寄件時間、加工完寄回的方式）');
+      L.push('　（備品：請客人多寄 ' + byoSpareQty(q.qty).toLocaleString('en-US') +
+             ' 個＝總數 5%、至少 10 個）');
+      L.push('　（請跟客人確認：袋子尺寸材質、寄件時間、加工完寄回的方式）');
     }
   }
   L.push('‧規格：' + specText());
