@@ -1291,11 +1291,21 @@ var PRICE = {
   chunlian: {
     label: '客製化春聯',
     blank: { 10:14.0, 30:11.0, 50:9.5, 100:8.5, 300:6.5, 500:5.2, 1000:4.2, 2000:3.5 },
-    procUnit: {
-      digital: { 10:41.0, 30:29.0, 50:23.5, 100:17.5, 300:12.5, 500:10.8, 1000:8.8, 2000:7.5 },
-      foil:    { 100:16.5, 300:11.5, 500:9.3, 1000:6.8, 2000:5.5 },
-      emboss:  { 100:1.4 },
-      deboss:  { 100:1.6 }
+    /* ★ 春聯工費（老闆 2026-11-19 口述，**確定值、不是暫估**）：
+         ‧燙金　　只有單面；一色每個 3.5；燙 2 色（套準對位）每個 4.5；基本費 1500
+         ‧打凸　　每個 3（打凹比照——沿用老闆 2026-11-19「打凹打凸一樣」的通則）
+         ‧數位印　每張 5.5，一個起印，基本費 800
+       ⚠️ 這組是固定單價、**沒有數量級距**（舊的 procUnit 草稿級距表已整組刪除，
+          不要再從舊版複製回來）。
+       ⚠️ **不要再乘款式係數／斗方尺寸係數**——老闆給的就是「每個」「每張」的價。
+          尺寸係數現在只剩紙材那邊在用（走級距表的傳統紙）。
+       ❓ 老闆還沒講、我先暫定的：打凸的基本費（比照紅包袋 1200）、條批／對聯是不是同價
+          （對聯一對是兩條、要過兩次機）、數位印大小張是不是同價。待核。 */
+    labor: {
+      foil:    { one:3.5, twoReg:4.5, min:1500 },
+      emboss:  { unit:3, min:1200 },
+      deboss:  { unit:3, min:1200 },
+      digital: { unit:5.5, min:800, moq:1 }
     },
     materials: {
       xuan:   { name:'萬年紅宣紙',     f:1.00, css:'m-xuan',   desc:'傳統春聯用紙，紅正、吸墨佳，手寫感最道地。' },
@@ -1424,7 +1434,7 @@ var PATTERNS = {
 
 var FAQS = [
   ['最少要印幾份？可以少量試做嗎？',
-   '看加工方式：<strong>燙金 100 份起</strong>（要開版，量太少版費攤不下來）；<strong>數位印刷 10 份就能做</strong>，免開版，適合試做、家用或小量送禮。'],
+   '看加工方式：<strong>燙金 100 份起</strong>（要開版，量太少版費攤不下來）；<strong>數位印刷 10 份就能做</strong>，免開版，適合試做、家用或小量送禮。<strong>春聯的數位印一張就能做</strong>（有一筆 NT$800 的基本費，量少時整筆就以基本費計）。'],
   ['AI 生成的圖、手機拍的照片可以直接印嗎？',
    '多半不行。AI 生圖與手機照片解析度不足、沒有去背、色彩也不是印刷用的，直接下印會糊掉或邊緣髒。我們可以代為重繪、去背並轉成高解析印刷檔，<strong>每張 NT$666</strong>，在上面「加購加工」勾選即可；轉好的檔案會一併交給您。'],
   ['燙金版費是什麼？下次再印還要再收嗎？',
@@ -1529,11 +1539,22 @@ function craftName(){
   var ks = procKeys();
   return ks.length ? ks.map(function(k){ return PRICE.processes[k].name }).join('＋') : '（未選）';
 }
+/* 春聯吃老闆 2026-11-19 給的固定工費（PRICE.chunlian.labor）；紅包袋不走這條。 */
+function clLabor(k){ return S.product === 'chunlian' ? (PRICE.chunlian.labor[k] || null) : null }
 function moq(){
-  return procKeys().reduce(function(m, k){ return Math.max(m, PRICE.processes[k].moq) }, 10);
+  /* ⚠️ 不要再把 10 寫死當地板：春聯數位印是「一個起印」，寫死 10 就把老闆的規矩蓋掉了。
+     沒選任何工序時才回 10。 */
+  var ms = procKeys().map(function(k){
+    var cl = clLabor(k);
+    return (cl && cl.moq) ? cl.moq : PRICE.processes[k].moq;
+  });
+  return ms.length ? Math.max.apply(null, ms) : 10;
 }
 function qtySteps(){
-  return moq() >= 100 ? [100, 300, 500, 1000, 2000] : [10, 30, 50, 100, 300, 500];
+  var m = moq();
+  if(m >= 100) return [100, 300, 500, 1000, 2000];
+  if(m <= 1)   return [1, 10, 30, 50, 100, 300];
+  return [10, 30, 50, 100, 300, 500];
 }
 
 /* ── 顏色：燙金箔色與數位印刷色各一組，兩道並用時兩組都會用到 ───────── */
@@ -2579,7 +2600,38 @@ function calc(){
                       note:'價格需依版期與落版狀況評估，請用 LINE 詢問' });
       return;
     }
-    if(k === 'foil' && PRICE[S.product].foilLabor){
+    /* ★ 春聯：固定單價 ＋ 基本費地板（老闆 2026-11-19）。
+       ⚠️ 有地板的列，總額不是「單價 × 數量」那麼單純，所以先算總額、再回推每個單價，
+          後面 unit × qty 乘回去才會剛好等於這列的總額。 */
+    var CL = clLabor(k);
+    if(CL){
+      var perC, rawC;
+      if(k === 'foil'){
+        var nC = S.plates.length;
+        if(nC >= 2){
+          /* 老闆只給了「2 色套準」的價，所以 2 色一律照 4.5 算（套準本來就是 2 色的常態）。
+             3 色以上他沒給 → 每多一色先 +1，對客只說會再確認。 */
+          perC = CL.twoReg + Math.max(0, nC - 2) * 1;
+          note = '燙 ' + nC + ' 色＋套準對位' + (nC > 2 ? '（3 色以上的價格我們會再跟您確認）' : '');
+        } else {
+          perC = CL.one;
+          note = '燙一色';
+        }
+        // 特殊箔材加價逐版累加（雷射金／玫瑰金等）
+        var fxC = S.plates.reduce(function(s, p){ return s + (PRICE.foilExtra[p.color] || 0) }, 0);
+        if(fxC){ perC += fxC; note += '，含特殊箔材加價' }
+      } else if(k === 'emboss' || k === 'deboss'){
+        var mC = (k === 'emboss' ? S.embossPlates : S.debossPlates).length;
+        perC = CL.unit * mC;
+        note = mC > 1 ? '共 ' + mC + ' 處' : '';
+      } else {
+        perC = CL.unit;
+        note = '';
+      }
+      rawC = qty * perC;
+      u = Math.max(CL.min, rawC) / qty;
+      if(rawC < CL.min) note = (note ? note + '，' : '') + '數量少，這筆以基本費計';
+    } else if(k === 'foil' && PRICE[S.product].foilLabor){
       /* 老闆 2026-10-12 的固定價：正常一色 3／滿版一色 4／2 色以上且套準 10。
          ⚠️ 10 元那檔已含套準，不要再疊套準費；也不要再乘版數（10 元就是整個的價）。 */
       var FL = PRICE[S.product].foilLabor;
@@ -2630,7 +2682,8 @@ function calc(){
         note = nc > 1 ? ('共 ' + nc + ' 塊版') : '';
       }
     }
-    if(k === 'digital' && S.sides === 'double'){
+    // 春聯只有單面（老闆 2026-11-19），而且單價已在上面的 CL 分支算完，不要再被這段覆蓋
+    if(k === 'digital' && S.sides === 'double' && !CL){
       // 雙面＝再過一次機，單價乘 2（全客製 12 元那條路也一樣）
       var base1 = hbArt() ? PRICE.hongbao.custom.digitalUnit : t.unit;
       u = base1 * 2;
@@ -3383,7 +3436,8 @@ function buildProcs(){
                  '<span><span class="block text-[13.5px]">' + p.name + '</span>' +
                  '<span class="block text-[11.5px] text-[#8F8674] mt-1 leading-5">' +
                  (off ? '公版做不了（要平張上機），<span class="text-gold-dim">請改選「全客製」</span>'
-                      : p.desc + '　<span class="text-gold-dim">' + p.moq + ' 份起</span>') +
+                      : p.desc + '　<span class="text-gold-dim">' +
+                        (((clLabor(k) || {}).moq) || p.moq) + ' 份起</span>') +
                  '</span></span>' +
                '</span></button>';
     }).join('');
@@ -3392,10 +3446,14 @@ function buildProcs(){
 /* 工序改變：欄位、標籤、顏色區、數量級距都要跟著換 */
 function applyCraftUI(){
   var foil = hasProc('foil'), dig = hasProc('digital') || hasProc('offset'), n = procCount();
+  /* 春聯是平張、只印／燙一面（老闆 2026-11-19），單／雙面選項整組不出現，也要把狀態扳回單面，
+     不然從紅包袋雙面切過來會留著 double。 */
+  if(S.product === 'chunlian' && S.sides !== 'single'){ S.sides = 'single'; pressGroup('sides', 'single') }
   buildProcs();
   $('foilColorBox').classList.toggle('hidden', !foil);
   $('inkColorBox').classList.toggle('hidden',  !dig);
-  $('sidesBox').classList.toggle('hidden', !dig);   // 單／雙面只對數位印刷有意義
+  // 單／雙面只對數位印刷有意義；春聯一律單面，連選項都不給
+  $('sidesBox').classList.toggle('hidden', !dig || S.product === 'chunlian');
   $('embossBox').classList.toggle('hidden', !hasProc('emboss'));
   $('debossBox').classList.toggle('hidden', !hasProc('deboss'));
   $('sidesLabel').textContent = foil ? '燙金面' : '印刷面';
