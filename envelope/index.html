@@ -375,7 +375,7 @@ section[id]{ scroll-margin-top:76px }
         <div id="byoBox" class="hidden mt-3 rounded-xl border border-ink-3 bg-ink p-4 text-[12px] leading-6 text-[#8F8674]">
           <span class="block text-[13px] font-bold text-gold-light mb-1">把袋子寄來加工，怎麼進行</span>
           ① 先用官方 LINE 跟我們說您的袋子（尺寸、材質、數量）與要燙的圖，我們看過確定能燙再寄。<br>
-          ② 確認後我們會用 LINE 給您<span class="text-gold-light">寄件地址與收件人</span>（地址不公開在網頁上）。<br>
+          ② 確認後我們會用 LINE 給您<span class="text-gold-light">寄件地址與收件人</span>，請務必先講好再寄。<br>
           ③ <span class="text-gold-light">請多寄備品：總數的 5%，至少 10 個</span>（例如訂 500 個就多寄 25 個）。
              燙金是一個一個過機器，難免有幾個位置歪掉或吃箔不勻，我們不另外收費，但袋子要您自己補。<br>
           ④ 線上這個金額<span class="text-gold-light">不含袋子</span>，只算燙金工費與製版費；加工完寄回的運費另計。<br>
@@ -966,10 +966,11 @@ section[id]{ scroll-margin-top:76px }
       <div>
         <h5 class="text-[12px] tracking-[.2em] text-gold-dim font-bold mb-4">本頁品項</h5>
         <div class="grid gap-2.5 text-[13.5px] text-[#8F8674]">
-          <a href="#workspace" class="hover:text-gold-light">客製燙金紅包袋</a>
-          <a href="#workspace" class="hover:text-gold-light">客製春聯 · 單字斗方</a>
-          <a href="#workspace" class="hover:text-gold-light">客製春聯 · 四字條批</a>
-          <a href="#workspace" class="hover:text-gold-light">客製春聯 · 七字對聯</a>
+          <!-- 老闆 2026-11-19：點了要直接跳到那個品項，不要客人自己再去按頁籤 -->
+          <a href="#workspace" data-jump="hongbao" class="hover:text-gold-light">客製燙金紅包袋</a>
+          <a href="#workspace" data-jump="chunlian:dofang" class="hover:text-gold-light">客製春聯 · 單字斗方</a>
+          <a href="#workspace" data-jump="chunlian:tiaopi" class="hover:text-gold-light">客製春聯 · 四字條批</a>
+          <a href="#workspace" data-jump="chunlian:duilian" class="hover:text-gold-light">客製春聯 · 七字對聯</a>
         </div>
       </div>
       <div>
@@ -1459,7 +1460,7 @@ var S = {
      'art'  ＝ 美術紙選單（papers.js 那 387 款，真牌價×落數）  ← 預設
      'trad' ＝ 原本那三款傳統春聯紙（萬年紅宣紙／厚磅絨布紙／抗UV卡紙，係數暫估價）
      傳統那三款留著，是因為萬年紅宣紙本來就是春聯最常用的紙，美術紙清單裡沒有。 */
-  clMat:'art',
+  clMat:'art', clMatForced:false,   // Forced ＝ 被條批／對聯強制退回傳統紙，換回斗方要還原
   procs:{ digital:false, foil:true, emboss:false, deboss:false },   // 可複選
   reg:false,                                                        // 套準
   foilParts:{ main:true, pattern:true, sub:false },                 // 印刷＋燙金並用時，哪些元素燙金
@@ -2957,6 +2958,24 @@ $$('[data-product]').forEach(function(b){
     update();
   });
 });
+/* 頁尾「本頁品項」那四條（老闆 2026-11-19）：
+   點了要**直接切到那個品項**再捲過去，不要客人到了上面還得自己按一次頁籤。
+   做法是去按那顆真的頁籤按鈕（重用既有的切換邏輯，不要把流程抄第二份）；
+   不擋預設行為，瀏覽器照 href="#workspace" 捲過去。 */
+document.addEventListener('click', function(e){
+  var a = e.target.closest && e.target.closest('[data-jump]');
+  if(!a) return;
+  var v = a.getAttribute('data-jump').split(':');
+  if(v[0] && S.product !== v[0]){
+    var pb = document.querySelector('[data-product="' + v[0] + '"]');
+    if(pb) pb.click();
+  }
+  if(v[1] && S.couplet !== v[1]){
+    var cb = document.querySelector('[data-couplet="' + v[1] + '"]');
+    if(cb) cb.click();
+  }
+});
+
 /* 春聯的紙材來源：美術紙／傳統春聯紙（老闆 2026-11-18） */
 $$('[data-clmat]').forEach(function(b){
   b.addEventListener('click', function(){
@@ -3280,7 +3299,10 @@ function applyModeUI(){
   $('clMatPick').classList.toggle('hidden', S.product !== 'chunlian');
   if(S.product === 'chunlian'){
     var artOk = S.couplet === 'dofang';
-    if(!artOk && S.clMat === 'art') S.clMat = 'trad';
+    /* 被我們強制退回傳統紙的，換回斗方時要自動還給他美術紙
+       （那次切換不是他自己選的，不該讓他以為美術紙不見了）。 */
+    if(!artOk && S.clMat === 'art'){ S.clMat = 'trad'; S.clMatForced = true }
+    else if(artOk && S.clMatForced){ S.clMat = 'art'; S.clMatForced = false }
     var artBtn = document.querySelector('[data-clmat="art"]');
     if(artBtn){
       artBtn.disabled = !artOk;
