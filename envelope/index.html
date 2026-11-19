@@ -786,6 +786,8 @@ section[id]{ scroll-margin-top:76px }
           </a>
         </div>
 
+        <!-- 老闆 2026-11-19：明細與金額離太遠不好看 → 整區收窄置中，列內再補點線牽過去 -->
+        <div class="max-w-[640px] mx-auto">
         <div id="priceRows" class="space-y-2.5 text-[13.5px]"></div>
         <div class="mt-4 pt-4 border-t border-ink-4 flex items-end justify-between">
           <div>
@@ -801,6 +803,7 @@ section[id]{ scroll-margin-top:76px }
         <p class="text-[11.5px] text-[#7E7565] mt-4 leading-5">
           燙金製版費為固定報價，<span class="text-gold-light">依實際燙印面積另行增減費用</span>。<br>
         </p>
+        </div><!-- ／收窄區 -->
       </div>
       <!-- ／價格明細結束 -->
 
@@ -2637,7 +2640,7 @@ function calc(){
       return s + Math.round(Math.max(PRICE.foilPlate.min, (+p.area || 0) * PRICE.foilPlate.rate));
     }, 0);
     plateRows.push({
-      name:'燙金製版費',
+      name:'燙金製版費', sort:42,
       note: foilPlateCount + ' 塊版（' +
             S.plates.map(function(p){
               var f = FOILS.filter(function(x){ return x.k === p.color })[0];
@@ -2657,19 +2660,19 @@ function calc(){
     return arr.length + ' 處，逐處各自計價　※ ' + PRICE.pressPlate.note;
   }
   if(hasProc('emboss')) plateRows.push({
-    name:'打凸凸版費', note:pressNote(S.embossPlates), v:pressFee(S.embossPlates) });
+    name:'打凸凸版費', sort:52, note:pressNote(S.embossPlates), v:pressFee(S.embossPlates) });
   if(hasProc('deboss')) plateRows.push({
-    name:'打凹版費', note:pressNote(S.debossPlates), v:pressFee(S.debossPlates) });
-  if(regSetup)          plateRows.push({ name:'套準設定費', note:'一次', v:regSetup });
+    name:'打凹版費', sort:54, note:pressNote(S.debossPlates), v:pressFee(S.debossPlates) });
+  if(regSetup)          plateRows.push({ name:'套準設定費', sort:56, note:'一次', v:regSetup });
   /* 刀模（老闆 2026-10-12）：全客製紅包袋用我們現成的刀模就不收錢；
      現成的只有「圓頭蓋」與「西式橫式平蓋」那兩支，選到沒有的形狀才要新開一支。
      （橫式目前停售，所以實務上只會用到圓頭蓋那支） */
   var needNewDie = S.product === 'hongbao' && !isFormed() && !flapCfg().die;
   if(needNewDie) plateRows.push({
-    name:'新開刀模費', note:flapCfg().name + '：我們目前沒有這支刀模，需另開一支',
+    name:'新開刀模費', sort:32, note:flapCfg().name + '：我們目前沒有這支刀模，需另開一支',
     // 紅包袋落版 22×27＝594cm² → 後加工\軋型.md 木刀「約 8K」級距＝1,200
     v: S.product === 'hongbao' ? PRICE.hongbao.custom.diePlate : PRICE.diecutPlate });
-  if(S.diecut)   plateRows.push({ name:'特殊刀模費', note:'一式', v:PRICE.diecutPlate });
+  if(S.diecut)   plateRows.push({ name:'特殊刀模費', sort:32, note:'一式', v:PRICE.diecutPlate });
 
   // ⑤ 放損：每過一道加工要多備料試機對位。燙金是「每塊版各上機一次」，所以照版數算層
   var layers = (hasProc('digital') ? (S.sides === 'double' ? 2 : 1) : 0) +
@@ -2682,13 +2685,13 @@ function calc(){
   /* 自備袋：放損這筆我們不收錢（袋子不是我們出的），但客人要多寄備品，
      所以改成一行「不收費、請多寄」的提醒，金額 0。 */
   if(byoMode() && spoilQty) plateRows.push({
-    name:'試機備品（不收費）',
+    name:'試機備品（不收費）', sort:70,
     note:'燙金是一個一個過機器，' + layers + ' 層加工大約會用掉 ' + spoilQty +
          ' 個來試機對位。我們不收這筆錢，但請您多寄一些備品過來',
     v: 0
   });
   if(spoilCost) plateRows.push({
-    name:'放損（試機對位備料）',
+    name:'放損（試機對位備料）', sort:70,
     // 小字不寫紙材單價（老闆 2026-11-19）
     note: layers + ' 層加工 × 每層 ' + PRICE.spoil.min + '～' + PRICE.spoil.max + ' 張，以 ' +
           PRICE.spoil.est + ' 張估＝ ' + spoilQty + ' 張',
@@ -2697,7 +2700,7 @@ function calc(){
 
   var aiN = S.aiConv ? Math.max(1, S.aiQty || 1) : 0;
   var aiCost = aiN * PRICE.aiConvert;   // 一次性費用，不隨份數跑
-  if(aiCost) plateRows.push({ name:'圖檔轉印刷檔', note:aiN + ' 張', v:aiCost });
+  if(aiCost) plateRows.push({ name:'圖檔轉印刷檔', sort:25, note:aiN + ' 張', v:aiCost });
 
   /* ⑥ 全客製的軋型工資：照 後加工\軋型.md 的木刀階梯（每張單價 × 張數，未達基本費收基本費）。
      「張」在這裡＝一個紅包袋（刀模一次軋一個 22×27 的料）。 */
@@ -2706,7 +2709,7 @@ function calc(){
     var dcRate  = C.diecutLabor.unit;
     var dcLabor = Math.max(C.diecutLabor.min, Math.round(qty * dcRate));
     plateRows.push({
-      name:'軋型工資',
+      name:'軋型工資', sort:30,
       // 小字不寫單價與基本費金額（老闆 2026-11-19）
       note: qty.toLocaleString('en-US') + ' 個' +
            (qty * dcRate < C.diecutLabor.min ? '（數量少，這筆以基本費計）' : ''),
@@ -2722,7 +2725,7 @@ function calc(){
     var O = PRICE.opp, kind = O[oppKindKey];
     oppBags = Math.ceil(qty / O.per);
     plateRows.push({
-      name:'OPP 透明袋（' + kind.name + '）',
+      name:'OPP 透明袋（' + kind.name + '）', sort:80,
       // 小字不寫單價（老闆 2026-11-19）
       note: oppBags.toLocaleString('en-US') + ' 個袋（每袋最多裝 ' + O.per + ' 個，' +
             flapCfg().name + '配' + kind.name + '）',
@@ -2731,7 +2734,7 @@ function calc(){
     if(S.oppPack){
       var packN = O.packPer === 'piece' ? qty : oppBags;
       plateRows.push({
-        name:'代裝服務',
+        name:'代裝服務', sort:82,
         note:'我們幫您裝進袋子，共 ' + packN.toLocaleString('en-US') +
              (O.packPer === 'piece' ? ' 個' : ' 袋'),
         v: packN * O.packFee
@@ -2795,22 +2798,30 @@ function renderPrice(){
   if(mat.art) paperNote = n + ' 個　' + mat.name;
   /* 自備袋（老闆 2026-11-18）：這一行還是要出現，但要講清楚「不收錢、袋子您出」，
      直接把行拿掉客人會以為我們漏算、或以為袋子是我們準備的。 */
+  /* ★ 明細的排序（老闆 2026-11-19 指定）：
+       紙材 → 印刷 → 軋型 → 燙金 → 打凸／打凹 → 糊型 → 放損 → 加購 → 運費 → 稅
+     每一列帶一個 sort 號碼，最後統一排。製版費／刀模費跟著它那道工序走（燙金 40＋42、
+     軋型 30＋刀模 32），客人看到的順序就跟我們實際的生產順序一樣。
+     ⚠️ 要插新項目就給一個號碼，不要再靠 push 的先後次序。 */
+  function row(sort, name, note, v){ rows.push({ sort:sort, name:name, note:note, v:v }) }
   if(mat.byo){
-    rows.push(['紅包袋（您自備）', n + ' 個由您寄來，不計紙材費', 0]);
+    row(10, '紅包袋（您自備）', n + ' 個由您寄來，不計紙材費', 0);
   } else {
-    rows.push(['紙材（' + typeTxt + mat.name + '）', paperNote, q.paperUnit * q.qty]);
+    row(10, '紙材（' + typeTxt + mat.name + '）', paperNote, q.paperUnit * q.qty);
   }
+  var PROC_SORT = { offset:20, digital:20, foil:40, emboss:50, deboss:51 };
   q.procRows.forEach(function(p){
-    if(p.quote){ rows.push([p.name, p.note, null]); return }   // null ＝ 顯示「另行報價」
+    var s = PROC_SORT[p.k] || 45;
+    if(p.quote){ row(s, p.name, p.note, null); return }   // null ＝ 顯示「另行報價」
     // 小字沒東西時不要留一個孤零零的全形空白（老闆 2026-11-19 把單價拿掉後常常就是空的）
-    rows.push([p.name + '工費', (p.note ? p.note + '　' : '') + '× ' + n + ' 份', p.unit * q.qty]);
+    row(s, p.name + '工費', (p.note ? p.note + '　' : '') + '× ' + n + ' 份', p.unit * q.qty);
   });
   // 糊型這類「按個數算、但不是工序」的項目，也要各自列一行（老闆 2026-11-18）
   q.unitRows.forEach(function(r){
-    rows.push([r.name, (r.note ? r.note + '　' : '') + '× ' + n + ' 個', r.unit * q.qty]);
+    row(60, r.name, (r.note ? r.note + '　' : '') + '× ' + n + ' 個', r.unit * q.qty);
   });
-  if(q.regUnit) rows.push(['套準', '× ' + n + ' 份', q.regUnit * q.qty]);
-  q.plateRows.forEach(function(p){ rows.push([p.name, p.note, p.v]) });
+  if(q.regUnit) row(56, '套準', '× ' + n + ' 份', q.regUnit * q.qty);
+  q.plateRows.forEach(function(p){ row(p.sort || 45, p.name, p.note, p.v) });
   /* 老闆 2026-11-17：運費這一列要把**每一種收件方式的費用都列出來**，
      客人一眼看得到選別的要多少，目前選的那個標亮。 */
   var freeAll  = q.sub >= PRICE.freeShipOver;      // q.sub 不含運費，直接比門檻
@@ -2826,15 +2837,28 @@ function renderPrice(){
               (freeAll ? '已滿 ' + money(PRICE.freeShipOver) + '，運費全免'
                        : '滿 ' + money(PRICE.freeShipOver) + ' 免運費') +
               '；收件方式可在下方「填寫訂購資料」更改</span>';
-  rows.push(['運費', shipNote, q.ship]);
+  row(90, '運費', shipNote, q.ship);
+  /* 稅也排進明細最後一列（老闆 2026-11-19 的順序：…運費再來稅）。
+     填了統編＝開三聯式要加 5%；沒填就是 0，但這一列還是要出現，客人才知道這個價沒含稅。 */
+  row(95, '營業稅 5%', wantInvoice()
+        ? '開三聯式發票，營業稅另計'
+        : '未開發票，不另加稅（在下面填統編就會加計並開三聯式）',
+      wantInvoice() ? q.tax : 0);
 
+  // 照 sort 排（同號碼維持原本的先後）
+  rows.forEach(function(r, i){ r.i = i });
+  rows.sort(function(a, b){ return (a.sort - b.sort) || (a.i - b.i) });
+
+  /* 版面（老闆 2026-11-19：「明細與金額的間隔太遠 不好看清楚」）：
+     中間補一條點線把品名與金額牽起來，整區也收窄置中，眼睛不用跑那麼遠。 */
   $('priceRows').innerHTML = rows.map(function(r){
-    return '<div class="flex items-start justify-between gap-4">' +
-             '<div class="min-w-0"><span class="block text-[#EDE4D3]">' + r[0] + '</span>' +
-             '<span class="block text-[11.5px] text-[#7E7565] mt-0.5">' + r[1] + '</span></div>' +
+    return '<div class="flex items-start gap-3">' +
+             '<div class="min-w-0"><span class="block text-[#EDE4D3]">' + r.name + '</span>' +
+             '<span class="block text-[11.5px] text-[#7E7565] mt-0.5">' + r.note + '</span></div>' +
+             '<span class="flex-1 border-b border-dotted border-gold-dark/40 mt-[0.72em] min-w-[18px]"></span>' +
              '<span class="shrink-0 tabular-nums font-bold ' +
-               (r[2] === null ? 'text-crimson-soft text-[13px]' : 'text-gold-light') + '">' +
-               (r[2] === null ? '另行報價' : money(r[2])) + '</span>' +
+               (r.v === null ? 'text-crimson-soft text-[13px]' : 'text-gold-light') + '">' +
+               (r.v === null ? '另行報價' : money(r.v)) + '</span>' +
            '</div>';
   }).join('');
 
