@@ -767,7 +767,8 @@ section[id]{ scroll-margin-top:76px }
     <!-- ／即時預覽結束 -->
 
     <!-- ── 價格明細：橫跨兩欄、放最下面，固定在版面裡不浮動 ── -->
-      <div class="lg:col-span-2 rounded-2xl border border-gold-dark/50 bg-gradient-to-b from-[#221D14] to-ink-2 p-5">
+      <!-- 老闆 2026-11-19：外框要跟內容一樣寬，不要框很大、字擠在中間一小條 -->
+      <div class="lg:col-span-2 w-full max-w-[700px] mx-auto rounded-2xl border border-gold-dark/50 bg-gradient-to-b from-[#221D14] to-ink-2 p-5 sm:p-6">
         <div class="flex items-baseline justify-between mb-4">
           <h3 class="text-[13px] tracking-[.16em] text-gold-dim font-bold">價格試算明細</h3>
           <span id="unitLine" class="text-[12px] text-[#8F8674]"></span>
@@ -787,7 +788,7 @@ section[id]{ scroll-margin-top:76px }
         </div>
 
         <!-- 老闆 2026-11-19：明細與金額離太遠不好看 → 整區收窄置中，列內再補點線牽過去 -->
-        <div class="max-w-[640px] mx-auto">
+        <div>
         <div id="priceRows" class="space-y-2.5 text-[13.5px]"></div>
         <div class="mt-4 pt-4 border-t border-ink-4 flex items-end justify-between">
           <div>
