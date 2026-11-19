@@ -361,13 +361,26 @@ section[id]{ scroll-margin-top:76px }
       <!-- 公版／全客製：最上層的分野，決定底下哪些東西能選（老闆 2026-10-12） -->
       <div id="modeBox" class="rounded-2xl border border-ink-3 bg-ink-2 p-5">
         <span class="lbl">訂製方式</span>
-        <div class="grid grid-cols-2 gap-2">
+        <!-- 老闆 2026-11-18：多一條「客人自備紅包袋寄來加工」 -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
           <button class="chip !py-3" data-mode="stock" aria-pressed="true">公版現貨
             <span class="block text-[11px] text-[#8F8674] mt-1">用現成的袋子加工</span></button>
+          <button class="chip !py-3" data-mode="byo" aria-pressed="false">自備袋加工
+            <span class="block text-[11px] text-[#8F8674] mt-1">您的袋子寄來給我們燙</span></button>
           <button class="chip !py-3" data-mode="custom" aria-pressed="false">全客製
             <span class="block text-[11px] text-[#8F8674] mt-1">自己挑紙、開刀模</span></button>
         </div>
         <p id="modeDesc" class="text-[12px] text-[#8F8674] mt-3 leading-5"></p>
+        <!-- 自備袋的寄件須知（只有選到自備袋才出現） -->
+        <div id="byoBox" class="hidden mt-3 rounded-xl border border-ink-3 bg-ink p-4 text-[12px] leading-6 text-[#8F8674]">
+          <span class="block text-[13px] font-bold text-gold-light mb-1">把袋子寄來加工，怎麼進行</span>
+          ① 先用官方 LINE 跟我們說您的袋子（尺寸、材質、數量）與要燙的圖，我們看過確定能燙再寄。<br>
+          ② 確認後我們會用 LINE 給您<span class="text-gold-light">寄件地址與收件人</span>（地址不公開在網頁上）。<br>
+          ③ <span class="text-gold-light">請多寄一些備品</span>：燙金是一個一個過機器，難免有幾個位置歪掉或吃箔不勻，
+             我們不另外收費，但袋子要您自己補。要多寄幾個，LINE 上跟我們抓。<br>
+          ④ 線上這個金額<span class="text-gold-light">不含袋子</span>，只算燙金工費與製版費；加工完寄回的運費另計。<br>
+          <span class="block mt-1 text-[#6E6558]">※ 太厚、已經裝好東西、表面上過亮膜或有凹凸紋路的袋子不一定吃得上箔，先問過比較保險。</span>
+        </div>
       </div>
 
       <!-- 加工方式（可複選、疊著做） -->
@@ -430,6 +443,10 @@ section[id]{ scroll-margin-top:76px }
           <span class="lbl">尺寸（公版規格）</span>
           <div id="hbSizeGrid" class="grid gap-2"></div>
           <p class="text-[12px] text-[#8F8674] mt-2 leading-5">單位公分，公版同價。另有客製尺寸，請用 LINE 詢問。</p>
+          <!-- 自備袋：這個尺寸只是拿來畫預覽、抓可燙範圍，不影響價格 -->
+          <p id="hbSizeHint" class="hidden text-[12px] text-gold-dim mt-1 leading-5">
+            選一個最接近您袋子的尺寸就好（這只用來畫預覽、抓可燙範圍，不影響價格）；
+            實際尺寸請在最下面的備註欄寫一下，或用 LINE 告訴我們。</p>
         </div>
 
         <div>
@@ -707,7 +724,7 @@ section[id]{ scroll-margin-top:76px }
         <!-- 擺字區（老闆 2026-11-18）：加吉祥話、拖到想要的位置；選中的那個可以換面／改字級／刪除 -->
         <div id="placeBox" class="px-4 py-3 border-t border-ink-3">
           <div class="flex items-center justify-between gap-3 flex-wrap">
-            <span class="text-[12px] text-gold-dim">加字放上去，直接用手指或滑鼠拖到喜歡的位置</span>
+            <span class="text-[12px] text-gold-dim">加字放上去，直接用手指或滑鼠拖到喜歡的位置；正面、背面、蓋頭上都可以拖</span>
             <div class="flex gap-1.5 flex-wrap" id="greetBtns"><!-- JS 產生 --></div>
           </div>
           <div id="itemBar" class="hidden mt-3 pt-3 border-t border-ink-3">
@@ -718,7 +735,6 @@ section[id]{ scroll-margin-top:76px }
               <span class="flex-1"></span>
               <button type="button" id="itemSmall" class="chip !px-2.5 !py-1 !text-[12px]">縮小</button>
               <button type="button" id="itemBig"   class="chip !px-2.5 !py-1 !text-[12px]">放大</button>
-              <button type="button" id="itemFace"  class="chip !px-2.5 !py-1 !text-[12px]">移到背面</button>
               <button type="button" id="itemDel"
                 class="chip !px-2.5 !py-1 !text-[12px] !text-crimson-soft">刪除</button>
             </div>
@@ -1619,7 +1635,16 @@ function oppKind(){
   if(!fl) return 'long';
   return PRICE.opp.short.flaps.indexOf(isStock() ? stockCfg().flap : S.hbFlap) >= 0 ? 'short' : 'long';
 }
+/* 自備袋（老闆 2026-11-18）：袋子是客人的，我們沒有紙材成本。
+   unit 不設數字、改由 calc() 直接把紙材單價歸零（unit:0 會被 `mat.unit ||` 當成沒給價，
+   反而掉回級距表去估，等於偷偷算了紙錢）。css 只是預覽畫個紅袋子示意。 */
+function byoMat(){
+  return { name:'您自備的袋子', unit:0, f:1.00, css:'m-fenghua', byo:true,
+           desc:'袋子由您提供寄來，我們只做燙金／數位印，線上金額不含袋子本身。' +
+                '預覽上的紅色只是示意，實際顏色就是您袋子的顏色。' };
+}
 function matCfg(){
+  if(byoMode()) return byoMat();
   if(artMode()) return artMat();
   return PRICE[S.product].materials[S.material];
 }
@@ -1823,7 +1848,9 @@ function buildMaterialSelect(){
            (ms[k].stock ? '（公版現貨）' : '') + '</option>';
   }).join('');
   // 公版時這行要講整款（紙＋蓋型＋尺寸），不是只講紙
-  if(S.product === 'hongbao' && isStock()){
+  if(byoMode()){
+    $('matDesc').textContent = byoMat().desc;   // 自備袋：沒有紙可挑，只說明這條路怎麼算
+  } else if(S.product === 'hongbao' && isStock()){
     var s = stockCfg();
     $('matDesc').textContent = '這款是' + PRICE.hongbao.layouts[s.layout].name + '的' +
       PRICE.hongbao.flaps[s.flap].name + '，' + s.spec + '；用紙是' + ms[s.paper].name + '。' +
@@ -1998,16 +2025,19 @@ function patternArt(size){
    ⚠️ 位置只是「客人想要的擺法」，實際完稿仍由我們對齊摺線與安全邊。 */
 var GREETINGS = [ '新年快樂', '恭禧發財', 'HAPPY NEW YEAR' ];
 function itemById(id){ return S.items.filter(function(i){ return i.id === id })[0] }
-function itemsOn(face){ return S.items.filter(function(i){ return i.face === face }) }
+/* 不再分正反面（老闆 2026-11-18）：這支留著只為相容舊呼叫，一律回空陣列。 */
+function itemsOn(face){ return [] }
 function addItem(type, txt, extra){
-  var it = { id:'i' + (++S.itemSeq), type:type, txt:txt || '', face:'front',
-             x:0.5, y:type === 'logo' ? 0.5 : 0.26,
+  /* x,y ＝ 在整張示意圖（兩個袋子並排那塊）上的相對位置，0～1。
+     預設放在左邊那個（正面）的中間：x 約 0.24 就是左袋中線（老闆 2026-11-18 起不分正反面）。 */
+  var it = { id:'i' + (++S.itemSeq), type:type, txt:txt || '',
+             x:0.24, y:type === 'logo' ? 0.55 : 0.34,
              size: type === 'logo' ? S.logoSize : 26,
              // 預設跟第 1 塊版同一個箔色；客人可以逐個改（老闆 2026-11-18）
              foil: (S.plates[0] || {}).color || 'bright' };
   if(extra) Object.keys(extra).forEach(function(k){ it[k] = extra[k] });
   // 後加的往下挪一點，不然全疊在同一個點看不出來
-  var n = itemsOn('front').length;
+  var n = S.items.length;
   if(n) it.y = Math.min(0.9, it.y + n * 0.14);
   S.items.push(it);
   S.sel = it.id;
@@ -2036,7 +2066,23 @@ function itemHtml(it){
            '<span class="pv-cm" data-cm="' + it.id + '"></span>' +
          '</div>';
 }
-function faceHtml(face){ return itemsOn(face).map(itemHtml).join('') }
+/* 兩面的 .pv-face 現在只當「量尺用的參考框」：圖文統一畫在 #pvLayer 上，
+   這裡回空字串就好（框還是要留著，itemCm() 與落面判定都靠它量）。 */
+function faceHtml(face){ return '' }
+/* 這一筆拖到哪一面了（我們自己判，不讓客人選——老闆 2026-11-18）。
+   用元素中心點去打兩個 .pv-face 的框；都沒中（例如拖到蓋頭或兩袋中間）就回 null。 */
+function faceOfItem(id){
+  var el = document.querySelector('.pv-item[data-item="' + id + '"]');
+  if(!el) return null;
+  var r = el.getBoundingClientRect();
+  var cx = r.left + r.width / 2, cy = r.top + r.height / 2, hit = null;
+  Array.prototype.forEach.call(document.querySelectorAll('.pv-face'), function(f){
+    var b = f.getBoundingClientRect();
+    if(cx >= b.left && cx <= b.right && cy >= b.top && cy <= b.bottom) hit = f.getAttribute('data-face');
+  });
+  return hit;
+}
+function faceName(f){ return f === 'front' ? '正面' : f === 'back' ? '背面' : '蓋頭／邊上' }
 
 /* 拖曳：用事件委派掛在舞台上，重繪後不必重新綁。
    位置用「指標在那一面上的百分比」算，所以 fitStage 把舞台縮放過也不受影響
@@ -2049,9 +2095,10 @@ function bindDrag(){
     if(!el){ if(S.sel){ S.sel = null; renderPreview(); renderItemBar() } return }
     var it = itemById(el.getAttribute('data-item'));
     if(!it) return;
-    var face = el.closest('.pv-face');
-    if(!face) return;
-    drag = { it:it, el:el, face:face };
+    // 整張示意圖都能拖（老闆 2026-11-18：不用分正反面），所以基準改成 #pvLayer 整層
+    var board = el.closest('#pvLayer');
+    if(!board) return;
+    drag = { it:it, el:el, face:board };
     S.sel = it.id;
     el.setPointerCapture && el.setPointerCapture(e.pointerId);
     document.querySelectorAll('.pv-item.sel').forEach(function(n){ n.classList.remove('sel') });
@@ -2064,8 +2111,8 @@ function bindDrag(){
     var r = drag.face.getBoundingClientRect();
     if(!r.width || !r.height) return;
     var x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
-    drag.it.x = Math.min(0.96, Math.max(0.04, x));
-    drag.it.y = Math.min(0.96, Math.max(0.04, y));
+    drag.it.x = Math.min(0.98, Math.max(0.02, x));
+    drag.it.y = Math.min(0.98, Math.max(0.02, y));
     drag.el.style.left = (drag.it.x * 100).toFixed(2) + '%';
     drag.el.style.top  = (drag.it.y * 100).toFixed(2) + '%';
     e.preventDefault();
@@ -2088,9 +2135,9 @@ function renderItemBar(){
   if(!it) return;
   var lg = it.type === 'logo' ? logoById(it.logoId) : null;
   $('itemName').textContent = it.type === 'logo' ? (lg && lg.name ? lg.name : '您的圖檔') : it.txt;
-  $('itemPos').textContent = (it.face === 'front' ? '正面' : '背面') +
+  // 落在哪一面是我們自己判的，不是客人選的（老闆 2026-11-18：不用分正面背面）
+  $('itemPos').textContent = faceName(faceOfItem(it.id)) +
     '　左右 ' + Math.round(it.x * 100) + '%　上下 ' + Math.round(it.y * 100) + '%';
-  $('itemFace').textContent = it.face === 'front' ? '移到背面' : '移到正面';
   // 實際公分（老闆 2026-11-18）：放大縮小、拖動之後都要跟著更新
   var c = itemCm(it.id);
   $('itemCmLine').textContent = c ? ('實際約 ' + c.w + ' × ' + c.h + ' 公分') : '';
@@ -2127,7 +2174,9 @@ function logoArt(w, lg){
 function itemCm(id){
   var el = document.querySelector('.pv-item[data-item="' + id + '"]');
   if(!el) return null;
-  var face = el.closest('.pv-face'); if(!face) return null;
+  /* 圖文現在畫在 #pvLayer 上（不分正反面），所以量尺的參考框固定拿正面那個袋身，
+     它就是「一個袋子多大」的基準；拖到背面上也是同一個尺標，換算一樣準。 */
+  var face = document.querySelector('.pv-face[data-face="front"]'); if(!face) return null;
   var r = el.getBoundingClientRect(), f = face.getBoundingClientRect();
   if(!f.width || !f.height || !r.width) return null;
   var sz = S.product === 'hongbao' ? hbSizeCfg() : null;
@@ -2310,23 +2359,33 @@ function renderPreview(){
     var bw = Math.min(W, Math.round(land ? W * fb.w / sz.l : W * fb.w / sz.w));
     var bh = Math.min(H, Math.round(land ? H * fb.h / sz.w : H * fb.h / sz.l));
     var bx = Math.round((W - bw) / 2), by = Math.round((H - bh) / 2);
-    var hasFront = itemsOn('front').length;
-    var bodyInner = area(bx, by, bw, bh, hasFront ? '' : fb.label) + faceHtml('front');
+    var noItems = !S.items.length;
+    var bodyInner = area(bx, by, bw, bh, noItems ? fb.label : '') + faceHtml('front');
 
     /* 正反兩面並排（老闆 2026-11-18：「預覽的示意圖 用正反2面」）。
        現在除了糊邊整張都能燙，背面也要讓客人看得到可以做。
        背面那欄往下墊一個蓋頭的高度，兩片袋身才會對齊在同一條線上。 */
-    var backBox = area(bx, by, bw, bh, itemsOn('back').length ? '' : '背面也可燙金') + faceHtml('back');
+    var backBox = area(bx, by, bw, bh, noItems ? '背面也可燙金' : '') + faceHtml('back');
     var cap = 'text-center text-[11px] text-[#7E7565] mt-2 tracking-[.14em]';
-    html = '<div class="flex items-start justify-center gap-5 sm:gap-7">' +
-             '<div>' + envelopeArt(W, flapH, H, mat.css, '', bodyInner) +
-               '<p class="' + cap + '">正面（蓋子未摺）</p></div>' +
-             '<div style="padding-top:' + flapH + 'px">' + backArt(W, H, mat.css, backBox) +
-               '<p class="' + cap + '">背面</p></div>' +
+    /* ★ 老闆 2026-11-18：「示意圖就隨意讓客人拖拉就好，不用分正面背面」
+       → 圖文不再掛在某一面底下，改成一層蓋在整張示意圖上的 #pvLayer，
+         客人要拖到正面、背面、蓋頭上都行，拖到哪就是哪。
+         哪一面是我們自己依落點判出來的（見 faceOfItem），不用客人選。 */
+    html = '<div id="pvBoard" class="relative">' +
+             '<div class="flex items-start justify-center gap-5 sm:gap-7">' +
+               '<div style="width:' + W + 'px">' + envelopeArt(W, flapH, H, mat.css, '', bodyInner) + '</div>' +
+               '<div style="width:' + W + 'px;padding-top:' + flapH + 'px">' + backArt(W, H, mat.css, backBox) + '</div>' +
+             '</div>' +
+             // 圖文層蓋在整張示意圖上，所以文字說明要放到 pvBoard 外面，不然會被一起算進可拖範圍
+             '<div id="pvLayer" class="absolute inset-0">' + S.items.map(itemHtml).join('') + '</div>' +
+           '</div>' +
+           '<div class="flex justify-center gap-5 sm:gap-7">' +
+             '<p class="' + cap + '" style="width:' + W + 'px">正面（蓋子未摺）</p>' +
+             '<p class="' + cap + '" style="width:' + W + 'px">背面</p>' +
            '</div>' +
            '<p class="text-center text-[11px] text-[#7E7565] mt-3 tracking-[.14em]">攤平示意' +
            (flapOn() ? '　蓋面虛線內亦可加工' : '') +
-           (isStock() ? '' : '　糊邊以外都能燙金／打凸') + '</p>';
+           (isFormed() ? '' : '　糊邊以外都能燙金／打凸') + '</p>';
 
   } else {
     // 春聯：紙張本體＋可加工範圍，圖案同樣由完稿檔決定
@@ -2429,7 +2488,11 @@ function calc(){
      —— 老闆報的就是成品空白袋的每個價，紙與形狀都已經含在裡面。
      沒給價的紙（非現貨那幾款）才回去走「級距表 × 係數」的暫估算法。 */
   var fixedPaper = mat.unit || 0;
-  var paperUnit = fixedPaper ? fixedPaper * sizeF2 : tier.unit * sizeF2 * paperOnlyF;
+  /* ★ 自備袋（老闆 2026-11-18）：袋子是客人寄來的 → 紙材一毛都不算。
+     ⚠️ 這一行要擋在前面，不能只靠 mat.unit＝0，不然會掉回級距表估價。 */
+  var paperUnit = byoMode() ? 0
+                : fixedPaper ? fixedPaper * sizeF2
+                : tier.unit * sizeF2 * paperOnlyF;
 
   // ② 每道工序的每份工費（燙金另計箔材加價與面積補價）
   var procRows = [], procUnitSum = 0;
@@ -2550,7 +2613,7 @@ function calc(){
   /* 刀模（老闆 2026-10-12）：全客製紅包袋用我們現成的刀模就不收錢；
      現成的只有「圓頭蓋」與「西式橫式平蓋」那兩支，選到沒有的形狀才要新開一支。
      （橫式目前停售，所以實務上只會用到圓頭蓋那支） */
-  var needNewDie = S.product === 'hongbao' && !isStock() && !flapCfg().die;
+  var needNewDie = S.product === 'hongbao' && !isFormed() && !flapCfg().die;
   if(needNewDie) plateRows.push({
     name:'新開刀模費', note:flapCfg().name + '：我們目前沒有這支刀模，需另開一支',
     // 紅包袋落版 22×27＝594cm² → 後加工\軋型.md 木刀「約 8K」級距＝1,200
@@ -2565,6 +2628,14 @@ function calc(){
                (S.diecut ? 1 : 0);
   var spoilQty = layers * PRICE.spoil.est;
   var spoilCost = spoilQty * paperUnit;
+  /* 自備袋：放損這筆我們不收錢（袋子不是我們出的），但客人要多寄備品，
+     所以改成一行「不收費、請多寄」的提醒，金額 0。 */
+  if(byoMode() && spoilQty) plateRows.push({
+    name:'試機備品（不收費）',
+    note:'燙金是一個一個過機器，' + layers + ' 層加工大約會用掉 ' + spoilQty +
+         ' 個來試機對位。我們不收這筆錢，但請您多寄一些備品過來',
+    v: 0
+  });
   if(spoilCost) plateRows.push({
     name:'放損（試機對位備料）',
     note: layers + ' 層加工 × 每層 ' + PRICE.spoil.min + '～' + PRICE.spoil.max + ' 張，以 ' +
@@ -2668,7 +2739,13 @@ function renderPrice(){
      公版那邊維持原本的「N 份 × 單價」（那是老闆自己報給客人的成品袋價，可以公開）。 */
   var paperNote = n + ' 份 × ' + q.paperUnit.toFixed(2) + ' 元';
   if(mat.art) paperNote = n + ' 個　' + mat.name;
-  rows.push(['紙材（' + typeTxt + mat.name + '）', paperNote, q.paperUnit * q.qty]);
+  /* 自備袋（老闆 2026-11-18）：這一行還是要出現，但要講清楚「不收錢、袋子您出」，
+     直接把行拿掉客人會以為我們漏算、或以為袋子是我們準備的。 */
+  if(mat.byo){
+    rows.push(['紅包袋（您自備）', n + ' 個由您寄來，不計紙材費', 0]);
+  } else {
+    rows.push(['紙材（' + typeTxt + mat.name + '）', paperNote, q.paperUnit * q.qty]);
+  }
   q.procRows.forEach(function(p){
     if(p.quote){ rows.push([p.name, p.note, null]); return }   // null ＝ 顯示「另行報價」
     rows.push([p.name + '工費', p.note + '　× ' + n + ' 份', p.unit * q.qty]);
@@ -2959,8 +3036,10 @@ function buildFlaps(){
     var fh = flapRise(k, W);
     var d = envelopePath(k, W, fh, BODY);
     var h = fh + BODY;
-    // 有沒有現成刀模，直接標在選項上 —— 沒有的要新開一支，會多一筆錢
-    var tag = f.die
+    /* 有沒有現成刀模，直接標在選項上 —— 沒有的要新開一支，會多一筆錢。
+       自備袋不用刀模（袋子是客人的、已經糊好了），這時候不標。 */
+    var tag = byoMode() ? ''
+      : f.die
       ? '<span class="block text-[10.5px] text-gold-dim mt-1 leading-4">現成刀模</span>'
       : '<span class="block text-[10.5px] text-crimson-soft mt-1 leading-4">需新開刀模</span>';
     return '<button class="chip !px-1.5 !py-2.5" data-flap="' + k + '" aria-pressed="' + (k === S.hbFlap) + '">' +
@@ -2972,9 +3051,17 @@ function buildFlaps(){
   }).join('');
 }
 
-/* 公版還是全客製（只有紅包袋分這兩條路；春聯是裁好的紙張，不分） */
+/* 紅包袋有三條路（春聯是裁好的紙張，不分）：
+     stock  ＝ 公版現貨，用我們現成的袋子加工
+     byo    ＝ 客人自備袋子寄來加工（老闆 2026-11-18 加的），我們只收工費與製版費
+     custom ＝ 全客製，從平張紙開始
+   ⚠️ 分清楚兩件事：
+     isStock()  ＝「是我們的公版袋」→ 有紙材費、款式固定
+     isFormed() ＝「已經糊好的成品袋」（stock 或 byo）→ 不能再進壓力機打凸打凹、不用刀模 */
 function isStock(){ return S.product === 'hongbao' && S.hbMode === 'stock' }
-function canPress(){ return !isStock() }          // 公版不能打凸／打凹
+function byoMode(){ return S.product === 'hongbao' && S.hbMode === 'byo' }
+function isFormed(){ return isStock() || byoMode() }
+function canPress(){ return !isFormed() }          // 成品袋不能打凸／打凹
 
 /* 公版款式清單：一款＝紙材＋蓋型＋尺寸一次固定 */
 function stockCfg(){
@@ -3016,13 +3103,17 @@ function applyStock(){
 /* 切換公版／全客製：紙材、刀模形狀、打凸打凹的開關都看這裡 */
 function applyModeUI(){
   var hb = S.product === 'hongbao';
-  var stock = isStock();
+  var stock = isStock(), byo = byoMode();
   $('modeBox').classList.toggle('hidden', !hb);
   if(hb) pressGroup('mode', S.hbMode);
-  $('modeDesc').textContent = !hb ? '' : (stock
+  $('modeDesc').textContent = !hb ? '' : stock
     ? '用現成的公版袋子加工：紙材與蓋型都是現成的，只做燙金／數位印。不能打凸、打凹（成型的袋子沒辦法再進壓力機）。'
+    : byo
+    ? '您自己的紅包袋寄來給我們加工：線上金額只算燙金／印刷的工費與製版費，不含袋子。'
+      + '袋子已經糊好了，一樣不能打凸、打凹。寄之前請先用 LINE 跟我們確認。'
     : '從平張紙開始做：紙材自己挑、刀模形狀自己指定，可以加打凸、打凹。'
-      + '用我們現成的刀模（直式圓頭蓋、西式平蓋）不另外收費；其他形狀要新開一支刀模，會多一筆。');
+      + '用我們現成的刀模（直式圓頭蓋、西式平蓋）不另外收費；其他形狀要新開一支刀模，會多一筆。';
+  $('byoBox').classList.toggle('hidden', !byo);
 
   // 橫式關掉時一律直式，版式選擇整區不顯示
   if(!ENABLE_LANDSCAPE && S.hbLayout !== 'portrait'){
@@ -3031,8 +3122,11 @@ function applyModeUI(){
   }
   $('hbLayoutPick').classList.toggle('hidden', !ENABLE_LANDSCAPE);
 
-  // 公版：版式／尺寸／蓋型那整張卡收起來（都由款式決定）
+  /* 公版：版式／尺寸／蓋型那整張卡收起來（都由款式決定）。
+     自備袋要留著 —— 客人得告訴我們袋子多大、什麼蓋型，預覽與可燙範圍才對。 */
   $('hbLayoutBox').classList.toggle('hidden', !hb || stock);
+  var szHint = $('hbSizeHint');
+  if(szHint) szHint.classList.toggle('hidden', !byo);
   // 擺字區只有紅包袋有（春聯的預覽沒有正反面可以放）
   $('placeBox').classList.toggle('hidden', !hb);
   if(stock){ applyStock(); buildStockList() }
@@ -3044,12 +3138,12 @@ function applyModeUI(){
        全客製紅包袋 → 美術紙選單（搜尋＋紙名＋克數，papers.js）
        春聯 → 原本那份紙材選單 */
   var pickStock = hb && stock;
-  var pickArt   = hb && !stock;
-  $('matLabel').textContent = pickStock ? '公版款式' : '紙張材質';
+  var pickArt   = hb && !stock && !byo;        // 自備袋沒有紙可挑（袋子是客人的）
+  $('matLabel').textContent = pickStock ? '公版款式' : byo ? '袋子' : '紙張材質';
   $('matLabel').setAttribute('for', pickStock ? 'stockSel' : (pickArt ? 'artSel' : 'matSel'));
   $('stockSel').classList.toggle('hidden', !pickStock);
   $('artBox').classList.toggle('hidden', !pickArt);
-  $('matSel').classList.toggle('hidden', pickStock || pickArt);
+  $('matSel').classList.toggle('hidden', pickStock || pickArt || byo);
   if(pickArt) buildArtSelect();
   buildMaterialSelect();
   applyDieBox();
@@ -3073,14 +3167,18 @@ function applyFlapUI(){
   /* 老闆 2026-10-12：**只有全客製才「選」刀模形狀**。
      公版是現成袋子，蓋型是那一款本來就長那樣，所以公版一律唯讀顯示、不給挑。 */
   var pick = !isStock() && !fixed;
+  // 蓋型按鈕上的「現成刀模／需新開刀模」標籤會隨模式變（自備袋不標），所以每次都重畫
+  buildFlaps();
   $('flapGrid').classList.toggle('hidden', !pick);
-  $('flapLabel').textContent = pick ? '刀模形狀（全客製才需指定）' : '蓋型（本款固定）';
+  $('flapLabel').textContent = !pick ? '蓋型（本款固定）'
+    : byoMode() ? '您袋子的蓋型（選一個最接近的）' : '刀模形狀（全客製才需指定）';
 
   var f = flapCfg();
   var why = fixed ? '這款橫式公版是「' + f.name + '」，蓋型隨尺寸固定。'
-          : (isStock() ? '本款公版的蓋型是「' + f.name + '」。要自己指定刀模形狀請改選「全客製」。' : '');
+          : isStock() ? '本款公版的蓋型是「' + f.name + '」。要自己指定刀模形狀請改選「全客製」。'
+          : byoMode() ? '選一個最接近您袋子的蓋型，預覽才畫得像；我們不會依這個去開刀模。' : '';
   // 老闆 2026-10-12：現成刀模只有圓頭蓋與西式橫式，其他形狀要新開一支
-  var tail = pick ? '　標「現成刀模」的不另外收費；標「需新開刀模」的會多一筆開模費。' : '';
+  var tail = (pick && !byoMode()) ? '　標「現成刀模」的不另外收費；標「需新開刀模」的會多一筆開模費。' : '';
   $('flapDesc').textContent = why + f.desc + tail;
   $('flapPrintBox').classList.toggle('hidden', !f.canPrint);
   if(!f.canPrint && S.flapPrint){
@@ -3345,7 +3443,7 @@ function renderFileList(){
              '<button type="button" class="flex-1 text-left text-[#CFC3AC] hover:text-gold-light truncate" ' +
                'data-logosel="' + l.id + '">' + esc(l.name) + '</button>' +
              '<span class="shrink-0 text-[11px] text-[#7E7565]">' +
-               (l.type === 'ai' ? 'AI 檔・不預覽' : (l.src ? (it ? (it.face === 'front' ? '正面' : '背面') : '') : '讀取中…')) +
+               (l.type === 'ai' ? 'AI 檔・不預覽' : (l.src ? (it ? faceName(faceOfItem(it.id)) : '') : '讀取中…')) +
              '</span>' +
              '<button type="button" class="shrink-0 text-crimson-soft hover:text-crimson px-1" ' +
                'data-logodel="' + l.id + '" aria-label="移除這個檔">×</button>' +
@@ -3400,11 +3498,8 @@ $('itemBig').addEventListener('click', function(){
   if(it.type === 'logo'){ S.logoSize = it.size; $('logoSize').value = it.size }
   renderPreview(); renderItemBar();
 });
-$('itemFace').addEventListener('click', function(){
-  var it = selItem(); if(!it) return;
-  it.face = it.face === 'front' ? 'back' : 'front';
-  renderPreview(); renderItemBar();
-});
+/* 「移到背面」那顆按鈕 2026-11-18 拿掉了：客人直接把圖拖到右邊那個袋子就是背面，
+   不用再用按鈕換面（老闆：「示意圖就隨意讓客人拖拉就好，不用分正面背面」）。 */
 /* 這一筆要燙哪個箔色（老闆 2026-11-18）。只改預覽的顏色，不自己動價錢——
    要多一塊版請客人自己在上面加，不然我們會在他不知道的情況下多報一次製版費。 */
 $('itemFoilSel').addEventListener('change', function(){
@@ -3532,8 +3627,13 @@ function orderText(no){
                                    : '（' + PRICE.hongbao.layouts[S.hbLayout].name + '）'));
   if(S.product === 'hongbao'){
     L.push('‧訂製方式：' + (isStock() ? '公版現貨（用現成袋子加工，不能打凸／打凹）'
-                                     : '全客製（自選紙材、指定刀模形狀）'));
+                          : byoMode()  ? '★ 客人自備紅包袋寄來加工（不含袋子，只收工費與製版費）'
+                                       : '全客製（自選紙材、指定刀模形狀）'));
     if(isStock()) L.push('‧公版款式：' + stockCfg().name);
+    if(byoMode()){
+      L.push('　（下面的尺寸與蓋型是客人在網站上挑「最接近的」，實際袋子以收到的實物為準）');
+      L.push('　（請跟客人確認：袋子尺寸材質、要多寄幾個備品、寄件時間、加工完寄回的方式）');
+    }
   }
   L.push('‧規格：' + specText());
   L.push('‧加工方式：' + craftName());
@@ -3542,12 +3642,12 @@ function orderText(no){
   /* 客人在預覽上擺的圖文位置（老闆 2026-11-18）：一定要帶進訂單，不然我們不知道他要放哪。
      座標是相對位置（左上角為 0%），完稿時照這個比例擺。 */
   if(S.product === 'hongbao' && S.items.length){
-    L.push('‧版面擺放（客人在預覽上拖的位置，左上角為 0%）：');
+    L.push('‧版面擺放（客人在預覽上拖的位置，整張示意圖左上角為 0%，正/背面是依落點判的）：');
     S.items.forEach(function(it){
       var lg = it.type === 'logo' ? logoById(it.logoId) : null;
       var fo = FOILS.filter(function(f){ return f.k === it.foil })[0];
       var c = itemCm(it.id);              // 客人拉到的實際大小（老闆 2026-11-18）
-      L.push('　' + (it.face === 'front' ? '正面' : '背面') + '　' +
+      L.push('　' + faceName(faceOfItem(it.id)) + '　' +
              (it.type === 'logo' ? '圖檔 ' + ((lg && lg.name) || '（未命名）') : '文字「' + it.txt + '」') +
              '　左右 ' + Math.round(it.x * 100) + '%、上下 ' + Math.round(it.y * 100) + '%' +
              (c ? '　約 ' + c.w + ' × ' + c.h + ' 公分' : '') +
@@ -3616,7 +3716,9 @@ function orderText(no){
   if(q.spoilQty) L.push('‧放損：另備 ' + q.spoilQty + ' 張（' + q.layers + ' 層加工，每層 ' +
                         PRICE.spoil.min + '～' + PRICE.spoil.max + ' 張），客人實拿仍是 ' +
                         q.qty.toLocaleString('en-US') + ' 份');
-  L.push('‧紙材：' + money(q.paperUnit * q.qty) + '（每份 ' + q.paperUnit.toFixed(2) + ' 元）');
+  L.push(byoMode()
+    ? '‧紙材：NT$ 0（袋子由客人自備寄來，不計紙材費）'
+    : '‧紙材：' + money(q.paperUnit * q.qty) + '（每份 ' + q.paperUnit.toFixed(2) + ' 元）');
   q.procRows.forEach(function(p){
     if(p.quote){ L.push('‧' + p.name + '：另行報價（' + p.note + '）'); return }
     L.push('‧' + p.name + '工費：' + money(p.unit * q.qty) + '（' + p.note + '）');
