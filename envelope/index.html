@@ -2561,49 +2561,50 @@ function calc(){
       var n = S.plates.length;
       var anyFull = S.plates.some(function(p){ return p.full });
       var base = anyFull ? FL.oneFull : FL.one;
+      /* ⚠️ 老闆 2026-11-19：「裡面的小字說明，有些寫到金額的請刪掉」
+         → 每一列的小字**只寫做了什麼、幾色、幾處、幾份**，一律不寫單價。
+           右邊那個金額就是這列的總額，單價不攤給客人看。 */
       if(n >= 2 && S.reg){
         u = FL.multiReg;
-        note = '燙 ' + n + ' 色＋套準對位，每份 ' + u + ' 元';
+        note = '燙 ' + n + ' 色＋套準對位';
       } else if(n >= 2){
-        // 老闆沒給「2 色不套準」的價，暫以色數 × 單色價，標出來待確認
+        // 老闆沒給「2 色不套準」的價，暫以色數 × 單色價（待他核價，但對客只說會再確認）
         u = base * n;
-        note = '每份 ' + base + ' 元 × ' + n + ' 色（未套準，此組合待老闆核價）';
+        note = '燙 ' + n + ' 色（未套準；這個組合的價格我們會再跟您確認）';
       } else {
         u = base;
-        note = (anyFull ? '燙印面積超過 ' + PRICE.hongbao.foilArea.cm2 + ' 平方公分（滿版那一檔）' : '正常面積') +
-               '燙一色，每份 ' + u + ' 元';
+        note = (anyFull ? '燙印面積超過正常範圍（滿版那一檔）' : '正常面積') + '燙一色';
       }
       // 特殊箔材的加價逐版累加（雷射金／玫瑰金等）
       var fx = S.plates.reduce(function(s, p){ return s + (PRICE.foilExtra[p.color] || 0) }, 0);
-      if(fx){ u += fx; note += '＋箔材 ' + fx.toFixed(2) }
+      if(fx){ u += fx; note += '，含特殊箔材加價' }
     } else if(k === 'digital' && hbArt()){
       /* ★ 全客製的數位印刷（老闆 2026-11-18）：以 22×27 的紙下去印，一張 12 元。
          一張 ＝ 一個紅包袋，所以就是每個 12 元、沒有級距。 */
       u = PRICE.hongbao.custom.digitalUnit;
-      note = '以 ' + PRICE.hongbao.custom.dieBlank.w + ' × ' + PRICE.hongbao.custom.dieBlank.h +
-             ' 公分平張印，每個 ' + u + ' 元';
+      note = '以 ' + PRICE.hongbao.custom.dieBlank.w + ' × ' + PRICE.hongbao.custom.dieBlank.h + ' 公分平張印';
     } else {
       var t = tierOf(PRICE[S.product].procUnit[k], qty);
       u = t.unit * sizeF2;
-      note = '每份 ' + u.toFixed(2) + ' 元';
+      note = '';
       if(k === 'foil'){
         // 春聯還是用舊的級距表（老闆只給了紅包袋的價）
         var nc = S.plates.length;
         var fx2 = S.plates.reduce(function(s, p){ return s + (PRICE.foilExtra[p.color] || 0) }, 0);
         u = u * nc + fx2;
-        note = nc > 1 ? ('每份 ' + t.unit.toFixed(2) + ' 元 × ' + nc + ' 塊版') : ('每份 ' + u.toFixed(2) + ' 元');
+        note = nc > 1 ? ('共 ' + nc + ' 塊版') : '';
       }
     }
     if(k === 'digital' && S.sides === 'double'){
       // 雙面＝再過一次機，單價乘 2（全客製 12 元那條路也一樣）
       var base1 = hbArt() ? PRICE.hongbao.custom.digitalUnit : t.unit;
       u = base1 * 2;
-      note = '每個 ' + base1.toFixed(2) + ' 元 × 雙面';
+      note = '雙面（正反各過一次機）';
     }
     // 打凸／打凹也是一處壓一次，處數多就多壓幾趟
     if(k === 'emboss' || k === 'deboss'){
       var m = (k === 'emboss' ? S.embossPlates : S.debossPlates).length;
-      if(m > 1){ u *= m; note = '每份 ' + t.unit.toFixed(2) + ' 元 × ' + m + ' 處' }
+      if(m > 1){ u *= m; note = '共 ' + m + ' 處' }
     }
     procUnitSum += u;
     procRows.push({ k:k, name:PRICE.processes[k].name, unit:u, note:note });
@@ -2616,8 +2617,8 @@ function calc(){
      公版是買現成糊好的成品袋，不收這筆；春聯是平張，也沒有糊型。 */
   var unitRows = [];
   if(hbArt()){
-    unitRows.push({ name:'糊型（成型）', unit:PRICE.hongbao.custom.glueUnit,
-                    note:'每個 ' + PRICE.hongbao.custom.glueUnit + ' 元，手工糊成袋' });
+    // 小字不寫單價（老闆 2026-11-19）
+    unitRows.push({ name:'糊型（成型）', unit:PRICE.hongbao.custom.glueUnit, note:'手工糊成袋' });
   }
   unitRows.forEach(function(r){ procUnitSum += r.unit });
 
@@ -2688,14 +2689,15 @@ function calc(){
   });
   if(spoilCost) plateRows.push({
     name:'放損（試機對位備料）',
+    // 小字不寫紙材單價（老闆 2026-11-19）
     note: layers + ' 層加工 × 每層 ' + PRICE.spoil.min + '～' + PRICE.spoil.max + ' 張，以 ' +
-          PRICE.spoil.est + ' 張估＝ ' + spoilQty + ' 張 × 紙材 ' + paperUnit.toFixed(2) + ' 元',
+          PRICE.spoil.est + ' 張估＝ ' + spoilQty + ' 張',
     v: spoilCost
   });
 
   var aiN = S.aiConv ? Math.max(1, S.aiQty || 1) : 0;
   var aiCost = aiN * PRICE.aiConvert;   // 一次性費用，不隨份數跑
-  if(aiCost) plateRows.push({ name:'圖檔轉印刷檔', note:aiN + ' 張 × ' + PRICE.aiConvert + ' 元', v:aiCost });
+  if(aiCost) plateRows.push({ name:'圖檔轉印刷檔', note:aiN + ' 張', v:aiCost });
 
   /* ⑥ 全客製的軋型工資：照 後加工\軋型.md 的木刀階梯（每張單價 × 張數，未達基本費收基本費）。
      「張」在這裡＝一個紅包袋（刀模一次軋一個 22×27 的料）。 */
@@ -2705,8 +2707,9 @@ function calc(){
     var dcLabor = Math.max(C.diecutLabor.min, Math.round(qty * dcRate));
     plateRows.push({
       name:'軋型工資',
-      note:'每個 ' + dcRate.toFixed(2) + ' 元 × ' + qty.toLocaleString('en-US') + ' 個' +
-           (qty * dcRate < C.diecutLabor.min ? '，未達基本費 ' + money(C.diecutLabor.min) + '，收基本費' : ''),
+      // 小字不寫單價與基本費金額（老闆 2026-11-19）
+      note: qty.toLocaleString('en-US') + ' 個' +
+           (qty * dcRate < C.diecutLabor.min ? '（數量少，這筆以基本費計）' : ''),
       v: dcLabor
     });
   }
@@ -2720,16 +2723,16 @@ function calc(){
     oppBags = Math.ceil(qty / O.per);
     plateRows.push({
       name:'OPP 透明袋（' + kind.name + '）',
-      note: oppBags.toLocaleString('en-US') + ' 個袋 × ' + kind.price.toFixed(2) + ' 元' +
-            '（每袋最多裝 ' + O.per + ' 個，' + flapCfg().name + '配' + kind.name + '）',
+      // 小字不寫單價（老闆 2026-11-19）
+      note: oppBags.toLocaleString('en-US') + ' 個袋（每袋最多裝 ' + O.per + ' 個，' +
+            flapCfg().name + '配' + kind.name + '）',
       v: oppBags * kind.price
     });
     if(S.oppPack){
       var packN = O.packPer === 'piece' ? qty : oppBags;
       plateRows.push({
         name:'代裝服務',
-        note:'我們幫您裝進袋子，每裝一' + (O.packPer === 'piece' ? '個' : '袋') + ' ' +
-             O.packFee + ' 元 × ' + packN.toLocaleString('en-US') +
+        note:'我們幫您裝進袋子，共 ' + packN.toLocaleString('en-US') +
              (O.packPer === 'piece' ? ' 個' : ' 袋'),
         v: packN * O.packFee
       });
@@ -2787,7 +2790,8 @@ function renderPrice(){
   /* ⚠️ 老闆 2026-11-18：「紙錢不用顯示出來」。
      全客製這一行原本會寫出「大紙每張 X 元 ÷ 一張軋 N 個 ＝ 每個 Y 元」整串算式，已改成只寫數量。
      公版那邊維持原本的「N 份 × 單價」（那是老闆自己報給客人的成品袋價，可以公開）。 */
-  var paperNote = n + ' 份 × ' + q.paperUnit.toFixed(2) + ' 元';
+  // 老闆 2026-11-19：小字不寫單價，只寫數量與紙名
+  var paperNote = n + ' 份';
   if(mat.art) paperNote = n + ' 個　' + mat.name;
   /* 自備袋（老闆 2026-11-18）：這一行還是要出現，但要講清楚「不收錢、袋子您出」，
      直接把行拿掉客人會以為我們漏算、或以為袋子是我們準備的。 */
@@ -2798,13 +2802,14 @@ function renderPrice(){
   }
   q.procRows.forEach(function(p){
     if(p.quote){ rows.push([p.name, p.note, null]); return }   // null ＝ 顯示「另行報價」
-    rows.push([p.name + '工費', p.note + '　× ' + n + ' 份', p.unit * q.qty]);
+    // 小字沒東西時不要留一個孤零零的全形空白（老闆 2026-11-19 把單價拿掉後常常就是空的）
+    rows.push([p.name + '工費', (p.note ? p.note + '　' : '') + '× ' + n + ' 份', p.unit * q.qty]);
   });
   // 糊型這類「按個數算、但不是工序」的項目，也要各自列一行（老闆 2026-11-18）
   q.unitRows.forEach(function(r){
-    rows.push([r.name, r.note + '　× ' + n + ' 個', r.unit * q.qty]);
+    rows.push([r.name, (r.note ? r.note + '　' : '') + '× ' + n + ' 個', r.unit * q.qty]);
   });
-  if(q.regUnit) rows.push(['套準', '每份 ' + q.regUnit.toFixed(2) + ' 元 × ' + n + ' 份', q.regUnit * q.qty]);
+  if(q.regUnit) rows.push(['套準', '× ' + n + ' 份', q.regUnit * q.qty]);
   q.plateRows.forEach(function(p){ rows.push([p.name, p.note, p.v]) });
   /* 老闆 2026-11-17：運費這一列要把**每一種收件方式的費用都列出來**，
      客人一眼看得到選別的要多少，目前選的那個標亮。 */
@@ -2863,22 +2868,17 @@ function renderPrice(){
     $('perUnit').textContent  = '平均每份 ' + (q.total / q.qty).toFixed(2) + ' 元';
   }
 
-  var parts = ['每份合計 ' + q.unit.toFixed(2) + ' 元（紙 ' + q.paperUnit.toFixed(2)];
-  // 另行報價的項目不要列進「每份合計」的算式，不然會出現「＋合版印 0.00」誤導人
-  q.procRows.forEach(function(p){
-    if(p.quote) return;
-    parts.push('＋' + PRICE.processes[p.k].short + ' ' + p.unit.toFixed(2));
-  });
-  if(q.regUnit) parts.push('＋套準 ' + q.regUnit.toFixed(2));
-  $('unitLine').textContent = q.big ? '大量訂製・專人報價' : parts.join('') + '）';
+  /* 右上角那行（老闆 2026-11-19：「和右上角那個小字」一起刪）——
+     原本寫「每份合計 16.77 元（紙 5.17＋燙金 8.60…）」，等於把成本結構整個攤開給客人看。
+     現在只留「大量訂製」那個狀態要講的話，平常就空著；
+     客人要看平均每份多少，下面那條的「平均每份 X 元」還在。 */
+  $('unitLine').textContent = q.big ? '大量訂製・專人報價' : '';
 
-  // 紙材是固定單價時不要講「紙也套級距」，級距只影響工費
+  // 數量級距提示也不要寫出紙材單價（同上）
   $('qtyTierHint').classList.toggle('!text-crimson-soft', q.big);
   $('qtyTierHint').textContent = q.big
     ? '超過 5,000 個，請用官方 LINE 洽詢專人報價'
-    : q.fixedPaper
-    ? '紙材固定每個 ' + q.fixedPaper + ' 元；工費套用 ' + q.tier.q + ' 份級距'
-    : '套用 ' + q.tier.q + ' 份級距單價';
+    : '套用 ' + q.tier.q + ' 份級距';
 }
 
 /* ── 全部重繪 ─────────────────────────────────────────────────────── */
@@ -3751,7 +3751,7 @@ function orderText(no){
     var oK = PRICE.opp[oppKind()];
     var oQ = Math.max(moq(), S.qty || moq());
     L.push('‧OPP 透明袋：' + oK.name + ' × ' + Math.ceil(oQ / PRICE.opp.per) +
-           ' 個（每袋裝 ' + PRICE.opp.per + ' 個，每個 ' + oK.price.toFixed(2) + ' 元）' +
+           ' 個（每袋裝 ' + PRICE.opp.per + ' 個）' +
            (S.oppPack ? '＋代裝服務' : '（不代裝，分開寄）'));
   }
   if(hasProc('foil')){
@@ -3805,18 +3805,18 @@ function orderText(no){
   L.push('');
   L.push('■ 費用試算' + (DRAFT_PRICING ? '（草稿價，待確認）' : ''));
   L.push('‧數量：' + q.qty.toLocaleString('en-US') + ' 份（' +
-         (q.fixedPaper ? '紙材固定單價，工費套用 ' : '套用 ') + q.tier.q + ' 份級距）');
+         '套用 ' + q.tier.q + ' 份級距）');
   if(q.spoilQty) L.push('‧放損：另備 ' + q.spoilQty + ' 張（' + q.layers + ' 層加工，每層 ' +
                         PRICE.spoil.min + '～' + PRICE.spoil.max + ' 張），客人實拿仍是 ' +
                         q.qty.toLocaleString('en-US') + ' 份');
   L.push(byoMode()
     ? '‧紙材：NT$ 0（袋子由客人自備寄來，不計紙材費）'
-    : '‧紙材：' + money(q.paperUnit * q.qty) + '（每份 ' + q.paperUnit.toFixed(2) + ' 元）');
+    : '‧紙材：' + money(q.paperUnit * q.qty));
   q.procRows.forEach(function(p){
     if(p.quote){ L.push('‧' + p.name + '：另行報價（' + p.note + '）'); return }
     L.push('‧' + p.name + '工費：' + money(p.unit * q.qty) + '（' + p.note + '）');
   });
-  if(q.regUnit) L.push('‧套準：' + money(q.regUnit * q.qty) + '（每份 ' + q.regUnit.toFixed(2) + ' 元）');
+  if(q.regUnit) L.push('‧套準：' + money(q.regUnit * q.qty));
   q.plateRows.forEach(function(p){ L.push('‧' + p.name + '：' + money(p.v) + '（' + p.note + '）') });
   L.push('‧運費：' + (q.ship === 0 ? '0（' + (S.ship === 'self' ? '自取' : '滿額免運') + '）' : money(q.ship)));
   var qn = q.procRows.filter(function(p){ return p.quote });
