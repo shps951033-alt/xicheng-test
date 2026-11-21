@@ -472,7 +472,7 @@ window.STYLES = [
     },
     {
         "c":  "25008",
-        "status":  "low",
+        "status":  "sold",
         "n":  "水豚寶",
         "cover":  "img/25008/cover.jpg",
         "pages":  [
@@ -690,6 +690,7 @@ window.STYLES = [
     },
     {
         "c":  "25009",
+        "status":  "sold",
         "n":  "白爛貓",
         "cover":  "img/25009/cover.jpg",
         "pages":  [
