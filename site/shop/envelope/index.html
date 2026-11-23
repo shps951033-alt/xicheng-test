@@ -557,16 +557,15 @@ section[id]{ scroll-margin-top:76px }
                老闆 2026-11-18 要在站上呈現刀模圖並寫明可燙金範圍；
                圖丟進 img\die\hongbao-die.png 就會自動出現（沒圖就只顯示文字，不會破版）。 -->
           <div id="dieBox" class="hidden mt-3 rounded-xl border border-ink-3 bg-ink p-4">
-            <span class="block text-[13px] font-bold text-gold-light">我們現成的紅包袋刀模</span>
-            <figure class="mt-2" style="display:none">
-              <img src="img/die/hongbao-die.png" alt="喜成紅包袋刀模展開圖與可燙金範圍"
+            <span id="dieTitle" class="block text-[13px] font-bold text-gold-light">我們現成的紅包袋刀模</span>
+            <!-- 兩支刀模各一張圖：直式＝中式圓頭蓋，橫式＝西式平蓋（老闆 2026-11-23 給檔）。
+                 由 applyDieBox() 切換 src，圖不在就整個 figure 收起來（不會破版）。 -->
+            <figure id="dieFig" class="mt-2" style="display:none">
+              <img id="dieImg" src="img/die/hongbao-die.png" alt="喜成紅包袋刀模展開圖與可燙金範圍"
                    class="w-full max-w-[360px] rounded-lg border border-ink-4 bg-white/5"
                    onload="this.closest('figure').style.display=''"
-                   onerror="this.closest('figure').remove()">
-              <figcaption class="mt-1.5 text-[11.5px] text-[#8F8674] leading-5">
-                我們這支刀模的展開圖。<span class="text-crimson-soft">灰色的糊邊不能燙金或打凸</span>，
-                其餘整張都可以；綠線是成品正面的摺線。要出稿可以直接照這張的比例擺圖。
-              </figcaption>
+                   onerror="this.closest('figure').style.display='none'">
+              <figcaption id="dieCap" class="mt-1.5 text-[11.5px] text-[#8F8674] leading-5"></figcaption>
             </figure>
             <p id="dieNote" class="text-[12px] text-[#8F8674] mt-2 leading-5"></p>
           </div>
@@ -1042,6 +1041,14 @@ var DRAFT_PRICING = true;
    設 false ＝ 版式選擇整區隱藏、一律直式；橫式的尺寸（landscape）與西式蓋型
    （pointed／sqround）都還留在 PRICE 裡沒刪，之後要賣橫式把這行改 true 就回來了。 */
 var ENABLE_LANDSCAPE = false;
+/* ★ 老闆 2026-11-23 傳來西式刀模：「可以放在全客製裡面」
+   → 橫式（西式）只在**全客製**開放，公版橫式仍照 2026-11-05「橫式都先不要」關著。
+   ⚠️ 不要順手把上面那個 ENABLE_LANDSCAPE 也改成 true，那會把兩款橫式公版現貨一起放出來。 */
+var ENABLE_LANDSCAPE_CUSTOM = true;
+/* 現在這個模式能不能選橫式 */
+function landscapeOK(){
+  return ENABLE_LANDSCAPE || (ENABLE_LANDSCAPE_CUSTOM && S.product === 'hongbao' && S.hbMode === 'custom');
+}
 var ORDER_ENDPOINT = '';   // 之後若接表單後端（Formspree / Apps Script），把網址填這裡即可自動送出
 
 var PRICE = {
@@ -1140,6 +1147,25 @@ var PRICE = {
       dieOuter: { w:19.8, h:24.7 },
       dieFront: { w:9, h:18 },
       glueEdgeCm: 1.8,
+      /* ★ 西式（橫式）刀模 —— 老闆 2026-11-23 傳來「喜成西式紅包袋.ai」
+           （已存 紅包袋春聯\刀模-喜成西式紅包袋.ai）。從檔案量到的實際數字：
+             成品正面（青色摺線框）＝ 17 × 9 公分（不含蓋頭）
+             展開外框（含蓋頭、背片、兩側糊翼）＝ 20.6 × 20.5 公分
+             上蓋頭 3.5、下背片 8.0、左右糊翼各 1.8 公分
+         ⚠️ dieBlank（備料）23 × 23 是**我按中式的裁切咬口邊推的**：
+            中式展開 19.8 × 24.7 → 老闆給的備料 22 × 27（＋2.2／＋2.3），
+            西式照同樣的邊加上去 ＝ 22.8 × 22.8，進位到 23 × 23。
+            老闆沒講過這個數字 → 落數與紙錢都吃它，要校就改這一行。
+         ⚠️ 這支是**現成刀模**（老闆 2026-10-12 就說過「西式橫式只有平蓋款」），
+            全客製選西式平蓋不收開模費；尖頭蓋沒有刀模。 */
+      west: {
+        dieBlank:   { w:23, h:23 },
+        dieOuter:   { w:20.6, h:20.5 },
+        dieFront:   { w:17, h:9 },
+        glueEdgeCm: 1.8,
+        flapCm:     3.5,
+        backCm:     8.0
+      },
       glueUnit: 3,          // 糊型（成型）每個 3 元 —— 老闆 2026-11-18 給的確定值
       /* ★ 數位印刷（老闆 2026-11-18 的確定值）：「以 22*27 的紙大下去印，印一張要 12 元」
          → 一張 22×27 ＝ 一個紅包袋，所以全客製的數位印就是**每個 12 元、沒有數量級距**。
@@ -1196,6 +1222,10 @@ var PRICE = {
          L85：商品標示「8.5 × 17.8（攤平含封口 16.8 × 17.5）」→ 16.8 − 8.5 ＝ 8.3
          L9 ：商品只標不含封口的 9 × 17.5，沒有攤平尺寸，先照商品照的比例estimate 5.6，待量 */
       landscape: {
+        /* ★ 老闆 2026-11-23 傳來西式刀模 → 全客製橫式的預設尺寸就是這支刀模的實際成品 17 × 9。
+           （L85／L9 是當初照公版商品照建的兩款現貨規格，全客製用不到那兩個數字。） */
+        L17:  { label:'17 × 9',    w:9,   l:17,   flap:'sqround', flapCm:3.5,
+               note:'喜成現成西式刀模（成品 17 × 9，不含蓋頭）' },
         L85: { label:'17.8 × 8.5', w:8.5, l:17.8, flap:'sqround', flapCm:8.3,
                note:'巢織紋西式平蓋（攤平含封口 16.8 × 17.5）' },
         L9:  { label:'17.5 × 9',   w:9,   l:17.5, flap:'pointed', flapCm:5.6, flapEst:true,
@@ -1523,7 +1553,7 @@ var S = {
      只有全客製才需要選紙材與刀模形狀，也只有全客製能加打凸／打凹。
      公版是現成糊好的袋子，沒辦法再進機器壓凸壓凹。 */
   hbMode:'stock', hbStock:'fenghua',
-  hbLayout:'portrait', hbSize:{ portrait:'s18', landscape:'L9' },
+  hbLayout:'portrait', hbSize:{ portrait:'s18', landscape:'L17' },   /* 橫式預設＝西式刀模的實際成品 17×9（老闆 2026-11-23） */
   /* 全客製的預設蓋型＝圓頭蓋：老闆 2026-11-18 說「我們有一個現成刀模」，就是這支
      （2026-10-12 也確認過現成的只有圓頭蓋那支）→ 預設不要讓客人一進來就背 1,200 刀模費。
      公版模式會由 applyStock() 依款式自己覆蓋這個值，不受影響。 */
@@ -1713,6 +1743,14 @@ function artMode(){
 /* ⚠️ 只有「全客製紅包袋」才有刀模、糊型、軋型、12 元平張印那一套。
    春聯也走美術紙之後，凡是紅包袋專屬的計價與 UI 都要改吃這支，不能只看 artMode()。 */
 function hbArt(){ return artMode() && S.product === 'hongbao' }
+/* 目前這張單用的是哪一支刀模：直式＝中式圓頭蓋（custom 本身），橫式＝西式（custom.west）。
+   ★ 老闆 2026-11-23 給了西式刀模檔之後，備料尺寸會跟著版式變（23×23 vs 22×27）
+     → 落數、紙錢、平張印的說明文字全部吃這支，不要再直接寫 PRICE.hongbao.custom.dieBlank。 */
+function customDie(){
+  var C = PRICE.hongbao.custom;
+  return (S.product === 'hongbao' && S.hbLayout === 'landscape') ? C.west : C;
+}
+function isWestDie(){ return S.product === 'hongbao' && S.hbLayout === 'landscape' }
 function artPaperObj(){ return ART_PAPERS[Math.min(S.artPaper, ART_PAPERS.length - 1)] || ART_PAPERS[0] }
 function artGradeObj(){ var p = artPaperObj(); return p.grades[Math.min(S.artGrade, p.grades.length - 1)] || p.grades[0] }
 /* 一「個」成品要用掉多大一塊紙（公分）。落數就是拿這個去排大紙。
@@ -1723,7 +1761,7 @@ function artGradeObj(){ var p = artPaperObj(); return p.grades[Math.min(S.artGra
      clPieces() 乘上去。⚠️ 不要在這裡就乘 3，不然落數會算成「一張大紙只裁 1 組」。
      橫批實際尺寸老闆沒給，先當成跟上下聯同尺寸的第三條。 */
 function artBlankCm(){
-  if(S.product === 'hongbao') return PRICE.hongbao.custom.dieBlank;
+  if(S.product === 'hongbao') return customDie().dieBlank;
   var m = PRICE.chunlian.cutMargin;
   if(S.couplet === 'tiaopi' || S.couplet === 'duilian'){
     var t = S.couplet === 'tiaopi' ? PRICE.chunlian.tiaopiCm : PRICE.chunlian.duilianCm;
@@ -2120,16 +2158,29 @@ function applyDieBox(){
   if(!box) return;
   box.classList.toggle('hidden', !hbArt());
   if(!hbArt()) return;
-  var C = PRICE.hongbao.custom, FA = PRICE.hongbao.foilArea;
+  var C = customDie(), FA = PRICE.hongbao.foilArea, west = isWestDie();
   var f = flapCfg();
+  // 圖與標題跟著版式換（老闆 2026-11-23 給了西式刀模檔）
+  $('dieTitle').textContent = west ? '我們現成的西式（橫式）紅包袋刀模' : '我們現成的紅包袋刀模';
+  var img = $('dieImg'), want = west ? 'img/die/hongbao-die-west.png' : 'img/die/hongbao-die.png';
+  if(img && img.getAttribute('src') !== want){ $('dieFig').style.display = 'none'; img.src = want }
+  $('dieCap').innerHTML = west
+    ? '我們這支西式刀模的展開圖。<span class="text-crimson-soft">灰色的兩側糊翼不能燙金或打凸</span>，' +
+      '其餘整張都可以；青線是成品正面的摺線。要出稿可以直接照這張的比例擺圖。'
+    : '我們這支刀模的展開圖。<span class="text-crimson-soft">灰色的糊邊不能燙金或打凸</span>，' +
+      '其餘整張都可以；綠線是成品正面的摺線。要出稿可以直接照這張的比例擺圖。';
   $('dieNote').innerHTML =
-    '成品 <span class="text-gold-light">' + C.dieFront.w + ' × ' + C.dieFront.h + ' 公分</span>（不含蓋頭）、圓頭蓋；' +
+    '成品 <span class="text-gold-light">' + C.dieFront.w + ' × ' + C.dieFront.h + ' 公分</span>（不含蓋頭）、' +
+    (west ? '西式平蓋；' : '圓頭蓋；') +
     '展開外框 ' + C.dieOuter.w + ' × ' + C.dieOuter.h + ' 公分，' +
     '加上裁切與咬口邊，一個要用掉 <span class="text-gold-light">' + C.dieBlank.w + ' × ' + C.dieBlank.h +
-    ' 公分</span>的紙。<br>' +
+    ' 公分</span>的紙。' + (west ? '（蓋頭 ' + C.flapCm + '、背片 ' + C.backCm + ' 公分）' : '') + '<br>' +
     '<span class="text-gold-light">可燙金／打凸範圍：除了糊邊，整張都可以做</span>' +
-    '——正面、背面、蓋頭都行，只有圖上塗灰的那兩塊糊邊（右側窄條與底摺，各約 ' +
-    C.glueEdgeCm + ' 公分寬）不能壓，壓了會黏不牢。<br>' +
+    (west
+      ? '——正面、背面、蓋頭都行，只有圖上塗灰的<span class="text-gold-light">左右兩側糊翼</span>（各約 ' +
+        C.glueEdgeCm + ' 公分寬）不能壓，壓了會黏不牢。'
+      : '——正面、背面、蓋頭都行，只有圖上塗灰的那兩塊糊邊（右側窄條與底摺，各約 ' +
+        C.glueEdgeCm + ' 公分寬）不能壓，壓了會黏不牢。') + '<br>' +
     '燙印面積<span class="text-gold-light">以您圖稿實際的大小為準</span>（請在上面「燙印色與版」填長寬）：' +
     '在 ' + FA.label + '（' + FA.cm2 + ' 平方公分）以內算「正常面積」，超過就跳到滿版那一檔；' +
     (f.canPrint ? '蓋面也可以另外燙，算另一塊版。' : '平頭蓋沒有蓋面可燙，只燙袋身。') + '<br>' +
@@ -2789,7 +2840,7 @@ function calc(){
       /* ★ 全客製的數位印刷（老闆 2026-11-18）：以 22×27 的紙下去印，一張 12 元。
          一張 ＝ 一個紅包袋，所以就是每個 12 元、沒有級距。 */
       u = PRICE.hongbao.custom.digitalUnit;
-      note = '以 ' + PRICE.hongbao.custom.dieBlank.w + ' × ' + PRICE.hongbao.custom.dieBlank.h + ' 公分平張印';
+      note = '以 ' + customDie().dieBlank.w + ' × ' + customDie().dieBlank.h + ' 公分平張印';
     } else if(k === 'emboss' || k === 'deboss'){
       /* ★ 打凸／打凹工費（老闆 2026-11-19，「打凹打凸一樣」）：max(1200, 個數 × 4 × 處數)。
          ⚠️ 這一列的總額不是「單價 × 數量」那麼單純（有基本費地板），
@@ -3231,8 +3282,13 @@ $$('[data-hblayout]').forEach(function(b){
   b.addEventListener('click', function(){
     S.hbLayout = b.getAttribute('data-hblayout');
     pressGroup('hblayout', S.hbLayout);
-    buildHbSizes();       // 直式四款、橫式兩款，清單不一樣
+    buildHbSizes();       // 直式四款、橫式三款，清單不一樣
     applyFlapUI();
+    /* 版式換了＝換一支刀模（直式中式／橫式西式，老闆 2026-11-23）→ 刀模圖與說明、
+       紙的落數都要跟著重算。⚠️ 少了這兩行，畫面會留著上一支刀模的圖與尺寸。 */
+    applyDieBox();
+    if(artMode()) buildArtSelect();
+    buildMaterialSelect();
     renderPreview(); renderPrice();
   });
 });
@@ -3323,8 +3379,11 @@ function foilMaxCm(){
   }
   if(S.product !== 'hongbao') return null;
   if(hbArt()){
-    var C = PRICE.hongbao.custom;
-    return { w:+(C.dieOuter.w - C.glueEdgeCm).toFixed(1), h:C.dieOuter.h, why:'刀模展開扣掉糊邊' };
+    /* 西式的糊翼在**左右兩側**（各 1.8），中式那條窄片也是扣寬度，所以兩支都扣 w。
+       ⚠️ 西式還有下背片會摺上來，但那片攤平時照樣能燙，不扣。 */
+    var C = customDie();
+    return { w:+(C.dieOuter.w - C.glueEdgeCm * (isWestDie() ? 2 : 1)).toFixed(1),
+             h:C.dieOuter.h, why:'刀模展開扣掉糊邊' };
   }
   var sz = hbSizeCfg();
   return sz ? { w:sz.w, h:sz.l, why:'袋身' } : null;
@@ -3352,10 +3411,25 @@ function plateOver(p){
 
 /* 目前選到的紅包袋尺寸 */
 function sizeList(){ return PRICE.hongbao.sizes[S.hbLayout] }
-function hbSizeCfg(){ return sizeList()[S.hbSize[S.hbLayout]] }
+/* 這個模式下真的能選的尺寸。
+   ★ 全客製橫式只留 L17（＝老闆 2026-11-23 給的那支西式刀模的實際成品 17 × 9）。
+     L85／L9 是公版現貨的規格、我們沒有那兩支刀模，全客製列出來會讓客人選到做不出來的東西
+     （L9 還掛尖頭蓋，選了會憑空多一筆開模費）。 */
+function sizeKeys(){
+  var ks = Object.keys(sizeList());
+  if(S.product === 'hongbao' && S.hbLayout === 'landscape' && S.hbMode === 'custom'){
+    return ks.filter(function(k){ return k === 'L17' });
+  }
+  return ks;
+}
+function hbSizeCfg(){
+  var l = sizeList(), k = S.hbSize[S.hbLayout];
+  if(sizeKeys().indexOf(k) < 0){ k = sizeKeys()[0]; S.hbSize[S.hbLayout] = k }
+  return l[k];
+}
 
 function buildHbSizes(){
-  var list = sizeList(), keys = Object.keys(list), cur = S.hbSize[S.hbLayout];
+  var list = sizeList(), keys = sizeKeys(), cur = S.hbSize[S.hbLayout];
   $('hbSizeGrid').style.gridTemplateColumns = 'repeat(' + Math.min(keys.length, 4) + ',minmax(0,1fr))';
   $('hbSizeGrid').innerHTML = keys.map(function(k){
     var s = list[k];
@@ -3372,7 +3446,11 @@ function buildHbSizes(){
 /* 蓋型選項的小圖示：直接拿畫預覽的同一個函式產生，保證圖示與預覽長得一樣 */
 function buildFlaps(){
   var W = 40, BODY = 30;
-  $('flapGrid').innerHTML = ['flat', 'floral', 'round'].map(function(k){
+  /* 直式＝中式三款蓋型；橫式＝西式兩款（老闆 2026-11-23 給了西式平蓋的現成刀模）。
+     ⚠️ 老闆 2026-10-12：「西式橫式只有平蓋款」→ 尖頭蓋留著，但它 die:false，選了會多一筆開模費。 */
+  var keys = (S.product === 'hongbao' && S.hbLayout === 'landscape')
+    ? ['sqround', 'pointed'] : ['flat', 'floral', 'round'];
+  $('flapGrid').innerHTML = keys.map(function(k){
     var f = PRICE.hongbao.flaps[k];
     var fh = flapRise(k, W);
     var d = envelopePath(k, W, fh, BODY);
@@ -3461,12 +3539,13 @@ function applyModeUI(){
       + '用我們現成的刀模（直式圓頭蓋、西式平蓋）不另外收費；其他形狀要新開一支刀模，會多一筆。';
   $('byoBox').classList.toggle('hidden', !byo);
 
-  // 橫式關掉時一律直式，版式選擇整區不顯示
-  if(!ENABLE_LANDSCAPE && S.hbLayout !== 'portrait'){
+  /* 橫式（西式）只在全客製開放（老闆 2026-11-23 給了西式刀模）；
+     公版／自備袋這邊還是一律直式，版式選擇整區不顯示。 */
+  if(!landscapeOK() && S.hbLayout !== 'portrait'){
     S.hbLayout = 'portrait';
     pressGroup('hblayout', 'portrait');
   }
-  $('hbLayoutPick').classList.toggle('hidden', !ENABLE_LANDSCAPE);
+  $('hbLayoutPick').classList.toggle('hidden', !landscapeOK());
 
   /* 公版：版式／尺寸／蓋型那整張卡收起來（都由款式決定）。
      自備袋要留著 —— 客人得告訴我們袋子多大、什麼蓋型，預覽與可燙範圍才對。 */
@@ -3517,6 +3596,14 @@ function applyFlapUI(){
      直接鎖成該尺寸的蓋型，避免出現「選了做不出來的組合」。 */
   var fixed = S.product === 'hongbao' && hbSizeCfg() && hbSizeCfg().flap;
   if(fixed) S.hbFlap = fixed;
+  /* 換版式時把蓋型拉回該版式有的那組，不然會留著上一個版式的蓋型（畫不出來、也報錯價）。
+     直式＝中式三款、橫式＝西式兩款。 */
+  var westFlaps = ['sqround', 'pointed'];
+  if(S.product === 'hongbao'){
+    var isLand = S.hbLayout === 'landscape';
+    if(isLand && westFlaps.indexOf(S.hbFlap) < 0) S.hbFlap = 'sqround';
+    if(!isLand && westFlaps.indexOf(S.hbFlap) >= 0) S.hbFlap = 'round';
+  }
   /* 老闆 2026-10-12：**只有全客製才「選」刀模形狀**。
      公版是現成袋子，蓋型是那一款本來就長那樣，所以公版一律唯讀顯示、不給挑。 */
   var pick = !isStock() && !fixed;
@@ -3527,7 +3614,9 @@ function applyFlapUI(){
     : byoMode() ? '您袋子的蓋型（選一個最接近的）' : '刀模形狀（全客製才需指定）';
 
   var f = flapCfg();
-  var why = fixed ? '這款橫式公版是「' + f.name + '」，蓋型隨尺寸固定。'
+  var why = (fixed && S.hbMode === 'custom')
+            ? '橫式走我們現成的西式刀模，蓋型就是「' + f.name + '」。'
+          : fixed ? '這款橫式公版是「' + f.name + '」，蓋型隨尺寸固定。'
           : isStock() ? '本款公版的蓋型是「' + f.name + '」。要自己指定刀模形狀請改選「全客製」。'
           : byoMode() ? '選一個最接近您袋子的蓋型，預覽才畫得像；我們不會依這個去開刀模。' : '';
   // 老闆 2026-10-12：現成刀模只有圓頭蓋與西式橫式，其他形狀要新開一支
