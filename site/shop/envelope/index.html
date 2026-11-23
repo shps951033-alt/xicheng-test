@@ -1296,13 +1296,27 @@ var PRICE = {
        ⚠️ **不要再乘款式係數／斗方尺寸係數**——老闆給的就是「每個」「每張」的價。
           尺寸係數現在只剩紙材那邊在用（走級距表的傳統紙）。
        ★ 唯一的張數例外：對聯一組 3 張、上機費收 3 次（老闆 2026-11-22）→ 見 duilianPieces。
-       ❓ 老闆還沒講、我先暫定的：打凸的基本費（比照紅包袋 1200）、條批與斗方燙金是不是同價
-          （條批 85 × 28 比斗方大很多）、數位印大小張是不是同價。待核。 */
+       ✅ 2026-11-23 老闆確認：打凸基本費 1200 正確、斗方裁切邊 1 公分正確、對聯基本費收 3 次正確。
+       ❌ 2026-11-23 老闆否決：「條批與斗方燙金同價」是錯的 → 條批／對聯的燙金另有價，見 laborBy。
+       ❓ 還沒核的：數位印大小張是不是同價、條批／對聯的**打凸**是不是也要上大機器（基本費會不會
+          比 1200 高）。待核，別自己推。 */
     labor: {
       foil:    { one:3.5, twoReg:4.5, min:1500 },
       emboss:  { unit:3, min:1200 },
       deboss:  { unit:3, min:1200 },
       digital: { unit:5.5, min:800, moq:1 }
+    },
+    /* ★ 款式專屬工費覆蓋（老闆 2026-11-23 口述，**確定值**）：
+         ‧四字條批 燙金：要上大機器、版比較大塊 → 基本費 2000、燙一張 5 元
+         ‧七字對聯 燙金：要上大機器、且要架版 3 次 → 一組基本費 5500、燙一組 50 元
+       ★ perSet:true ＝ 老闆給的價**已經是「一組」的價**（對聯的 50／5500 已含 3 張、含架版 3 次）
+         → calc() 那邊不可以再乘 duilianPieces，也不可以再把基本費 × 3，會變兩倍。
+       ⚠️ 老闆只給了「燙一色」的價。2 色以上他沒給 → 不要自己按 +1 或按比例推
+          （斗方 3.5→4.5 那個 +1 的差額套不到 5 元／50 元上）。程式改成顯示「另行報價」。
+       ⚠️ 這裡只覆蓋 foil。打凸／打凹／數位印目前仍吃上面那組 labor（待老闆核）。 */
+    laborBy: {
+      tiaopi:  { foil: { one:5,  min:2000, perSet:true, bigMachine:true } },
+      duilian: { foil: { one:50, min:5500, perSet:true, bigMachine:true, setups:3 } }
     },
     /* 傳統春聯紙（萬年紅宣紙／厚磅絨布紙／抗UV防曬卡紙）整組刪除
        —— 老闆 2026-11-22：「我們配合的紙廠沒有那些紙」。
@@ -1327,12 +1341,12 @@ var PRICE = {
     tiaopiCm:  { w:28, h:85 },
     duilianCm: { w:23, h:85 },
     machineMaxCm: { long:90, short:64 },
-    /* ★ 老闆 2026-11-22：「對聯一組算3張 收3次上機費用」
-         → 一組 ＝ 橫批＋上下聯 3 張：紙算 3 張，工費的每張單價算 3 張，
-           基本費（上機費）也收 3 次（燙金 1500×3、打凸 1200×3、數位印 800×3）。
-       ⚠️ 「收 3 次上機費用」我讀成基本費 ×3。如果老闆的意思只是「每張都要算工費」
-          （那部分 3 張單價本來就含了），就把 pieceMin 改成 false，基本費只收一次。
-       ⚠️ 橫批實際尺寸老闆沒給，紙與工費都先照一條 85 × 23 算（3 張同尺寸）。 */
+    /* ★ 老闆 2026-11-22：「對聯一組算3張 收3次上機費用」，2026-11-23 他確認「基本費收 3 次」
+         → 一組 ＝ 橫批＋上下聯 3 張：紙算 3 張，工費的每張單價算 3 張，基本費也收 3 次
+           （打凸 1200×3 ＝ 3600、數位印 800×3 ＝ 2400）。
+       ⚠️ 燙金**不走這條**：老闆 2026-11-23 直接給了「一組」的價（50／基本費 5500，已含架版 3 次）
+          → laborBy.duilian.foil 帶 perSet:true，calc() 不再乘 3。改燙金價只改 laborBy。
+       ⚠️ 橫批實際尺寸老闆沒給，紙與打凸／數位印都先照一條 85 × 23 算（3 張同尺寸）。 */
     duilianPieces: 3,
     pieceMin: true,
     /* 斗方用美術紙算落數時，一個成品要留的裁切邊（公分，長寬各加這麼多）。
@@ -1562,8 +1576,22 @@ function clPieces(){
 }
 /* 數量的量詞：對聯是「一組」在賣（3 張），其他都是「份」。只影響顯示，不影響計價。 */
 function unitWord(){ return clPieces() > 1 ? '組' : '份' }
-/* 春聯吃老闆 2026-11-19 給的固定工費（PRICE.chunlian.labor）；紅包袋不走這條。 */
-function clLabor(k){ return S.product === 'chunlian' ? (PRICE.chunlian.labor[k] || null) : null }
+/* 春聯吃老闆給的固定工費；紅包袋不走這條。
+   基底 ＝ PRICE.chunlian.labor（2026-11-19），再被 laborBy[款式] 覆蓋（2026-11-23 條批／對聯燙金）。
+   ⚠️ 用 assign 疊出新物件，不要直接改 PRICE 裡的那包（會汙染到下一次試算）。 */
+function clLabor(k){
+  if(S.product !== 'chunlian') return null;
+  var base = PRICE.chunlian.labor[k];
+  if(!base) return null;
+  var ov = (PRICE.chunlian.laborBy[S.couplet] || {})[k];
+  if(!ov) return base;
+  var o = {}, p;
+  for(p in base) o[p] = base[p];
+  for(p in ov)   o[p] = ov[p];
+  /* 覆蓋表只給了一色價 → 把基底那個「2 色套準」的價拿掉，免得偷偷套用斗方的 4.5。 */
+  if(ov.one && !ov.twoReg) delete o.twoReg;
+  return o;
+}
 function moq(){
   /* ⚠️ 不要再把 10 寫死當地板：春聯數位印是「一個起印」，寫死 10 就把老闆的規矩蓋掉了。
      沒選任何工序時才回 10。 */
@@ -1696,6 +1724,19 @@ function artUps(){
   var B = artBlankCm();
   if(!B) return 0;
   return upsOnSheet(artGradeObj().perBig, B.w, B.h);
+}
+/* ★ 老闆 2026-11-23：「有些紙材本身就沒有這麼大張的時候，就不給選就好了，
+     不用再另外洽詢官方 LINE。」
+   → 大紙排不出一個成品（落數 0）的紙／克數，選單裡直接不列出。
+   ⚠️ 這是跟著「目前款式與尺寸」動的：換款式（斗方／條批／對聯）或換斗方尺寸都要重建選單，
+      不然會留著一個已經裝不下的紙在那裡算價。所以凡是改款式／尺寸的地方都要叫 buildArtSelect()。 */
+function gradeUpsOf(g){
+  var B = artBlankCm();
+  if(!B) return 0;
+  return upsOnSheet(g.perBig, B.w, B.h);
+}
+function paperUsable(p){
+  return p.grades.some(function(g){ return gradeUpsOf(g) > 0 });
 }
 /* 這款紙有哪些顏色（沒資料就回空陣列，選單整個不出現） */
 function artColors(){ return PAPER_COLORS[artPaperObj().name] || [] }
@@ -1991,13 +2032,19 @@ function buildMaterialSelect(){
 function artGroupOf(p){ return p.grp || '精選美術紙' }
 function buildArtSelect(){
   var qy = (S.artQuery || '').trim();
-  var hits = [];
+  /* ★ 老闆 2026-11-23：大紙不夠大的紙「不給選就好了」→ 先把排不出落數的整款濾掉，
+       再套搜尋字。hidden 只拿來在下面寫一句提示，讓客人知道清單為什麼變短。 */
+  var usable = [], hits = [], hidden = 0;
   ART_PAPERS.forEach(function(p, i){
+    if(!paperUsable(p)){ hidden++; return }
+    usable.push(i);
     if(!qy || p.name.indexOf(qy) >= 0) hits.push(i);
   });
-  // 搜不到就退回全部，不要讓客人看到空選單
+  // 真的一款都不合（理論上不該發生）→ 寧可全列出來，也不要給客人一個空選單
+  if(!usable.length){ hidden = 0; ART_PAPERS.forEach(function(p, i){ usable.push(i) }) }
+  // 搜不到就退回（可用的）全部，不要讓客人看到空選單
   var noHit = !hits.length;
-  if(noHit) ART_PAPERS.forEach(function(p, i){ hits.push(i) });
+  if(noHit) hits = usable.slice();
   if(hits.indexOf(S.artPaper) < 0) S.artPaper = hits[0];
 
   var groups = [], byGrp = {};
@@ -2015,16 +2062,25 @@ function buildArtSelect(){
 
   /* 克數選單：只出克數。
      ⚠️ 老闆 2026-11-18：「紙錢不用顯示出來」——原本這裡寫「每個紙錢 X 元」，已拿掉。
-     算不出落數的紙（規格還沒建）才標一句，免得客人選了看不懂為什麼沒價。 */
-  var p = artPaperObj(), B = PRICE.hongbao.custom.dieBlank;
-  if(S.artGrade >= p.grades.length) S.artGrade = 0;
-  $('artGradeSel').innerHTML = p.grades.map(function(g, i){
-    var ups = upsOnSheet(g.perBig, B.w, B.h);
+     ★ 老闆 2026-11-23：裝不下的克數也不列出（原本是標「｜需另詢」留著給人選）。
+     ⚠️ 這裡原本寫死 PRICE.hongbao.custom.dieBlank，春聯會拿紅包袋的刀模備料去算落數
+        （2026-11-23 修）→ 一律用 gradeUpsOf()／artBlankCm()，它會按目前商品與款式回對的備料。 */
+  var p = artPaperObj(), gi = [];
+  p.grades.forEach(function(g, i){ if(gradeUpsOf(g) > 0) gi.push(i) });
+  // 同上：一個克數都排不出來時（理論上 paperUsable 已經擋掉了）寧可全列出
+  if(!gi.length) p.grades.forEach(function(g, i){ gi.push(i) });
+  if(gi.indexOf(S.artGrade) < 0) S.artGrade = gi[0];
+  $('artGradeSel').innerHTML = gi.map(function(i){
     return '<option value="' + i + '"' + (i === S.artGrade ? ' selected' : '') + '>' +
-           g.g + (ups ? '' : '｜需另詢') + '</option>';
+           p.grades[i].g + '</option>';
   }).join('');
 
-  $('artUps').textContent = '';   // 原本寫「一張大紙軋 N 個」，同上，不對客人顯示
+  /* 原本寫「一張大紙軋 N 個」（成本，不對客顯示）。現在借這行講兩件事：
+     搜不到、以及「有幾款紙因為大紙裝不下這個尺寸而沒列出」。 */
+  var tips = [];
+  if(noHit && qy) tips.push('找不到「' + qy + '」，先列出全部');
+  if(hidden) tips.push('有 ' + hidden + ' 款紙的大紙裝不下這個尺寸，已自動不列出');
+  $('artUps').textContent = tips.join('；');
 
   /* 顏色選單（老闆 2026-11-18）：有色卡資料才出現。
      ⚠️ 選項字只寫色名，**不寫價差** —— 同紙不同色價錢可能不一樣，但那屬於成本，不對客人攤開。 */
@@ -2038,8 +2094,8 @@ function buildArtSelect(){
     }).join('');
     $('artColorChip').style.background = colorHex(cs[S.artColor].n);
   }
-  $('artSearch').placeholder = '搜尋紙名（共 ' + ART_PAPERS.length + ' 款）';
-  if(noHit && qy) $('artUps').textContent = '找不到「' + qy + '」，先列出全部';
+  // 款數要報「這個尺寸能用的」款數，不是全部 293 款（老闆 2026-11-23 起會濾掉裝不下的）
+  $('artSearch').placeholder = '搜尋紙名（共 ' + usable.length + ' 款）';
 }
 
 /* ── 刀模圖／可燙金範圍 ───────────────────────────────────────────────
@@ -2620,9 +2676,12 @@ function calc(){
      美術紙那條路的 mat.unit 是「一條」的紙錢（落數照一條 85 × 23 排），所以在這裡乘張數；
      傳統紙那條路的 f 也已經改成「一條」的係數（0.68），同樣在這裡乘，不要再塞回 f。 */
   var pieces = clPieces();
-  /* ⚠️ 美術紙排不出落數（這款紙的規格還沒建，或大紙比成品還小）→ 紙錢根本算不出來。
+  /* ⚠️ 美術紙排不出落數（大紙比成品還小）→ 紙錢根本算不出來。
      以前這裡會默默掉回 blank 級距表（那是草稿暫估價）報一個數字給客人，那是錯的。
-     現在標記 noPaper：紙材那列寫「另行報價」，整張單也不出總價，要客人用 LINE 問。 */
+     ★ 老闆 2026-11-23：「有些紙材本身就沒有這麼大張的時候，就不給選就好了，不用再另外洽詢
+       官方 LINE」→ 這種紙現在在 buildArtSelect() 就濾掉了，客人選不到，所以這條走不到。
+     ⚠️ 這段**不要刪**：它是最後一道保險（萬一哪天選單濾漏了、或紙廠規格資料缺失），
+        寧可不出總價，也不要報一個漏算紙錢的數字。 */
   var noPaper = !byoMode() && !!mat.art && !mat.art.ups;
   var paperUnit = (byoMode() || noPaper) ? 0
                 : fixedPaper ? fixedPaper * pieces * (mat.art ? 1 : sizeF2)
@@ -2646,6 +2705,13 @@ function calc(){
       var perC, rawC;
       if(k === 'foil'){
         var nC = S.plates.length;
+        /* ★ 條批／對聯（laborBy 覆蓋，老闆只給一色價）燙 2 色以上 → 另行報價。
+           ⚠️ 不要拿斗方 3.5→4.5 的 +1 差額去推 5 元／50 元的二色價。 */
+        if(nC >= 2 && !CL.twoReg){
+          procRows.push({ k:k, name:PRICE.processes[k].name, unit:0, quote:true,
+                          note:'這個款式燙 2 色以上要套準、架版次數也不同，價格請用官方 LINE 問我們' });
+          return;
+        }
         if(nC >= 2){
           /* 老闆只給了「2 色套準」的價，所以 2 色一律照 4.5 算（套準本來就是 2 色的常態）。
              3 色以上他沒給 → 每多一色先 +1，對客只說會再確認。 */
@@ -2667,12 +2733,18 @@ function calc(){
         note = '';
       }
       /* ★ 對聯一組 3 張、上機費收 3 次（老闆 2026-11-22）：
-           每組的工費 ＝ 一張的價 × 3；基本費（上機費）也 × 3。 */
-      if(pieces > 1){
+           每組的工費 ＝ 一張的價 × 3；基本費（上機費）也 × 3。
+         ★ 但 CL.perSet ＝ 老闆給的價**本來就是一組的價**（2026-11-23 的燙金 50／5500 已含
+           3 張與架版 3 次）→ 這時不可以再乘，乘了就變兩倍。 */
+      if(pieces > 1 && !CL.perSet){
         perC = perC * pieces;
         note = (note ? note + '，' : '') + '一組 ' + pieces + ' 張（橫批＋上下聯），上機費收 ' + pieces + ' 次';
+      } else if(pieces > 1){
+        note = (note ? note + '，' : '') + '一組 ' + pieces + ' 張（橫批＋上下聯）' +
+               (CL.setups ? '，含架版 ' + CL.setups + ' 次' : '');
       }
-      var minC = CL.min * (pieces > 1 && PRICE.chunlian.pieceMin ? pieces : 1);
+      if(CL.bigMachine) note = (note ? note + '，' : '') + '大版面上大機';
+      var minC = CL.min * (pieces > 1 && !CL.perSet && PRICE.chunlian.pieceMin ? pieces : 1);
       rawC = qty * perC;
       u = Math.max(minC, rawC) / qty;
       if(rawC < minC) note = (note ? note + '，' : '') + '數量少，這筆以基本費計';
@@ -3180,6 +3252,9 @@ $$('[data-dofang]').forEach(function(b){
     S.dofangSize = b.getAttribute('data-dofang');
     pressGroup('dofang', S.dofangSize);
     // 尺寸會改落數（一張大紙切得出幾個）→ 紙錢、說明與可燙範圍都要重算（老闆 2026-11-18）
+    /* ★ 尺寸也會改「哪些紙裝得下」（老闆 2026-11-23：裝不下就不給選）→ 紙張選單要重建。
+       ⚠️ 少了這行，從斗方 10 公分切到 30 公分時會留著一款已經裝不下的紙在那裡算價。 */
+    if(artMode()) buildArtSelect();
     buildMaterialSelect();
     buildPlateList();
     renderPreview(); renderPrice();
