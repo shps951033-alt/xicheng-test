@@ -1342,6 +1342,10 @@ var PRICE = {
          ‧四字條批 打凸：也要上大機器 → 基本費 2000、一張 8 元
          ‧七字對聯 打凸：也要上大機器 → 一組基本費 5500、一組 70 元
            （打凹比照打凸——沿用老闆 2026-11-19「打凹打凸一樣」的通則）
+         ‧四字條批 數位印：一張 100 元、**沒有基本費**
+         ‧七字對聯 數位印：一組 300 元、**沒有基本費**
+           （斗方維持 5.5／張＋基本費 800，那是老闆 2026-11-19 給的）
+           ⚠️ min:0 是刻意的，不要「順手」補一個基本費上去。
        ★ perSet:true ＝ 老闆給的價**已經是「一組」的價**（對聯的 50／5500 已含 3 張、含架版 3 次）
          → calc() 那邊不可以再乘 duilianPieces，也不可以再把基本費 × 3，會變兩倍。
        ⚠️ 老闆只給了「燙一色」的價。2 色以上他沒給 → 不要自己按 +1 或按比例推
@@ -1351,14 +1355,16 @@ var PRICE = {
           兩處以上老闆沒講是不是也照乘，先照乘（跟斗方同一套算法），待他核。 */
     laborBy: {
       tiaopi: {
-        foil:   { one:5, min:2000, perSet:true, bigMachine:true },
-        emboss: { unit:8, min:2000, perSet:true, bigMachine:true },
-        deboss: { unit:8, min:2000, perSet:true, bigMachine:true }
+        foil:    { one:5, min:2000, perSet:true, bigMachine:true },
+        emboss:  { unit:8, min:2000, perSet:true, bigMachine:true },
+        deboss:  { unit:8, min:2000, perSet:true, bigMachine:true },
+        digital: { unit:100, min:0, perSet:true, moq:1 }
       },
       duilian: {
-        foil:   { one:50, min:5500, perSet:true, bigMachine:true, setups:3 },
-        emboss: { unit:70, min:5500, perSet:true, bigMachine:true, setups:3 },
-        deboss: { unit:70, min:5500, perSet:true, bigMachine:true, setups:3 }
+        foil:    { one:50, min:5500, perSet:true, bigMachine:true, setups:3 },
+        emboss:  { unit:70, min:5500, perSet:true, bigMachine:true, setups:3 },
+        deboss:  { unit:70, min:5500, perSet:true, bigMachine:true, setups:3 },
+        digital: { unit:300, min:0, perSet:true, moq:1 }
       }
     },
     /* 傳統春聯紙（萬年紅宣紙／厚磅絨布紙／抗UV防曬卡紙）整組刪除
