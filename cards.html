@@ -477,7 +477,7 @@
    - 2026-07-01d：軋型加「沿用舊刀（三年內軋過同圖形）」子選項，預設關；勾選 dieCutCost reuseDie=true → 免刀模費(knife=0)、只收工資
    - 2026-11-12：美術紙名片新增「數位印刷」選項（不印刷／單面／雙面，預設不印刷＝與舊版同價）。老闆定規則：
      紙裁 6K（330×393mm）、可印範圍 300×380、成品間距 6mm（出血各3）、全部同方向（兩種擺法取多者）；
-     6K 張數＝⌈數量÷每張排數⌉＋放損（3%、最少 5 張）；印工＝6K 張數×單面15／雙面22；紙價沿用原大紙算法不變。
+     6K 張數＝⌈數量÷每張排數⌉＋放損（3%、最少 5 張）；印工＝6K 張數×單面15／雙面22（⚠ 2026-11-25 已改照名片張數計，見下）；紙價沿用原大紙算法不變。
      90×54 → 每張 6K 排 20 個。見 DIGI／digiCost()
    - 2026-11-12b：美術紙清單併入恆成紙業官網全部牌價（54 個子系列／228 克數檔；每克數取最高色號價、令價÷500 換每張、
      同克數多種大紙規格自動選「每張名片紙料最省」者）；移除清單尾端重複的「黑武士」「美國皮革紙」兩筆（價格不變）。
@@ -488,6 +488,9 @@
      區塊由 營運部/廠商/牌價整合腳本.py 產生（勿手改區塊內容，改腳本重跑）
    - 2026-11-12d：再併峻揚 76 款（官網不公開價格 → 取 Vault 紙張牌價-峻揚紙業.md 紙樣冊牌價，腳本回查）；共 386 款。
      美術紙／裱紙背紙下拉加「搜尋框」：空白隔開多個關鍵字、比對紙名＋分組＋克數，即時篩選；目前選的紙不在結果就自動換第一筆
+   - 2026-11-25：數位印刷計價改照「名片張數」（老闆定，取代 6K×15／22）：(張數＋放損)×單價；
+     標準 1 模 單面 2／雙面 3 元，加大 2～4 模 單面 2.5／雙面 3.8 元；放損＝max(⌈張數×5%⌉, 10 張)。
+     6K 排版仍保留，只用來判斷完成尺寸放不放得進數位機（放不進 → 不計印工、提示聯絡）。
    ========================================================= */
 const BOXES = [3,5,10,15,20,25,30];                          // 3盒起訂盒數
 const BOXES_25 = [2.5,5,10,15,20,25,30];                     // 2.5盒起訂盒數
@@ -1877,9 +1880,14 @@ function quoteArt(paper, sheets, foilF, foilB, emboss, mod, bigFoil, foilAreas, 
   return { pre, tax: Math.round(pre*1.05) };
 }
 
-// ===== 美術紙數位印刷（2026-11-12 老闆定）=====
-// 紙先裁 6K（330×393mm）再上數位機；可印範圍 300×380；成品之間留 6mm（出血各 3mm）；全部同方向
-const DIGI = { areaW:300, areaL:380, gap:6, price:{"單面":15,"雙面":22}, spoilRate:0.03, spoilMin:5 };
+// ===== 美術紙數位印刷（2026-11-12 老闆定；2026-11-25 計價改照名片張數）=====
+// 計價（2026-11-25 老闆定）：照名片張數算，(張數＋放損) × 每張單價
+//   標準 1 模：單面 2 元／雙面 3 元；加大 2～4 模：單面 2.5 元／雙面 3.8 元
+//   放損＝max(⌈張數×5%⌉, 10 張)
+// 排版只用來檢查放不放得進數位機：紙裁 6K（330×393mm）、可印範圍 300×380、成品間距 6mm、全部同方向
+const DIGI = { areaW:300, areaL:380, gap:6,
+  pricePerCard:{"單面":2,"雙面":3}, pricePerCardBig:{"單面":2.5,"雙面":3.8},
+  spoilRate:0.05, spoilMin:10 };
 // 一邊能排幾個：n×成品 + (n−1)×間距 ≤ 可印長
 function digiFit(len, piece){ return (piece>0 && len>=piece) ? Math.floor((len+DIGI.gap)/(piece+DIGI.gap)) : 0; }
 // 一張 6K 排幾個：兩種擺法（不混排）取多者
@@ -1891,11 +1899,11 @@ function digiPerSheet(L, W){
 // size=[長,寬] mm（已知完成尺寸）；未知時用標準 90×54 的排數 ÷ 模數
 function digiCost(side, qty, size, mod){
   const per = size ? digiPerSheet(size[0], size[1]) : Math.floor(digiPerSheet(90,54)/Math.max(1,mod));
-  if(per<1) return { ok:false, per:0, need:0, spoil:0, sheets:0, cost:0 };
-  const need  = Math.ceil(qty/per);
-  const spoil = Math.max(DIGI.spoilMin, Math.ceil(need*DIGI.spoilRate));
-  const sheets = need + spoil;
-  return { ok:true, per, need, spoil, sheets, cost: sheets*DIGI.price[side] };
+  if(per<1) return { ok:false, per:0, spoil:0, cards:0, unit:0, cost:0 };
+  const unit  = (mod>1 ? DIGI.pricePerCardBig : DIGI.pricePerCard)[side];
+  const spoil = Math.max(DIGI.spoilMin, Math.ceil(qty*DIGI.spoilRate));
+  const cards = qty + spoil;
+  return { ok:true, per, spoil, cards, unit, cost: Math.round(cards*unit) };
 }
 
 /* =========================================================
@@ -2330,7 +2338,7 @@ function render(){
   }else{
     ({pre,tax}=quoteArt(ART_PAPERS[state.artPaper].grades[state.artGrade],state.artQty,state.foilF,state.foilB,state.emboss,effMod,state.bigFoil,state.foilAreas,state.roundCorner,state.mounting,state.mounting?ART_PAPERS[state.artPaper2].grades[state.artGrade2]:null));
   }
-  // 美術紙數位印刷：6K 張數（含放損）× 單面15／雙面22
+  // 美術紙數位印刷：(名片張數＋放損) × 單價（1模 2／3；加大 2～4 模 2.5／3.8）（2026-11-25）
   state.digiInfo = null;
   const dgh=$("digiHint");
   if(state.mode==="art" && state.digi!=="none"){
